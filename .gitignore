@@ -44,3 +44,9 @@
 *blx.bib
 .bak 
 .mtc
+
+build/
+build/*
+MCSlab/include/Makefile
+
+.vscode/
