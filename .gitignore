@@ -48,3 +48,5 @@
 build/
 build/*
 MCSlab/include/Makefile
+
+.vscode/
