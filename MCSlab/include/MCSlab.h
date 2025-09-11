@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdio.h>
+#include <vector>
 #include "Neutron.h"
 #include "Point.h"
 

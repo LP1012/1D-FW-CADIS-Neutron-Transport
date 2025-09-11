@@ -1,5 +1,5 @@
 #include "Neutron.h"
-#include "mcnp_random.h"
+// #include "mcnp_random.h"
 
 #include <cmath>
 
@@ -11,8 +11,8 @@ Neutron::Neutron(Point position) : _pos(position)
 void
 Neutron::move(const double distance)
 {
-  _pos.x = distance * _mu; // CHECK
-}
+  _pos.moveX(distance * _mu); // CHECK MATH
+};
 
 
 void
@@ -20,4 +20,4 @@ Neutron::randomIsoAngle()
 {
   _mu = 2*rang()-1;// sample between -1 and 1
   _ang = std::acos(_mu);
-}
+};
