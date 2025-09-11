@@ -44,3 +44,6 @@
 *blx.bib
 .bak 
 .mtc
+
+build/
+build/*
