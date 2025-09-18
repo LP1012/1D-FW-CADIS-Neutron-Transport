@@ -8,7 +8,8 @@
 class MCSlab {
 public:
   MCSlab(const unsigned int x_cells, const unsigned int n_particles,
-         const unsigned int n_generations, const unsigned int n_inactive);
+         const unsigned int n_generations, const unsigned int n_inactive,
+         const tinyxml2::XMLDocument &input_file);
   /// method to run simulation
   void k_eigenvalue();
 
@@ -24,7 +25,7 @@ protected:
   const unsigned int _n_inactive;
 
   /// simulation input file
-  const tinyxml2::XMLDocument _input;
+  const tinyxml2::XMLDocument &_input;
 
   /// bank of source sites
   std::vector<Neutron> _fission_bank;
