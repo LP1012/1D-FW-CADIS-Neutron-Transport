@@ -2,6 +2,7 @@
 #include "Neutron.h"
 #include "Point.h"
 #include "Slab.h"
+#include "tinyxml2.h"
 
 #include <cmath>
 #include <iostream>

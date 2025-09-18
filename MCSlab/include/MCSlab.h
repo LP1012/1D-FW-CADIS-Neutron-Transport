@@ -2,6 +2,7 @@
 
 #include "Neutron.h"
 #include "Point.h"
+#include "tinyxml2.h"
 #include <vector>
 
 class MCSlab {
@@ -22,8 +23,8 @@ protected:
   /// number of inactive cycles
   const unsigned int _n_inactive;
 
-  /// vector of slab data: size, Sigma_a, Sigma_s, nu_Sigma_f
-  const std::vector<std::vector<double>> _slabs;
+  /// simulation input file
+  const tinyxml2::XMLDocument _input;
 
   /// bank of source sites
   std::vector<Neutron> _fission_bank;

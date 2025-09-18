@@ -14,6 +14,7 @@ add_executable(MCSlab
     src/Slab.cpp
     src/main.cpp
     src/RNG.cpp
+    src/tinyxml2.cpp
     # add other source files here
 )
 
