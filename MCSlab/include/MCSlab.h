@@ -7,9 +7,7 @@
 
 class MCSlab {
 public:
-  MCSlab(const unsigned int x_cells, const unsigned int n_particles,
-         const unsigned int n_generations, const unsigned int n_inactive,
-         const tinyxml2::XMLDocument &input_file);
+  MCSlab(const tinyxml2::XMLDocument &input_file);
   /// method to run simulation
   void k_eigenvalue();
 
