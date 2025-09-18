@@ -13,6 +13,7 @@ add_executable(MCSlab
     src/Neutron.cpp
     src/Slab.cpp
     src/main.cpp
+    src/RNG.cpp
     # add other source files here
 )
 
