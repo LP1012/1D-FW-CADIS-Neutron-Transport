@@ -34,6 +34,7 @@ void MCSlab::readInput() {
   auto *regionsElement = root->FirstChildElement("regions");
   auto *region = root->FirstChildElement("region");
   while (region) {
+    auto id = getAttributeOrThrow<unsigned int>(region, "id");
     auto xmin = getAttributeOrThrow<double>(region, "xmax");
     auto xmax = getAttributeOrThrow<double>(region, "xmin");
     auto n_cells = getAttributeOrThrow<unsigned int>(region, "n_cells");
