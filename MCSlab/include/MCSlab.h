@@ -12,15 +12,12 @@ public:
   void k_eigenvalue();
 
 protected:
-  /// mesh size for Shannon entropy calcs
-  const unsigned int _x_cells;
-
   /// number of neutrons per generation
-  const unsigned int _n_particles;
+  unsigned int _n_particles;
   /// number of generations
-  const unsigned int _n_generations;
+  unsigned int _n_generations;
   /// number of inactive cycles
-  const unsigned int _n_inactive;
+  unsigned int _n_inactive;
 
   /// simulation input file
   const tinyxml2::XMLDocument &_input;
