@@ -2,10 +2,10 @@
 
 #include <vector>
 
-class Slab {
+class Region {
 public:
-  Slab(const double xmin, const double xmax, const unsigned int n_cells,
-       const double Sigma_a, const double Sigma_s, const double nu_Sigma_f);
+  Region(const double xmin, const double xmax, const unsigned int n_cells,
+         const double Sigma_a, const double Sigma_s, const double nu_Sigma_f);
 
   // define getter funcions
   double xMin() { return _xmin; }

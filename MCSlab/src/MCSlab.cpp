@@ -1,7 +1,7 @@
 #include "MCSlab.h"
 #include "Neutron.h"
 #include "Point.h"
-#include "Slab.h"
+#include "Region.h"
 #include "tinyxml2.h"
 
 #include <cmath>

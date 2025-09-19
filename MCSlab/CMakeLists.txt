@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 add_executable(MCSlab
     src/MCSlab.cpp
     src/Neutron.cpp
-    src/Slab.cpp
+    src/Region.cpp
     src/main.cpp
     src/RNG.cpp
     src/tinyxml2.cpp

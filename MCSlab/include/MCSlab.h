@@ -2,6 +2,7 @@
 
 #include "Neutron.h"
 #include "Point.h"
+#include "Region.h"
 #include "tinyxml2.h"
 #include <vector>
 
@@ -21,6 +22,9 @@ protected:
 
   /// simulation input file
   const tinyxml2::XMLDocument &_input;
+
+  /// vector of regions
+  std::vector<Region> _regions;
 
   /// bank of source sites
   std::vector<Neutron> _fission_bank;
