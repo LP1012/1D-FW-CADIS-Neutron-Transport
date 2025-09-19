@@ -17,6 +17,13 @@ MCSlab::MCSlab(const std::string input_file_name)
 
 void MCSlab::k_eigenvalue() {
   // this is where the simulation will be run
+  for (auto i = 0; _n_generations; i++) {
+    // put something in to not count tallies for (i-1)<n_inactive
+    for (auto j = 0; _n_particles; j++) {
+      // generate neutrons from fission bank positions first
+      // use the length of the bank and compare to j
+    }
+  }
 }
 
 void MCSlab::readInput() {
