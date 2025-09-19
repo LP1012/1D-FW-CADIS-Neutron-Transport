@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 # Project name and language
 project(MCSlab LANGUAGES CXX)
 
-# Require C++14 (you can stick to 11 if you prefer)
-set(CMAKE_CXX_STANDARD 14)
+# Require C++17
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Define the executable and source files

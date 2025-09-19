@@ -2,6 +2,7 @@
 #include "Neutron.h"
 #include "Point.h"
 #include "Region.h"
+#include "XMLUtils.h"
 #include "tinyxml2.h"
 
 #include <cmath>
@@ -33,39 +34,13 @@ void MCSlab::readInput() {
   auto *regionsElement = root->FirstChildElement("regions");
   auto *region = root->FirstChildElement("region");
   while (region) {
-    auto *id = region->FindAttribute("id");
-    if (!id)
-      throw std::runtime_error("id not set for region!");
-
-    auto *xmin_attrib = region->FindAttribute("xmin");
-    if (!xmin_attrib)
-      throw std::runtime_error("xmin not set for region!");
-    auto xmin = xmin_attrib->DoubleValue();
-
-    auto *xmax_attrib = region->FindAttribute("xmax");
-    if (!xmax_attrib)
-      throw std::runtime_error("xmax not set for region!");
-    auto xmax = xmax_attrib->DoubleValue();
-
-    auto *n_cells_attrib = region->FindAttribute("n_cells");
-    if (!n_cells_attrib)
-      throw std::runtime_error("n_cells not set for region!");
-    auto n_cells = n_cells_attrib->UnsignedValue();
-
-    auto *Sigma_a_attrib = region->FindAttribute("Sigma_a");
-    if (!Sigma_a_attrib)
-      throw std::runtime_error("Sigma_a not set for region!");
-    auto Sigma_a = Sigma_a_attrib->DoubleValue();
-
-    auto *Sigma_s_attrib = region->FindAttribute("Sigma_s");
-    if (!Sigma_s_attrib)
-      throw std::runtime_error("Sigma_s not set for region!");
-    auto Sigma_s = Sigma_s_attrib->DoubleValue();
-
-    auto *nuSigma_f_attrib = region->FindAttribute("nuSigma_f");
-    if (!nuSigma_f_attrib)
-      throw std::runtime_error("nuSigma_f not set for region!");
-    auto nuSigma_f = nuSigma_f_attrib->DoubleValue();
+    auto id = getAttributeOrThrow<unsigned int>(region, "id");
+    auto xmin = getAttributeOrThrow<double>(region, "xmax");
+    auto xmax = getAttributeOrThrow<double>(region, "xmin");
+    auto n_cells = getAttributeOrThrow<unsigned int>(region, "n_cells");
+    auto Sigma_a = getAttributeOrThrow<double>(region, "Sigma_a");
+    auto Sigma_s = getAttributeOrThrow<double>(region, "Sigma_s");
+    auto nuSigma_f = getAttributeOrThrow<double>(region, "Sigma_f");
 
     Region region_obj(xmin, xmax, n_cells, Sigma_a, Sigma_s,
                       nuSigma_f);   // create region
@@ -81,14 +56,7 @@ void MCSlab::readInput() {
   auto *n_gen_attrib = settings->FindAttribute("n_generations");
   auto *n_inactive_attrib = settings->FindAttribute("n_inactive");
 
-  if (!n_part_attrib)
-    throw std::runtime_error("n_particles not set!");
-  if (!n_gen_attrib)
-    throw std::runtime_error("n_generations not set!");
-  if (!n_inactive_attrib)
-    throw std::runtime_error("n_inactive not set!");
-
-  _n_particles = n_part_attrib->UnsignedValue();
-  _n_generations = n_gen_attrib->UnsignedValue();
-  _n_inactive = n_inactive_attrib->UnsignedValue();
+  _n_particles = getAttributeOrThrow<unsigned int>(settings, "n_particles");
+  _n_generations = getAttributeOrThrow<unsigned int>(settings, "n_generations");
+  _n_inactive = getAttributeOrThrow<unsigned int>(settings, "n_inactive");
 }
