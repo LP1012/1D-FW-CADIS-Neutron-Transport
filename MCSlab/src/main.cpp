@@ -1,16 +1,16 @@
 // include files
-#include "mcnp_random.h"
 #include "MCSlab.h"
 #include "Neutron.h"
 #include "Point.h"
-#include "Slab.h"
+#include "Region.h"
 
-#include <iostream>
 #include <cmath>
+#include <iostream>
+#include <random>
 #include <vector>
 
-int main()
-{
-  std::cout << "Hello World :-)" << std::endl;
+int main() {
+  MCSlab test_mcslab("test_1_region.xml");
+  std::cout << "n_inactive = " << test_mcslab.nInactive() << std::endl;
   return 0;
 }
