@@ -10,13 +10,7 @@
 #include <vector>
 
 int main() {
-  Region test_slab(1, 2, 4, 1, 1, 0);
-  for (auto center : test_slab.cellCenters()) {
-    std::cout << "cell center at: " << center << std::endl;
-  }
-
-  for (auto loc : test_slab.cellLocs()) {
-    std::cout << "cells bounded by: " << loc[0] << ", " << loc[1] << std::endl;
-  }
+  MCSlab test_mcslab("test_1_region.xml");
+  std::cout << "n_inactive = " << test_mcslab.nInactive() << std::endl;
   return 0;
 }

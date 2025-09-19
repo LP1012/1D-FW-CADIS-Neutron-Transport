@@ -18,8 +18,9 @@ private:
   // bounds of slab
   const double _xmin;
   const double _xmax;
-  // number of cells in mesh
-  const unsigned int _n_cells;
+
+  const unsigned int _n_cells; // number of cells in mesh
+
   // material properties
   const double _Sigma_a;
   const double _Sigma_s;
