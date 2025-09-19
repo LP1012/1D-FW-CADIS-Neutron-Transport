@@ -42,7 +42,7 @@ void MCSlab::readInput() {
     auto Sigma_s = getAttributeOrThrow<double>(region, "Sigma_s");
     auto nuSigma_f = getAttributeOrThrow<double>(region, "Sigma_f");
 
-    Region region_obj(xmin, xmax, n_cells, Sigma_a, Sigma_s,
+    Region region_obj(id, xmin, xmax, n_cells, Sigma_a, Sigma_s,
                       nuSigma_f);   // create region
     _regions.push_back(region_obj); // add region to list of regions
   }
