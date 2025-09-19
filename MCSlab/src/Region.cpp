@@ -1,9 +1,9 @@
 #include "Region.h"
 
-Region::Region(const double xmin, const double xmax, const unsigned int n_cells,
-               const double Sigma_a, const double Sigma_s,
-               const double nu_Sigma_f)
-    : _xmin(xmin), _xmax(xmax), _n_cells(n_cells), _Sigma_a(Sigma_a),
+Region::Region(const unsigned int id, const double xmin, const double xmax,
+               const unsigned int n_cells, const double Sigma_a,
+               const double Sigma_s, const double nu_Sigma_f)
+    : _id(id), _xmin(xmin), _xmax(xmax), _n_cells(n_cells), _Sigma_a(Sigma_a),
       _Sigma_s(Sigma_s), _nu_Sigma_f(nu_Sigma_f) {
 
   // calculate total cross section and mean-free-path
