@@ -12,7 +12,7 @@ Neutron::Neutron(double position, std::vector<Region> &regions)
 
 double Neutron::distanceToCollision(const double mfp) {
   double rn = _rng.generateRN();
-  return -std::log(rn) / mfp;
+  return -std::log(rn) * mfp;
 }
 
 void Neutron::setRandomStartPosition(
