@@ -11,6 +11,7 @@ public:
   // define getter funcions
   double xMin() { return _xmin; }
   double xMax() { return _xmax; }
+  double nuSigF() { return _nu_Sigma_f; }
   double mfp() { return _mfp; }
   unsigned int id() { return _id; }
   std::vector<std::vector<double>> cellLocs() { return _cell_locs; }

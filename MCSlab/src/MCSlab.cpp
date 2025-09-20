@@ -22,7 +22,21 @@ void MCSlab::k_eigenvalue() {
     for (auto j = 0; _n_particles; j++) {
       // generate neutrons from fission bank positions first
       // use the length of the bank and compare to j
+      Neutron neutron(0, _regions);
+      neutron.setRandomStartPosition(
+          _fissionable_regions); // set location in fuel
+
+      // begin random walk
+      double mean_free_path = MCSlab::MFP(neutron.regionID());
+      neutron.distanceToCollision(mean_free_path);
     }
+  }
+}
+
+double MCSlab::MFP(const unsigned int id) {
+  for (auto region : _regions) {
+    if (region.id() == id)
+      return region.mfp();
   }
 }
 
@@ -66,4 +80,12 @@ void MCSlab::readInput() {
   _n_particles = getAttributeOrThrow<unsigned int>(settings, "n_particles");
   _n_generations = getAttributeOrThrow<unsigned int>(settings, "n_generations");
   _n_inactive = getAttributeOrThrow<unsigned int>(settings, "n_inactive");
+}
+
+void MCSlab::fissionRegions() {
+  for (auto region : _regions) {
+    if (region.nuSigF() > 1e-8)
+      _fissionable_regions.push_back(region);
+  }
+  _n_fissionable_regions = _fissionable_regions.size();
 }

@@ -16,6 +16,7 @@ public:
   unsigned int nParticles() { return _n_particles; }
   unsigned int nGenerations() { return _n_generations; }
   unsigned int nInactive() { return _n_inactive; }
+  double MFP(const unsigned int id);
 
 protected:
   /// number of neutrons per generation
@@ -31,6 +32,9 @@ protected:
 
   /// vector of regions
   std::vector<Region> _regions;
+  /// vector of fissile regions
+  std::vector<Region> _fissionable_regions;
+  unsigned int _n_fissionable_regions;
 
   /// bank of source sites
   std::vector<Neutron> _fission_bank;
@@ -39,4 +43,5 @@ protected:
   std::vector<double> _scalar_flux;
 
   void readInput();
+  void fissionRegions();
 };
