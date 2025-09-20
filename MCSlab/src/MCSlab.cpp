@@ -38,6 +38,7 @@ double MCSlab::MFP(const unsigned int id) {
     if (region.id() == id)
       return region.mfp();
   }
+  // add case for MFP in void
 }
 
 void MCSlab::readInput() {
