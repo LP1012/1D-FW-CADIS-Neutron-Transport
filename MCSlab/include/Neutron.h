@@ -7,7 +7,7 @@
 
 class Neutron {
 public:
-  Neutron(double position = 0, std::vector<Region> &regions);
+  Neutron(double position, std::vector<Region> &regions);
 
   // move neutron to new position
   void movePosition(const double new_position);
