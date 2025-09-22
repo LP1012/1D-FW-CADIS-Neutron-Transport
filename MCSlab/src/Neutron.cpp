@@ -4,15 +4,21 @@
 #include <cmath>
 #include <random>
 
-Neutron::Neutron(double position, std::vector<Region> &regions)
-    : _pos(position), _regions(regions), _rng() {
+Neutron::Neutron(double position) : _pos(position), _rng() {
   Neutron::randomIsoAngle();
-  Neutron::setRegionID();
+  _is_alive = true;
 }
 
 double Neutron::distanceToCollision(const double mfp) {
   double rn = _rng.generateRN();
   return -std::log(rn) * mfp;
+}
+
+double Neutron::distanceToEdge() {
+  if (_mu > 0)
+    return _region->xMax() - _pos;
+  else
+    return _pos - _region->xMin();
 }
 
 void Neutron::setRandomStartPosition(
@@ -41,7 +47,11 @@ void Neutron::randomIsoAngle() {
   _ang = std::acos(_mu);
 };
 
-void Neutron::movePosition(const double new_position) { _pos = new_position; }
+void Neutron::movePosition(const double new_position) {
+  _pos = new_position;
+  setRegionID();
+  setRegion();
+}
 
 void Neutron::setRegionID() {
   _region_id = 0; // set to 0 (void) if not in region
@@ -52,3 +62,15 @@ void Neutron::setRegionID() {
     }
   }
 }
+
+void Neutron::setRegion() {
+  _region = nullptr;
+  for (auto region : _regions) {
+    if (region.xMin() < _pos && _pos < region.xMax()) {
+      _region = &region;
+      break;
+    }
+  }
+}
+
+void Neutron::kill() { _is_alive = false; }

@@ -13,6 +13,7 @@
 MCSlab::MCSlab(const std::string input_file_name)
     : _input_file_name(input_file_name) {
   readInput();
+  setMinMax();
 };
 
 void MCSlab::k_eigenvalue() {
@@ -22,13 +23,16 @@ void MCSlab::k_eigenvalue() {
     for (auto j = 0; _n_particles; j++) {
       // generate neutrons from fission bank positions first
       // use the length of the bank and compare to j
-      Neutron neutron(0, _regions);
+      Neutron neutron(0);
       neutron.setRandomStartPosition(
           _fissionable_regions); // set location in fuel
 
       // begin random walk
       double mean_free_path = MCSlab::MFP(neutron.regionID());
-      neutron.distanceToCollision(mean_free_path);
+      double distanceToCollision = neutron.distanceToCollision(mean_free_path);
+
+      // find distance to nearest edge
+      double distanceToEdge = neutron.distanceToEdge();
     }
   }
 }
@@ -89,4 +93,16 @@ void MCSlab::fissionRegions() {
       _fissionable_regions.push_back(region);
   }
   _n_fissionable_regions = _fissionable_regions.size();
+}
+
+void MCSlab::setMinMax() {
+  _domainMin = _regions[0].xMin();
+  _domainMax = _regions[0].xMax();
+
+  for (auto region : _regions) {
+    if (region.xMin() < _domainMin)
+      _domainMin = region.xMin();
+    if (region.xMax() > _domainMax)
+      _domainMax = region.xMax();
+  }
 }

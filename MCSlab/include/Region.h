@@ -9,13 +9,13 @@ public:
          const double nu_Sigma_f);
 
   // define getter funcions
-  double xMin() { return _xmin; }
-  double xMax() { return _xmax; }
-  double nuSigF() { return _nu_Sigma_f; }
-  double mfp() { return _mfp; }
-  unsigned int id() { return _id; }
-  std::vector<std::vector<double>> cellLocs() { return _cell_locs; }
-  std::vector<double> cellCenters() { return _cell_centers; }
+  double xMin() const { return _xmin; }
+  double xMax() const { return _xmax; }
+  double nuSigF() const { return _nu_Sigma_f; }
+  double mfp() const { return _mfp; }
+  unsigned int id() const { return _id; }
+  std::vector<std::vector<double>> cellLocs() const { return _cell_locs; }
+  std::vector<double> cellCenters() const { return _cell_centers; }
 
 private:
   // slab id

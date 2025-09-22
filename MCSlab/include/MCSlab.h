@@ -36,6 +36,10 @@ protected:
   std::vector<Region> _fissionable_regions;
   unsigned int _n_fissionable_regions;
 
+  // hold  min and max of computation domain
+  double _domainMin;
+  double _domainMax;
+
   /// bank of source sites
   std::vector<Neutron> _fission_bank;
 
@@ -44,4 +48,6 @@ protected:
 
   void readInput();
   void fissionRegions();
+
+  void setMinMax();
 };

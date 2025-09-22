@@ -7,7 +7,7 @@
 
 class Neutron {
 public:
-  Neutron(double position, std::vector<Region> &regions);
+  Neutron(double position, const std::vector<Region> &regions);
 
   // move neutron to new position
   void movePosition(const double new_position);
@@ -17,6 +17,7 @@ public:
   void setRandomStartPosition(const std::vector<Region> &fissionable_regions);
 
   double distanceToCollision(const double mfp);
+  double distanceToEdge();
 
   // define getter functions
   double pos() const { return _pos; }
@@ -25,11 +26,13 @@ public:
   unsigned int regionID() const { return _region_id; }
 
 private:
-  double _pos;                         // x-position
-  double _ang;                         // angle (theta) in radians
-  double _mu;                          // cosine of angle
-  unsigned int _region_id;             // ID of region currently located in
-  const std::vector<Region> &_regions; // list of all regions in simulation
+  double _pos;                        // x-position
+  double _ang;                        // angle (theta) in radians
+  double _mu;                         // cosine of angle
+  unsigned int _region_id;            // ID of region currently located in
+  Region *_region;                    // region currently located in
+  bool _is_alive;                     // is neutron still being tracked?
+  const std::vector<Region> _regions; // all regions available
 
   // initialize RNG
   UniformRNG _rng;
@@ -39,4 +42,8 @@ private:
   /// @brief Set region ID based on current location and regions available
   /// @param regions
   void setRegionID();
+
+  void setRegion();
+
+  void kill();
 };
