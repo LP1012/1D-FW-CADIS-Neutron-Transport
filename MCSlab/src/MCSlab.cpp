@@ -33,6 +33,15 @@ void MCSlab::k_eigenvalue() {
 
       // find distance to nearest edge
       double distanceToEdge = neutron.distanceToEdge();
+
+      if (distanceToCollision > distanceToEdge) {
+        // change neutron region, recalculate MFP, resample distance to
+        // collision
+      } else {
+        // collision occurs
+
+        // check if absorption
+      }
     }
   }
 }
