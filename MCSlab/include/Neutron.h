@@ -20,13 +20,17 @@ public:
   double distanceToCollision();
   double distanceToEdge();
 
-  void collision();
+  void kill();
+
+  /// @brief Set cosine of angle randomly assuming isotropic distribution
+  void randomIsoAngle();
 
   // define getter functions
   double pos() const { return _pos; }
   double ang() const { return _ang; }
   double mu() const { return _mu; }
   double isAlive() const { return _is_alive; }
+  Region region() const { return *_region; }
 
 private:
   double _pos;     // x-position
@@ -38,10 +42,5 @@ private:
   // initialize RNG
   UniformRNG _rng;
 
-  /// @brief Set cosine of angle randomly assuming isotropic distribution
-  void randomIsoAngle();
-
   void setRegion(const std::vector<Region> &regions);
-
-  void kill();
 };

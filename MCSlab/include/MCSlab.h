@@ -12,6 +12,8 @@ public:
   /// method to run simulation
   void k_eigenvalue();
 
+  void collision(Neutron neutron);
+
   // define getter functions
   unsigned int nParticles() { return _n_particles; }
   unsigned int nGenerations() { return _n_generations; }
@@ -39,8 +41,14 @@ protected:
   double _domainMin;
   double _domainMax;
 
+  // initialize RNG
+  UniformRNG _rng;
+
   /// bank of source sites
-  std::vector<Neutron> _fission_bank;
+  std::vector<Neutron> _old_fission_bank;
+  std::vector<Neutron> _new_fission_bank;
+
+  double _k; // multiplication constant
 
   /// flux at each point in mesh
   std::vector<double> _scalar_flux;

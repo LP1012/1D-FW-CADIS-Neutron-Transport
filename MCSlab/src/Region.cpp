@@ -9,6 +9,7 @@ Region::Region(const double xmin, const double xmax, const unsigned int n_cells,
   // calculate total cross section and mean-free-path
   _Sigma_t = _Sigma_a + _Sigma_s;
   _absorption_ratio = _Sigma_a / _Sigma_t;
+  _n_per_abs = nu_Sigma_f / _Sigma_a;
 
   // populate cell locations
   Region::populateCellLocs();
