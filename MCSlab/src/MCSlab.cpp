@@ -43,6 +43,8 @@ void MCSlab::k_eigenvalue() {
         if (distanceToCollision > distanceToEdge) {
           // change neutron region, recalculate MFP, resample distance to
           // collision
+
+          // if region is the edge now, kill if escape
         } else {
           // collision occurs
 

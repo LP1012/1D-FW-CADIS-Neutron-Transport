@@ -16,7 +16,6 @@ public:
   unsigned int nParticles() { return _n_particles; }
   unsigned int nGenerations() { return _n_generations; }
   unsigned int nInactive() { return _n_inactive; }
-  double MFP(const unsigned int id);
 
 protected:
   /// number of neutrons per generation
