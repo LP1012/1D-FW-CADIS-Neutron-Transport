@@ -9,6 +9,8 @@ public:
 
   static Region voidRegion(double xmin, double xmax, unsigned n_cells);
 
+  void setIndex(const unsigned int index_number);
+
   // define getter funcions
   double xMin() const { return _xmin; }
   double xMax() const { return _xmax; }
@@ -23,6 +25,8 @@ private:
   // bounds of slab
   const double _xmin;
   const double _xmax;
+
+  unsigned int _region_index; // location of region in region vector
 
   const unsigned int _n_cells; // number of cells in mesh
 

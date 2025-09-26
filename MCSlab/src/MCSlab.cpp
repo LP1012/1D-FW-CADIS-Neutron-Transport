@@ -128,12 +128,15 @@ void MCSlab::readInput() {
   // add void regions, check if regions overlap
   std::vector<Region> new_regions;
   for (auto i = 1; i < _regions.size() - 1; i++) {
-    new_regions.push_back(_regions[i]);
+    new_regions.push_back(_regions[i]);       // add user-specified region
+    _regions[i].setIndex(new_regions.size()); // set region index
     if (_regions[i].xMax() < _regions[i + 1].xMin()) {
       Region void_region =
           Region::voidRegion(_regions[i].xMax(), _regions[i + 1].xMin(), 10);
+      void_region.setIndex(new_regions.size() + 1); // set void region index
+      new_regions.push_back(void_region); // add void region to list of regions
     } else if (_regions[i].xMax() > _regions[i + 1].xMin()) {
-      throw std::runtime_error("Error! Regions overlap.");
+      throw std::runtime_error("Error! Regions overlap."); // check if overlap
     }
   }
 

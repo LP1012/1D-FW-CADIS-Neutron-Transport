@@ -25,6 +25,10 @@ Region Region::voidRegion(double xmin, double xmax, unsigned n_cells) {
                 nuSigma_f_void);
 };
 
+void Region::setIndex(const unsigned int region_index) {
+  _region_index = region_index;
+}
+
 void Region::populateCellLocs() {
   double dx = (_xmax - _xmin) / static_cast<double>(_n_cells);
   for (auto i = 0; i < _n_cells; i++) {
