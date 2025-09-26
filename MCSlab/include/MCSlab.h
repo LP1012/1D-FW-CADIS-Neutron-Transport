@@ -20,22 +20,16 @@ public:
   unsigned int nInactive() { return _n_inactive; }
 
 protected:
-  /// number of neutrons per generation
-  unsigned int _n_particles;
-  /// number of generations
-  unsigned int _n_generations;
-  /// number of inactive cycles
-  unsigned int _n_inactive;
+  unsigned int _n_particles;   // number of neutrons per generation
+  unsigned int _n_generations; // number of generations
+  unsigned int _n_inactive;    // number of inactive cycles
 
   /// simulation input file
-  // const tinyxml2::XMLDocument &_input;
   const std::string _input_file_name;
 
-  /// vector of regions
-  std::vector<Region> _regions;
-  /// vector of fissile regions
-  std::vector<Region> _fissionable_regions;
-  unsigned int _n_fissionable_regions;
+  std::vector<Region> _regions;             // vector of regions
+  std::vector<Region> _fissionable_regions; // vector of fissile regions
+  unsigned int _n_fissionable_regions;      // number of fissionable regions
 
   // hold  min and max of computation domain
   double _domainMin;
@@ -44,14 +38,13 @@ protected:
   // initialize RNG
   UniformRNG _rng;
 
-  /// bank of source sites
+  // banks of source sites
   std::vector<Neutron> _old_fission_bank;
   std::vector<Neutron> _new_fission_bank;
 
   double _k; // multiplication constant
 
-  /// flux at each point in mesh
-  std::vector<double> _scalar_flux;
+  std::vector<double> _scalar_flux; // flux at each point in mesh
 
   void readInput();
   void fissionRegions();

@@ -33,15 +33,18 @@ private:
   const unsigned int _n_cells; // number of cells in mesh
 
   // material properties
-  const double _Sigma_a;
-  const double _Sigma_s;
-  const double _nu_Sigma_f;
-  double _Sigma_t; // total cross section
-  double _absorption_ratio;
-  double _n_per_abs;
+  const double _Sigma_a;    // absorption cross section
+  const double _Sigma_s;    // scattering cross section
+  const double _nu_Sigma_f; // fission cross section times number of neutrons
+                            // produced per fission
+  double _Sigma_t;          // total cross section
+  double _absorption_ratio; // absorptions per collision
+  double _n_per_abs;        // neutrons produced per absorptions
 
   // store locations of cells in mesh
   std::vector<std::vector<double>> _cell_locs;
   std::vector<double> _cell_centers;
+
+  /// @brief Populates cell edge and center locations
   void populateCellLocs();
 };

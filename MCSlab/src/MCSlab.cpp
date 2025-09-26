@@ -48,7 +48,7 @@ void MCSlab::k_eigenvalue() {
               // neutron escapes on right side
               neutron.kill();
             else {
-              // move one region to right
+              // move neutron to a region on the right
               unsigned int new_index = current_index + 1;
               while (_regions[new_index].SigmaA() < 1e-8)
                 new_index++; // skip over void regions
@@ -61,10 +61,10 @@ void MCSlab::k_eigenvalue() {
               // neutron escapes on left side
               neutron.kill();
             else {
-              // move one region to left
+              // move neutron to a region on the left
               unsigned int new_index = current_index - 1;
               while (_regions[new_index].SigmaA() < 1e-8)
-                new_index--;
+                new_index--; // skip over void regions
 
               Region new_region = _regions[new_index];
               neutron.setPositionOnBoundary(new_region.xMax(), new_region);
