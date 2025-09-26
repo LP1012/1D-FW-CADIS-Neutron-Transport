@@ -24,6 +24,7 @@ public:
   double pos() const { return _pos; }
   double ang() const { return _ang; }
   double mu() const { return _mu; }
+  double isAlive() const { return _is_alive; }
 
 private:
   double _pos;     // x-position

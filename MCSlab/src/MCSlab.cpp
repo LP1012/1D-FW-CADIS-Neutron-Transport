@@ -27,19 +27,21 @@ void MCSlab::k_eigenvalue() {
       neutron.setRandomStartPosition(
           _fissionable_regions); // set location in fuel
 
-      // begin random walk
-      double distanceToCollision = neutron.distanceToCollision();
+      while (neutron.isAlive()) {
+        // begin random walk
+        double distanceToCollision = neutron.distanceToCollision();
 
-      // find distance to nearest edge
-      double distanceToEdge = neutron.distanceToEdge();
+        // find distance to nearest edge
+        double distanceToEdge = neutron.distanceToEdge();
 
-      if (distanceToCollision > distanceToEdge) {
-        // change neutron region, recalculate MFP, resample distance to
-        // collision
-      } else {
-        // collision occurs
+        if (distanceToCollision > distanceToEdge) {
+          // change neutron region, recalculate MFP, resample distance to
+          // collision
+        } else {
+          // collision occurs
 
-        // check if absorption
+          // check if absorption
+        }
       }
     }
   }
