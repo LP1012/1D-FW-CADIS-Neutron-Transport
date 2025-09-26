@@ -1,25 +1,40 @@
-cmake_minimum_required(VERSION 3.10)
+cmake_minimum_required(VERSION 3.14)
 
-# Project name and language
 project(MCSlab LANGUAGES CXX)
 
-# Require C++17
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Define the executable and source files
-add_executable(MCSlab
+include(FetchContent)
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/heads/main.zip
+)
+FetchContent_MakeAvailable(googletest)
+
+# Core library
+add_library(mclib
     src/MCSlab.cpp
     src/Neutron.cpp
     src/Region.cpp
-    src/main.cpp
     src/RNG.cpp
     src/tinyxml2.cpp
     # add other source files here
 )
+target_include_directories(mclib PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
-# Tell the compiler where to find headers
-target_include_directories(MCSlab
-    PUBLIC ${CMAKE_SOURCE_DIR}/include
-)
+# Main executable
+add_executable(MCSlab src/main.cpp)
+target_link_libraries(MCSlab PRIVATE mclib)
+
+# Enable testing
+enable_testing()
+
+# Tests
+add_executable(run_tests test/tests.cpp)
+target_link_libraries(run_tests PRIVATE mclib GTest::gtest_main)
+
+include(GoogleTest)
+gtest_discover_tests(run_tests)
+
 
