@@ -9,7 +9,8 @@ Neutron::Neutron(double position) : _pos(position), _rng() {
   _is_alive = true;
 }
 
-double Neutron::distanceToCollision(const double mfp) {
+double Neutron::distanceToCollision() {
+  double mfp = 1.0 / _region->SigmaT();
   double rn = _rng.generateRN();
   return -std::log(rn) * mfp;
 }
@@ -47,25 +48,15 @@ void Neutron::randomIsoAngle() {
   _ang = std::acos(_mu);
 };
 
-void Neutron::movePosition(const double new_position) {
+void Neutron::movePositionAndRegion(const double new_position,
+                                    const std::vector<Region> &regions) {
   _pos = new_position;
-  setRegionID();
-  setRegion();
+  setRegion(regions);
 }
 
-void Neutron::setRegionID() {
-  _region_id = 0; // set to 0 (void) if not in region
-  for (auto region : _regions) {
-    if (region.xMin() < _pos && _pos < region.xMax()) {
-      _region_id = region.id();
-      break;
-    }
-  }
-}
-
-void Neutron::setRegion() {
+void Neutron::setRegion(const std::vector<Region> &regions) {
   _region = nullptr;
-  for (auto region : _regions) {
+  for (auto region : regions) {
     if (region.xMin() < _pos && _pos < region.xMax()) {
       _region = &region;
       break;

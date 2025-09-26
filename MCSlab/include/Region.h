@@ -13,6 +13,7 @@ public:
   double xMin() const { return _xmin; }
   double xMax() const { return _xmax; }
   double nuSigF() const { return _nu_Sigma_f; }
+  double SigmaT() const { return _Sigma_t; }
   std::vector<std::vector<double>> cellLocs() const { return _cell_locs; }
   std::vector<double> cellCenters() const { return _cell_centers; }
 

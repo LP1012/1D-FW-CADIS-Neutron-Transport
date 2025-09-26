@@ -28,8 +28,7 @@ void MCSlab::k_eigenvalue() {
           _fissionable_regions); // set location in fuel
 
       // begin random walk
-      double mean_free_path = MCSlab::MFP(neutron.regionID());
-      double distanceToCollision = neutron.distanceToCollision(mean_free_path);
+      double distanceToCollision = neutron.distanceToCollision();
 
       // find distance to nearest edge
       double distanceToEdge = neutron.distanceToEdge();
