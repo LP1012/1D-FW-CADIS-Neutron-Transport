@@ -1,17 +1,26 @@
 #include "Region.h"
 
-Region::Region(const unsigned int id, const double xmin, const double xmax,
-               const unsigned int n_cells, const double Sigma_a,
-               const double Sigma_s, const double nu_Sigma_f)
-    : _id(id), _xmin(xmin), _xmax(xmax), _n_cells(n_cells), _Sigma_a(Sigma_a),
+Region::Region(const double xmin, const double xmax, const unsigned int n_cells,
+               const double Sigma_a, const double Sigma_s,
+               const double nu_Sigma_f)
+    : _xmin(xmin), _xmax(xmax), _n_cells(n_cells), _Sigma_a(Sigma_a),
       _Sigma_s(Sigma_s), _nu_Sigma_f(nu_Sigma_f) {
 
   // calculate total cross section and mean-free-path
   _Sigma_t = _Sigma_a + _Sigma_s;
-  _mfp = 1.0 / _Sigma_t;
 
   // populate cell locations
   Region::populateCellLocs();
+};
+
+Region Region::voidRegion(double xmin, double xmax, unsigned n_cells) {
+  // Preset cross sections for void
+  constexpr double Sigma_a_void = 0.0;
+  constexpr double Sigma_s_void = 0.0;
+  constexpr double nuSigma_f_void = 0.0;
+
+  return Region(xmin, xmax, n_cells, Sigma_a_void, Sigma_s_void,
+                nuSigma_f_void);
 };
 
 void Region::populateCellLocs() {

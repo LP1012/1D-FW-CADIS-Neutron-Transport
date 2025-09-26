@@ -46,13 +46,13 @@ void MCSlab::k_eigenvalue() {
   }
 }
 
-double MCSlab::MFP(const unsigned int id) {
-  for (auto region : _regions) {
-    if (region.id() == id)
-      return region.mfp();
-  }
-  // add case for MFP in void
-}
+// double MCSlab::MFP(const unsigned int id) {
+//   for (auto region : _regions) {
+//     if (region.id() == id)
+//       return region.mfp();
+//   }
+//   // add case for MFP in void
+// }
 
 void MCSlab::readInput() {
   tinyxml2::XMLDocument input_file;
@@ -69,7 +69,7 @@ void MCSlab::readInput() {
   auto *regionsElement = root->FirstChildElement("regions");
   auto *region = root->FirstChildElement("region");
   while (region) {
-    auto id = getAttributeOrThrow<unsigned int>(region, "id");
+    // auto id = getAttributeOrThrow<unsigned int>(region, "id");
     auto xmin = getAttributeOrThrow<double>(region, "xmax");
     auto xmax = getAttributeOrThrow<double>(region, "xmin");
     auto n_cells = getAttributeOrThrow<unsigned int>(region, "n_cells");
@@ -77,9 +77,21 @@ void MCSlab::readInput() {
     auto Sigma_s = getAttributeOrThrow<double>(region, "Sigma_s");
     auto nuSigma_f = getAttributeOrThrow<double>(region, "Sigma_f");
 
-    Region region_obj(id, xmin, xmax, n_cells, Sigma_a, Sigma_s,
+    Region region_obj(xmin, xmax, n_cells, Sigma_a, Sigma_s,
                       nuSigma_f);   // create region
     _regions.push_back(region_obj); // add region to list of regions
+  }
+
+  // add void regions, check if regions overlap
+  std::vector<Region> new_regions;
+  for (auto i = 1; i < _regions.size() - 1; i++) {
+    new_regions.push_back(_regions[i]);
+    if (_regions[i].xMax() < _regions[i + 1].xMin()) {
+      Region void_region =
+          Region::voidRegion(_regions[i].xMax(), _regions[i + 1].xMin(), 10);
+    } else if (_regions[i].xMax() > _regions[i + 1].xMin()) {
+      throw std::runtime_error("Error! Regions overlap.");
+    }
   }
 
   // load settings
