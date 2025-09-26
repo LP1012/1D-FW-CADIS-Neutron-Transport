@@ -20,6 +20,7 @@ public:
   double distanceToCollision();
   double distanceToEdge();
 
+  void setPositionOnBoundary(const double new_position, Region &new_region);
   void kill();
 
   /// @brief Set cosine of angle randomly assuming isotropic distribution

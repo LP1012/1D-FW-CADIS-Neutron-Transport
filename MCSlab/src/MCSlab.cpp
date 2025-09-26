@@ -41,8 +41,35 @@ void MCSlab::k_eigenvalue() {
         double distanceToEdge = neutron.distanceToEdge();
 
         if (distanceToCollision > distanceToEdge) {
-          // change neutron region, recalculate MFP, resample distance to
-          // collision
+          // neutron has reached edge of region
+          unsigned int current_index = neutron.region().regionIndex();
+          if (neutron.mu() > 0) {
+            if (current_index == _regions.size() - 1)
+              // neutron escapes on right side
+              neutron.kill();
+            else {
+              // move one region to right
+              unsigned int new_index = current_index + 1;
+              while (_regions[new_index].SigmaA() < 1e-8)
+                new_index++; // skip over void regions
+
+              Region new_region = _regions[new_index];
+              neutron.setPositionOnBoundary(new_region.xMin(), new_region);
+            }
+          } else {
+            if (current_index == 0)
+              // neutron escapes on left side
+              neutron.kill();
+            else {
+              // move one region to left
+              unsigned int new_index = current_index - 1;
+              while (_regions[new_index].SigmaA() < 1e-8)
+                new_index--;
+
+              Region new_region = _regions[new_index];
+              neutron.setPositionOnBoundary(new_region.xMax(), new_region);
+            }
+          }
 
           // if region is the edge now, kill if escape
         } else {

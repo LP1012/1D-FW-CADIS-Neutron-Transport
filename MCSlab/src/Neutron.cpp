@@ -66,3 +66,9 @@ void Neutron::setRegion(const std::vector<Region> &regions) {
 }
 
 void Neutron::kill() { _is_alive = false; }
+
+void Neutron::setPositionOnBoundary(const double new_position,
+                                    Region &new_region) {
+  _pos = new_position;
+  _region = &new_region;
+}
