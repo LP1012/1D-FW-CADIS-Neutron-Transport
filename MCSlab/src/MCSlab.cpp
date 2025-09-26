@@ -46,9 +46,7 @@ void MCSlab::k_eigenvalue() {
 
           // if region is the edge now, kill if escape
         } else {
-          // collision occurs
-
-          // check if absorption
+          neutron.collision();
         }
       }
     }

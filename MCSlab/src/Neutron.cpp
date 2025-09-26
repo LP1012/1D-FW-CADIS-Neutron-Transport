@@ -23,6 +23,18 @@ double Neutron::distanceToEdge() {
     return _pos - _region->xMin();
 }
 
+void Neutron::collision() {
+  // test if collision or absorption
+  double rn = _rng.generateRN();
+  if (rn < _region->absorptionRatio())
+    Neutron::kill();
+
+  // this would be where we could calculate the energy lost in scatter. however,
+  // because the material properties are energy-indendent, we only need the new
+  // angle to proceed.
+  Neutron::randomIsoAngle();
+}
+
 void Neutron::setRandomStartPosition(
     const std::vector<Region> &fissionable_regions) {
 

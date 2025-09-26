@@ -20,6 +20,8 @@ public:
   double distanceToCollision();
   double distanceToEdge();
 
+  void collision();
+
   // define getter functions
   double pos() const { return _pos; }
   double ang() const { return _ang; }
