@@ -4,8 +4,9 @@
 #include <cmath>
 #include <random>
 
-Neutron::Neutron(double position) : _pos(position), _rng() {
+Neutron::Neutron(double position, const std::vector<Region> &regions) : _rng() {
   Neutron::randomIsoAngle();
+  Neutron::movePositionAndRegion(position, regions);
   _is_alive = true;
 }
 

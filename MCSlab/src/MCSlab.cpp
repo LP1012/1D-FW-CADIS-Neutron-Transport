@@ -20,15 +20,21 @@ void MCSlab::k_eigenvalue() {
   // this is where the simulation will be run
   for (auto i = 0; _n_generations; i++) {
     // put something in to not count tallies for (i-1)<n_inactive
+    unsigned int fissions_in_old_bank = _fission_bank.size();
     for (auto j = 0; _n_particles; j++) {
       // generate neutrons from fission bank positions first
-      // use the length of the bank and compare to j
-      Neutron neutron(0);
-      neutron.setRandomStartPosition(
-          _fissionable_regions); // set location in fuel
+      Neutron neutron(0, _regions); // initialize neutron
 
+      // adjust neutron start position based on randomness or fission bank
+      if (j < fissions_in_old_bank - 1)
+        neutron.movePositionAndRegion(_fission_bank[j].pos(), _regions);
+      else
+        neutron.setRandomStartPosition(
+            _fissionable_regions); // set location in fuel
+
+      // begin random walk
       while (neutron.isAlive()) {
-        // begin random walk
+
         double distanceToCollision = neutron.distanceToCollision();
 
         // find distance to nearest edge
