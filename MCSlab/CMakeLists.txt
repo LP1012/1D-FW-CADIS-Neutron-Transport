@@ -13,7 +13,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(googletest)
 
 # Core library
-add_library(mclib
+add_library(MCLib
     src/MCSlab.cpp
     src/Neutron.cpp
     src/Region.cpp
@@ -21,18 +21,18 @@ add_library(mclib
     src/tinyxml2.cpp
     # add other source files here
 )
-target_include_directories(mclib PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(MCLib PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 # Main executable
 add_executable(MCSlab src/main.cpp)
-target_link_libraries(MCSlab PRIVATE mclib)
+target_link_libraries(MCSlab PRIVATE MCLib)
 
 # Enable testing
 enable_testing()
 
 # Tests
 add_executable(run_tests test/tests.cpp)
-target_link_libraries(run_tests PRIVATE mclib GTest::gtest_main)
+target_link_libraries(run_tests PRIVATE MCLib GTest::gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(run_tests)
