@@ -12,31 +12,42 @@ public:
   /// method to run simulation
   void k_eigenvalue();
 
+  void collision(Neutron neutron);
+
   // define getter functions
   unsigned int nParticles() { return _n_particles; }
   unsigned int nGenerations() { return _n_generations; }
   unsigned int nInactive() { return _n_inactive; }
 
 protected:
-  /// number of neutrons per generation
-  unsigned int _n_particles;
-  /// number of generations
-  unsigned int _n_generations;
-  /// number of inactive cycles
-  unsigned int _n_inactive;
+  unsigned int _n_particles;   // number of neutrons per generation
+  unsigned int _n_generations; // number of generations
+  unsigned int _n_inactive;    // number of inactive cycles
 
   /// simulation input file
-  // const tinyxml2::XMLDocument &_input;
   const std::string _input_file_name;
 
-  /// vector of regions
-  std::vector<Region> _regions;
+  std::vector<Region> _regions;             // vector of regions
+  std::vector<Region> _fissionable_regions; // vector of fissile regions
+  unsigned int _n_fissionable_regions;      // number of fissionable regions
 
-  /// bank of source sites
-  std::vector<Neutron> _fission_bank;
+  // hold  min and max of computation domain
+  double _domainMin;
+  double _domainMax;
 
-  /// flux at each point in mesh
-  std::vector<double> _scalar_flux;
+  // initialize RNG
+  UniformRNG _rng;
+
+  // banks of source sites
+  std::vector<Neutron> _old_fission_bank;
+  std::vector<Neutron> _new_fission_bank;
+
+  double _k; // multiplication constant
+
+  std::vector<double> _scalar_flux; // flux at each point in mesh
 
   void readInput();
+  void fissionRegions();
+
+  void setMinMax();
 };

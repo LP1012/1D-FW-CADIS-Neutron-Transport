@@ -8,11 +8,26 @@ Region::Region(const double xmin, const double xmax, const unsigned int n_cells,
 
   // calculate total cross section and mean-free-path
   _Sigma_t = _Sigma_a + _Sigma_s;
-  _mfp = 1.0 / _Sigma_t;
+  _absorption_ratio = _Sigma_a / _Sigma_t;
+  _n_per_abs = nu_Sigma_f / _Sigma_a;
 
   // populate cell locations
   Region::populateCellLocs();
 };
+
+Region Region::voidRegion(double xmin, double xmax, unsigned n_cells) {
+  // Preset cross sections for void
+  constexpr double Sigma_a_void = 0.0;
+  constexpr double Sigma_s_void = 0.0;
+  constexpr double nuSigma_f_void = 0.0;
+
+  return Region(xmin, xmax, n_cells, Sigma_a_void, Sigma_s_void,
+                nuSigma_f_void);
+};
+
+void Region::setIndex(const unsigned int region_index) {
+  _region_index = region_index;
+}
 
 void Region::populateCellLocs() {
   double dx = (_xmax - _xmin) / static_cast<double>(_n_cells);
