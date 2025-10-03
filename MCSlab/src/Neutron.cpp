@@ -2,6 +2,7 @@
 #include "Point.h"
 #include "Region.h"
 #include <cmath>
+#include <memory>
 #include <random>
 
 Neutron::Neutron(double position, const std::vector<Region> &regions) : _rng() {
