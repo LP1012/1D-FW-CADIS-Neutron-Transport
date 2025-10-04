@@ -9,22 +9,6 @@
 
 class NeutronTest : public testing::Test {
 protected:
-  // void SetUp() override {
-  //   regions.clear();
-  //   regions.emplace_back(-1, 1, 1, 1, 1, 0);
-  //   regions.emplace_back(1, 2, 1, 1, 1, 1);
-
-  //   fissionable_regions.clear();
-  //   fissionable_regions.emplace_back(regions[1]);
-
-  //   neutron.emplace(0, regions, 0); // set the seed to be 0 for testing
-  // }
-  // ~NeutronTest() noexcept override =
-  //     default; // fixes the exception specification
-
-  // std::vector<Region> regions;
-  // std::vector<Region> fissionable_regions;
-  // std::optional<Neutron> neutron; // can be constructed later
   std::vector<Region> regions{Region(-1, 1, 1, 1, 1, 0),
                               Region(1, 2, 1, 1, 1, 1)};
   Neutron neutron{0, regions, 0};
