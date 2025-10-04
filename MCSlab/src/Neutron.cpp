@@ -23,9 +23,9 @@ double Neutron::distanceToCollision() {
 
 double Neutron::distanceToEdge() {
   if (_mu > 0)
-    return _region->xMax() - _pos;
+    return (_region->xMax() - _pos) / _mu;
   else
-    return _pos - _region->xMin();
+    return (_pos - _region->xMin()) / (-_mu);
 }
 
 void Neutron::setRandomStartPosition(
