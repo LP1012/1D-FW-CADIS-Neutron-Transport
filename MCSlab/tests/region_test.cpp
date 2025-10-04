@@ -9,8 +9,6 @@
 
 class RegionTest : public testing::Test {
 protected:
-  // std::vector<Region> regions{Region(-1, 1, 1, 1, 1, 0),
-  //                             Region(1, 2, 1, 1, 1, 1)};
   Region region{-1.0, 1.0, 4, 3, 2, 4}; // set generic tester region
 };
 
