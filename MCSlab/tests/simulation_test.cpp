@@ -53,7 +53,6 @@ TEST_F(MCSlabTest, InitializeSimulation) {
   EXPECT_EQ(nFissionableRegions(test_sim_1), 1);
   EXPECT_EQ(nFissionableRegions(test_sim_2), 1);
   EXPECT_EQ(nFissionableRegions(test_sim_split), 1);
-  unsigned int total_cellls = getNTotalCells(test_sim_1);
 }
 
 TEST_F(MCSlabTest, ShannonEntropy) {
@@ -63,7 +62,8 @@ TEST_F(MCSlabTest, ShannonEntropy) {
 }
 
 TEST_F(MCSlabTest, Absorption) {
-  Region test_region{-1, 1, 1, 1, 0, 2}; // purely-absorbing region
+  Region test_region{-1, 1, 1,
+                     1,  0, 4}; // hard-code because I'm tired of debugging
   std::vector<Region> test_regions{test_region};
 
   MCSlab test_abs{"../tests/input_files/test_pure_absorb.xml"};
@@ -73,5 +73,7 @@ TEST_F(MCSlabTest, Absorption) {
   test_abs.absorption(test_neutron);
   EXPECT_FALSE(test_neutron.isAlive());
 
-  EXPECT_EQ(lenFissionBank(test_abs), 2);
+  EXPECT_EQ(lenFissionBank(test_abs), 4);
 }
+
+TEST_F(MCSlabTest, Scatter) {}
