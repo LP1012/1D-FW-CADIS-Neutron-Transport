@@ -7,6 +7,8 @@
 #include <vector>
 
 class MCSlab {
+  friend class MCSlabTest;
+
 public:
   MCSlab(const std::string input_file_name);
   /// method to run simulation

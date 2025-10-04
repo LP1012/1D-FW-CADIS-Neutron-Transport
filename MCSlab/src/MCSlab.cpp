@@ -143,7 +143,7 @@ void MCSlab::readInput() {
 
   // loop over regions
   auto *regionsElement = root->FirstChildElement("regions");
-  auto *region = root->FirstChildElement("region");
+  auto *region = regionsElement->FirstChildElement("region");
   while (region) {
     // auto id = getAttributeOrThrow<unsigned int>(region, "id");
     auto xmin = getAttributeOrThrow<double>(region, "xmin");
@@ -151,34 +151,31 @@ void MCSlab::readInput() {
     auto n_cells = getAttributeOrThrow<unsigned int>(region, "n_cells");
     auto Sigma_a = getAttributeOrThrow<double>(region, "Sigma_a");
     auto Sigma_s = getAttributeOrThrow<double>(region, "Sigma_s");
-    auto nuSigma_f = getAttributeOrThrow<double>(region, "Sigma_f");
+    auto nuSigma_f = getAttributeOrThrow<double>(region, "nuSigma_f");
 
     Region region_obj(xmin, xmax, n_cells, Sigma_a, Sigma_s,
-                      nuSigma_f);   // create region
+                      nuSigma_f); // create region
+
+    // add checks for overlap and void regions here
+    if (_regions.size() > 0) {
+      auto prev_region = _regions.back();
+
+      if (prev_region.xMax() < region_obj.xMin()) {
+        // add a void region between separated regions
+        Region void_region =
+            Region::voidRegion(prev_region.xMax(), region_obj.xMin(), 10);
+        void_region.setIndex(_regions.size()); // check this
+        _regions.push_back(void_region);
+      } else if (prev_region.xMax() < region_obj.xMin())
+        throw std::runtime_error("Error! Regions overlap."); // check if overlap
+      else if (prev_region.xMin() > region_obj.xMin())
+        throw std::runtime_error(
+            "Error! Regions are not sorted"); // check regions are sorted
+    }
+
     _regions.push_back(region_obj); // add region to list of regions
 
     region = region->NextSiblingElement("region"); // move to next
-  }
-
-  // add void regions, check if regions overlap
-  std::vector<Region> new_regions;
-  for (auto i = 0; i < _regions.size(); i++) {
-
-    new_regions.push_back(_regions[i]);           // add user-specified region
-    _regions[i].setIndex(new_regions.size() - 1); // set region index
-
-    if (_regions[i].xMax() < _regions[i + 1].xMin()) {
-      // create void region between user-specified regions
-      Region void_region =
-          Region::voidRegion(_regions[i].xMax(), _regions[i + 1].xMin(), 10);
-      void_region.setIndex(new_regions.size() + 1); // set void region index
-      new_regions.push_back(void_region); // add void region to list of regions
-
-    } else if (_regions[i].xMax() > _regions[i + 1].xMin()) {
-      throw std::runtime_error("Error! Regions overlap."); // check if overlap
-
-    } else if (_regions[i].xMin() > _regions[i + 1].xMin())
-      throw std::runtime_error("Error! Regions are not sorted");
   }
 
   // add cell bounds
