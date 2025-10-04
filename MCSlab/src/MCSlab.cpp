@@ -34,7 +34,7 @@ void MCSlab::k_eigenvalue() {
       Neutron neutron(0, _regions); // initialize neutron
 
       // adjust neutron start position based on randomness or fission bank
-      if (j < fissions_in_old_bank - 1)
+      if (fissions_in_old_bank > 0 && j < fissions_in_old_bank - 1)
         neutron.movePositionAndRegion(_old_fission_bank[j].pos(), _regions);
       else
         neutron.setRandomStartPosition(
@@ -95,6 +95,13 @@ void MCSlab::k_eigenvalue() {
          static_cast<double>(_n_particles); // calculate multiplication factor
     _old_fission_bank = _new_fission_bank;  // reassign fission bank
     _new_fission_bank.clear(); // clear new bank for next generation
+
+    // spit out results
+    if (i < _n_inactive - 1) {
+      printf("%.6f\n", _shannon_entropy);
+    } else {
+      printf("%.6f                %.6f\n", _shannon_entropy, _k);
+    }
   }
 }
 
