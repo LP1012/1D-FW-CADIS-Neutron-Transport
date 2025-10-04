@@ -16,6 +16,7 @@ MCSlab::MCSlab(const std::string input_file_name)
     : _input_file_name(input_file_name), _rng() {
   readInput();
   setMinMax();
+  fissionRegions();
 };
 
 void MCSlab::k_eigenvalue() {

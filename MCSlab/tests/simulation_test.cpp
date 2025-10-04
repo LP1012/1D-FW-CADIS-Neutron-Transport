@@ -19,6 +19,12 @@ protected:
   // define test-only getters
   unsigned int getNTotalCells(MCSlab sim) const { return sim._n_total_cells; }
   std::vector<Region> regions(MCSlab sim) const { return sim._regions; }
+  std::vector<Region> fissionRegions(MCSlab sim) const {
+    return sim._fissionable_regions;
+  }
+  unsigned int nFissionableRegions(MCSlab sim) const {
+    return sim._n_fissionable_regions;
+  }
 };
 
 TEST_F(MCSlabTest, InitializeSimulation) {
@@ -34,4 +40,8 @@ TEST_F(MCSlabTest, InitializeSimulation) {
   for (auto i = 0; i < test_sims.size(); i++) {
     EXPECT_EQ(regions(test_sims[i]).size(), i + 1);
   }
+
+  EXPECT_EQ(nFissionableRegions(test_sim_1), 1);
+  EXPECT_EQ(nFissionableRegions(test_sim_2), 1);
+  EXPECT_EQ(nFissionableRegions(test_sim_split), 1);
 }
