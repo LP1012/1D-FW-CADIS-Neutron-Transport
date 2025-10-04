@@ -6,7 +6,7 @@
 #include <optional>
 #include <random>
 
-Neutron::Neutron(double position, const std::vector<Region> &regions,
+Neutron::Neutron(double position, std::vector<Region> &regions,
                  std::optional<unsigned int> seed)
     : _rng(seed.has_value() ? UniformRNG(0, 1.0, seed.value())
                             : UniformRNG(0, 1.0)) {
@@ -54,25 +54,25 @@ void Neutron::randomIsoAngle() {
 };
 
 void Neutron::movePositionAndRegion(const double new_position,
-                                    const std::vector<Region> &regions) {
+                                    std::vector<Region> &regions) {
   _pos = new_position;
   setRegion(regions);
 }
 
-void Neutron::setRegion(const std::vector<Region> &regions) {
+void Neutron::setRegion(std::vector<Region> &regions) {
   _region = nullptr;
-  for (auto region : regions) {
+  for (auto &region : regions) {
     if (region.xMin() < _pos && _pos < region.xMax()) {
       _region = &region;
       break;
+    } else if (region.xMin() == _pos) {
+      if (_mu > 0)
+        _region = &region;
+    } else if (_pos == region.xMax()) {
+      if (_mu < 0)
+        _region = &region;
     }
   }
 }
 
 void Neutron::kill() { _is_alive = false; }
-
-void Neutron::setPositionOnBoundary(const double new_position,
-                                    Region &new_region) {
-  _pos = new_position;
-  _region = &new_region;
-}

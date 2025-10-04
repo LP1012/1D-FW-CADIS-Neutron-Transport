@@ -53,8 +53,8 @@ void MCSlab::k_eigenvalue() {
               while (_regions[new_index].SigmaA() < 1e-8)
                 new_index++; // skip over void regions
 
-              Region new_region = _regions[new_index];
-              neutron.setPositionOnBoundary(new_region.xMin(), new_region);
+              double new_position = _regions[new_index].xMin();
+              neutron.movePositionAndRegion(new_position, _regions);
             }
           } else {
             if (current_index == 0)
@@ -66,8 +66,8 @@ void MCSlab::k_eigenvalue() {
               while (_regions[new_index].SigmaA() < 1e-8)
                 new_index--; // skip over void regions
 
-              Region new_region = _regions[new_index];
-              neutron.setPositionOnBoundary(new_region.xMax(), new_region);
+              double new_position = _regions[new_index].xMax();
+              neutron.movePositionAndRegion(new_position, _regions);
             }
           }
 

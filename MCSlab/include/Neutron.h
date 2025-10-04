@@ -7,13 +7,15 @@
 #include <vector>
 
 class Neutron {
+  friend class NeutronTest;
+
 public:
-  Neutron(double position, const std::vector<Region> &regions,
+  Neutron(double position, std::vector<Region> &regions,
           std::optional<unsigned int> seed = std::nullopt);
 
   // move neutron to new position
   void movePositionAndRegion(const double new_position,
-                             const std::vector<Region> &regions);
+                             std::vector<Region> &regions);
 
   /// @brief Set start position of neutron randomly in fissionable regionss
   /// @param fissionable_regions
@@ -24,11 +26,6 @@ public:
 
   /// @brief Calculates distance to edge along current direction
   double distanceToEdge();
-
-  /// @brief Set position in region on boundary (region depends on direction)
-  /// @param new_position
-  /// @param new_region
-  void setPositionOnBoundary(const double new_position, Region &new_region);
 
   /// @brief Terminate particle
   void kill();
@@ -53,5 +50,5 @@ private:
 
   /// @brief Set region based on current location. Will not work on edge.
   /// @param regions
-  void setRegion(const std::vector<Region> &regions);
+  void setRegion(std::vector<Region> &regions);
 };
