@@ -8,9 +8,9 @@
 
 #include <iomanip> // delete later
 
-class SimTest : public testing::Test {
+class MCSlabTest : public testing::Test {
 protected:
-  std::vector<Region> regions{Region(-1, 1, 1, 1, 1, 0),
-                              Region(1, 2, 1, 1, 1, 1)};
-  Neutron neutron{0, regions, 0};
+  MCSlab test_sim{"../tests/input_files/test_2_region_split.xml"};
 };
+
+TEST_F(MCSlabTest, InitializeSimulation) {}
