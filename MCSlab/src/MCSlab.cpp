@@ -5,6 +5,8 @@
 #include "XMLUtils.h"
 #include "tinyxml2.h"
 
+#include <algorithm> // for std::sort
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -12,16 +14,22 @@
 
 MCSlab::MCSlab(const std::string input_file_name)
     : _input_file_name(input_file_name), _rng() {
+  _n_total_cells = 0;
+  _n_fissionable_regions = 0;
   readInput();
   setMinMax();
+  fissionRegions();
 };
 
 void MCSlab::k_eigenvalue() {
   // this is where the simulation will be run
-  for (auto i = 0; _n_generations; i++) {
+  for (auto i = 0; i < _n_generations; i++) {
+    // define bins
+    std::vector<unsigned long int> collision_bins(_n_total_cells, 0);
+
     // put something in to not count tallies for (i-1)<n_inactive
     unsigned int fissions_in_old_bank = _old_fission_bank.size();
-    for (auto j = 0; _n_particles; j++) {
+    for (auto j = 0; j < _n_particles; j++) {
       // generate neutrons from fission bank positions first
       Neutron neutron(0, _regions); // initialize neutron
 
@@ -53,8 +61,8 @@ void MCSlab::k_eigenvalue() {
               while (_regions[new_index].SigmaA() < 1e-8)
                 new_index++; // skip over void regions
 
-              Region new_region = _regions[new_index];
-              neutron.setPositionOnBoundary(new_region.xMin(), new_region);
+              double new_position = _regions[new_index].xMin();
+              neutron.movePositionAndRegion(new_position, _regions);
             }
           } else {
             if (current_index == 0)
@@ -66,17 +74,19 @@ void MCSlab::k_eigenvalue() {
               while (_regions[new_index].SigmaA() < 1e-8)
                 new_index--; // skip over void regions
 
-              Region new_region = _regions[new_index];
-              neutron.setPositionOnBoundary(new_region.xMax(), new_region);
+              double new_position = _regions[new_index].xMax();
+              neutron.movePositionAndRegion(new_position, _regions);
             }
           }
 
-          // if region is the edge now, kill if escape
         } else {
+          collision_bins[collisionIndex(neutron)] +=
+              1; // add one collision to bin
           MCSlab::collision(neutron);
         }
       }
     }
+    shannonEntropy(collision_bins);
     _k = static_cast<double>(_new_fission_bank.size()) /
          static_cast<double>(_n_particles); // calculate multiplication factor
     _old_fission_bank = _new_fission_bank;  // reassign fission bank
@@ -116,14 +126,6 @@ void MCSlab::collision(Neutron neutron) {
   }
 }
 
-// double MCSlab::MFP(const unsigned int id) {
-//   for (auto region : _regions) {
-//     if (region.id() == id)
-//       return region.mfp();
-//   }
-//   // add case for MFP in void
-// }
-
 void MCSlab::readInput() {
   tinyxml2::XMLDocument input_file;
 
@@ -137,33 +139,48 @@ void MCSlab::readInput() {
 
   // loop over regions
   auto *regionsElement = root->FirstChildElement("regions");
-  auto *region = root->FirstChildElement("region");
+  auto *region = regionsElement->FirstChildElement("region");
   while (region) {
     // auto id = getAttributeOrThrow<unsigned int>(region, "id");
-    auto xmin = getAttributeOrThrow<double>(region, "xmax");
-    auto xmax = getAttributeOrThrow<double>(region, "xmin");
+    auto xmin = getAttributeOrThrow<double>(region, "xmin");
+    auto xmax = getAttributeOrThrow<double>(region, "xmax");
     auto n_cells = getAttributeOrThrow<unsigned int>(region, "n_cells");
     auto Sigma_a = getAttributeOrThrow<double>(region, "Sigma_a");
     auto Sigma_s = getAttributeOrThrow<double>(region, "Sigma_s");
-    auto nuSigma_f = getAttributeOrThrow<double>(region, "Sigma_f");
+    auto nuSigma_f = getAttributeOrThrow<double>(region, "nuSigma_f");
 
     Region region_obj(xmin, xmax, n_cells, Sigma_a, Sigma_s,
-                      nuSigma_f);   // create region
+                      nuSigma_f); // create region
+
+    // add checks for overlap and void regions here
+    if (_regions.size() > 0) {
+      auto prev_region = _regions.back();
+
+      if (prev_region.xMax() < region_obj.xMin()) {
+        // add a void region between separated regions
+        Region void_region =
+            Region::voidRegion(prev_region.xMax(), region_obj.xMin(), 10);
+        void_region.setIndex(_regions.size()); // check this
+        _regions.push_back(void_region);
+      } else if (prev_region.xMax() < region_obj.xMin())
+        throw std::runtime_error("Error! Regions overlap."); // check if overlap
+      else if (prev_region.xMin() > region_obj.xMin())
+        throw std::runtime_error(
+            "Error! Regions are not sorted"); // check regions are sorted
+    }
+
     _regions.push_back(region_obj); // add region to list of regions
+
+    region = region->NextSiblingElement("region"); // move to next
   }
 
-  // add void regions, check if regions overlap
-  std::vector<Region> new_regions;
-  for (auto i = 1; i < _regions.size() - 1; i++) {
-    new_regions.push_back(_regions[i]);       // add user-specified region
-    _regions[i].setIndex(new_regions.size()); // set region index
-    if (_regions[i].xMax() < _regions[i + 1].xMin()) {
-      Region void_region =
-          Region::voidRegion(_regions[i].xMax(), _regions[i + 1].xMin(), 10);
-      void_region.setIndex(new_regions.size() + 1); // set void region index
-      new_regions.push_back(void_region); // add void region to list of regions
-    } else if (_regions[i].xMax() > _regions[i + 1].xMin()) {
-      throw std::runtime_error("Error! Regions overlap."); // check if overlap
+  // add cell bounds
+  for (auto region : _regions) {
+    _n_total_cells += region.nCells();
+    for (auto i = 0; i < region.cellBounds().size(); i++) {
+      // each region holds its own set of bounds, so we need an inner
+      // loop over each region's bounds
+      _all_cell_bounds.push_back(region.cellBounds()[i]);
     }
   }
 
@@ -199,4 +216,37 @@ void MCSlab::setMinMax() {
     if (region.xMax() > _domainMax)
       _domainMax = region.xMax();
   }
+}
+
+unsigned int MCSlab::collisionIndex(const Neutron &neutron) {
+  double collision_location = neutron.pos();
+  for (auto i = 1; i < _n_total_cells + 1; i++) {
+    if (collision_location < _all_cell_bounds[i])
+      return i - 1; // CHECK THIS LOGIC
+  }
+  throw std::runtime_error("Collision location not within domain of problem!");
+}
+
+double
+MCSlab::shannonEntropy(const std::vector<unsigned long int> &collision_bins) {
+  double shannon_entropy = 0; // initialize
+
+  // calculate total number of collisions
+  unsigned int n_total_collisions;
+  for (auto collisions : collision_bins)
+    n_total_collisions += collisions;
+
+  // normalize collision_bins
+  std::vector<double> normalized_col_bins(collision_bins.size(), 0);
+  for (auto i = 0; i < collision_bins.size(); i++)
+    normalized_col_bins[i] = static_cast<double>(collision_bins[i]) /
+                             static_cast<double>(n_total_collisions);
+
+  // calculate shannon entropy
+  for (auto collision_frac : normalized_col_bins) {
+    if (collision_frac > 0)
+      shannon_entropy -= collision_frac * std::log2(collision_frac);
+  }
+
+  return shannon_entropy;
 }

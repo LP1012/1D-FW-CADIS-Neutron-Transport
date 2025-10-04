@@ -3,6 +3,8 @@
 #include <vector>
 
 class Region {
+  friend class RegionTest;
+
 public:
   Region(const double xmin, const double xmax, const unsigned int n_cells,
          const double Sigma_a, const double Sigma_s, const double nu_Sigma_f);
@@ -20,8 +22,10 @@ public:
   double absorptionRatio() const { return _absorption_ratio; }
   double nPerAbsorption() const { return _n_per_abs; }
   unsigned int regionIndex() const { return _region_index; }
+  std::vector<double> cellBounds() const { return _cell_bounds; }
   std::vector<std::vector<double>> cellLocs() const { return _cell_locs; }
   std::vector<double> cellCenters() const { return _cell_centers; }
+  unsigned int nCells() const { return _n_cells; }
 
 private:
   // bounds of slab
@@ -42,8 +46,10 @@ private:
   double _n_per_abs;        // neutrons produced per absorptions
 
   // store locations of cells in mesh
-  std::vector<std::vector<double>> _cell_locs;
-  std::vector<double> _cell_centers;
+  std::vector<double> _cell_bounds; // holds vector of all bounds on the cells
+  std::vector<std::vector<double>>
+      _cell_locs; // holds vector of cell locations as (xmin,xmax) pairs
+  std::vector<double> _cell_centers; // holds cell center locations
 
   /// @brief Populates cell edge and center locations
   void populateCellLocs();

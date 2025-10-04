@@ -9,7 +9,7 @@ Region::Region(const double xmin, const double xmax, const unsigned int n_cells,
   // calculate total cross section and mean-free-path
   _Sigma_t = _Sigma_a + _Sigma_s;
   _absorption_ratio = _Sigma_a / _Sigma_t;
-  _n_per_abs = nu_Sigma_f / _Sigma_a;
+  _n_per_abs = _nu_Sigma_f / _Sigma_a;
 
   // populate cell locations
   Region::populateCellLocs();
@@ -41,5 +41,9 @@ void Region::populateCellLocs() {
     _cell_locs.push_back(cell_loc);               // add to cell locations
     _cell_centers.push_back((upper_bound + lower_bound) /
                             2.0); // add cell center location
+
+    _cell_bounds.push_back(lower_bound);
+    if (i == _n_cells - 1)
+      _cell_bounds.push_back(upper_bound);
   }
 };
