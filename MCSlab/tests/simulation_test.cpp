@@ -76,4 +76,16 @@ TEST_F(MCSlabTest, Absorption) {
   EXPECT_EQ(lenFissionBank(test_abs), 4);
 }
 
-TEST_F(MCSlabTest, Scatter) {}
+TEST_F(MCSlabTest, Scatter) {
+  Region test_region{-1, 1, 1,
+                     0,  1, 0}; // hard-code because I'm tired of debugging
+  std::vector<Region> test_regions{test_region};
+  MCSlab test_scatter{"../tests/input_files/test_pure_scatter.xml"};
+  Neutron test_neutron{0, test_regions};
+  double orig_mu = test_neutron.mu();
+
+  EXPECT_FALSE(test_scatter.testAbsorption(test_neutron));
+  test_scatter.scatter(test_neutron);
+  EXPECT_TRUE(test_neutron.isAlive());
+  EXPECT_FALSE(orig_mu == test_neutron.mu());
+}
