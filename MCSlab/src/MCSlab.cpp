@@ -84,9 +84,9 @@ void MCSlab::k_eigenvalue() {
           if (isAbsorbed) {
             collision_bins[collisionIndex(neutron)] +=
                 1; // add one collision to bin
-            MCSlab::absorption(neutron);
+            absorption(neutron);
           } else
-            MCSlab::scatter(neutron);
+            scatter(neutron);
         }
       }
     }
@@ -112,9 +112,10 @@ void MCSlab::absorption(Neutron &neutron) {
 
   (production_rn < neutron_region.nPerAbsorption() -
                        std::floor(neutron_region.nPerAbsorption()))
-      ? n_born = std::floor(neutron_region.nPerAbsorption())
-      : n_born = std::floor(neutron_region.nPerAbsorption()) +
-                 1; // determine number of neutrons born
+      ? n_born = std::ceil(neutron_region.nPerAbsorption())
+      : n_born = std::floor(
+            neutron_region
+                .nPerAbsorption()); // determine number of neutrons born
 
   for (auto i = 0; i < n_born; i++) {
     Neutron fission_neutron =

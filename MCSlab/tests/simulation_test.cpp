@@ -29,6 +29,10 @@ protected:
   unsigned int nFissionableRegions(const MCSlab &sim) const {
     return sim._n_fissionable_regions;
   }
+
+  unsigned int lenFissionBank(const MCSlab &sim) {
+    return sim._new_fission_bank.size();
+  }
 };
 
 TEST_F(MCSlabTest, InitializeSimulation) {
@@ -59,7 +63,7 @@ TEST_F(MCSlabTest, ShannonEntropy) {
 }
 
 TEST_F(MCSlabTest, Absorption) {
-  Region test_region{-1, 1, 1, 1, 0, 1}; // purely-absorbing region
+  Region test_region{-1, 1, 1, 1, 0, 2}; // purely-absorbing region
   std::vector<Region> test_regions{test_region};
 
   MCSlab test_abs{"../tests/input_files/test_pure_absorb.xml"};
@@ -68,4 +72,6 @@ TEST_F(MCSlabTest, Absorption) {
 
   test_abs.absorption(test_neutron);
   EXPECT_FALSE(test_neutron.isAlive());
+
+  EXPECT_EQ(lenFissionBank(test_abs), 2);
 }
