@@ -9,8 +9,15 @@
 #include <random>
 #include <vector>
 
-int main() {
-  MCSlab test_mcslab("test_1_region.xml");
-  std::cout << "n_inactive = " << test_mcslab.nInactive() << std::endl;
+int main(int argc, char *argv[]) {
+  if (argc == 1)
+    throw std::runtime_error(
+        "Program must have input file command line argument!");
+  else if (argc > 2)
+    throw std::runtime_error("Program only takes one argument!");
+
+  std::string input_filename = argv[1];
+  MCSlab simulation{input_filename};
+  simulation.k_eigenvalue();
   return 0;
 }
