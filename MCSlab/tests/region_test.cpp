@@ -30,6 +30,8 @@ TEST_F(RegionTest, CellLocations) {
       EXPECT_FLOAT_EQ(region.cellLocs()[i][j], expected_cell_locs[i][j]);
     }
   }
+
+  EXPECT_TRUE(region.cellBounds().size() == region.cellLocs().size() + 1);
 }
 
 TEST_F(RegionTest, MaterialProperties) {

@@ -26,8 +26,8 @@ target_link_libraries(MCSlab PRIVATE MCLib)
 enable_testing()
 
 # Tests
-add_executable(run_tests tests/tests.cpp tests/neutron_test.cpp
-                         tests/region_test.cpp tests/simulation_test.cpp)
+add_executable(run_tests tests/neutron_test.cpp tests/region_test.cpp
+                         tests/simulation_test.cpp)
 target_link_libraries(run_tests PRIVATE MCLib GTest::gtest_main)
 
 include(GoogleTest)

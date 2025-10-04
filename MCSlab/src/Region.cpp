@@ -41,5 +41,9 @@ void Region::populateCellLocs() {
     _cell_locs.push_back(cell_loc);               // add to cell locations
     _cell_centers.push_back((upper_bound + lower_bound) /
                             2.0); // add cell center location
+
+    _cell_bounds.push_back(lower_bound);
+    if (i == _n_cells - 1)
+      _cell_bounds.push_back(upper_bound);
   }
 };

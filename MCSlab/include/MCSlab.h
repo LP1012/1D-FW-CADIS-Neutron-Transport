@@ -30,6 +30,8 @@ protected:
   std::vector<Region> _regions;             // vector of regions
   std::vector<Region> _fissionable_regions; // vector of fissile regions
   unsigned int _n_fissionable_regions;      // number of fissionable regions
+  std::vector<double> _all_cell_bounds;     // all cell boundaries
+  unsigned int _n_total_cells;              // number of cells in all regions
 
   // hold  min and max of computation domain
   double _domainMin;
@@ -44,10 +46,14 @@ protected:
 
   double _k; // multiplication constant
 
+  std::vector<double> _shannon_entropy;
   std::vector<double> _scalar_flux; // flux at each point in mesh
 
   void readInput();
   void fissionRegions();
 
   void setMinMax();
+
+  unsigned int collisionIndex(const Neutron &neutron);
+  double shannonEntropy(const std::vector<unsigned long int> &collision_bins);
 };
