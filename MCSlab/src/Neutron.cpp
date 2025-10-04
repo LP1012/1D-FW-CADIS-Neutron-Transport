@@ -3,9 +3,13 @@
 #include "Region.h"
 #include <cmath>
 #include <memory>
+#include <optional>
 #include <random>
 
-Neutron::Neutron(double position, const std::vector<Region> &regions) : _rng() {
+Neutron::Neutron(double position, const std::vector<Region> &regions,
+                 std::optional<unsigned int> seed)
+    : _rng(seed.has_value() ? UniformRNG(0, 1.0, seed.value())
+                            : UniformRNG(0, 1.0)) {
   Neutron::randomIsoAngle();
   Neutron::movePositionAndRegion(position, regions);
   _is_alive = true;

@@ -1,8 +1,11 @@
 #include "Neutron.h"
 #include "Region.h"
 #include <gtest/gtest.h>
+#include <iostream> // delete later
 #include <optional>
 #include <vector>
+
+#include <iomanip> // delete later
 
 class NeutronTest : public testing::Test {
 protected:
@@ -14,7 +17,7 @@ protected:
     fissionable_regions.clear();
     fissionable_regions.emplace_back(regions[1]);
 
-    neutron.emplace(0, regions);
+    neutron.emplace(0, regions, 0); // set the seed to be 0 for testing
   }
   ~NeutronTest() noexcept override =
       default; // fixes the exception specification
@@ -27,6 +30,7 @@ protected:
 TEST_F(NeutronTest, InitialState) {
   EXPECT_TRUE(neutron->isAlive());
   EXPECT_NEAR(neutron->pos(), 0.0, 1e-12);
+  EXPECT_NEAR(neutron->mu(), 0.185689233033, 1e-12);
 }
 
 TEST_F(NeutronTest, SetRandomPositionInFuel) {
@@ -34,3 +38,5 @@ TEST_F(NeutronTest, SetRandomPositionInFuel) {
   EXPECT_TRUE(neutron->pos() < fissionable_regions[0].xMax());
   EXPECT_TRUE(neutron->pos() > fissionable_regions[0].xMin());
 }
+
+// TEST_F(NeutronTest, )

@@ -3,11 +3,13 @@
 #include "Point.h"
 #include "RNG.h"
 #include "Region.h"
+#include <optional>
 #include <vector>
 
 class Neutron {
 public:
-  Neutron(double position, const std::vector<Region> &regions);
+  Neutron(double position, const std::vector<Region> &regions,
+          std::optional<unsigned int> seed = std::nullopt);
 
   // move neutron to new position
   void movePositionAndRegion(const double new_position,
