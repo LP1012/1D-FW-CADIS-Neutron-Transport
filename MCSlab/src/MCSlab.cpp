@@ -138,9 +138,11 @@ void MCSlab::k_eigenvalue() {
 
     // spit out results
     if (i < _n_inactive) {
-      printf("|    %d     |    %.4e   |            |\n", i, _shannon_entropy);
+      printf("|    %d     |    %.4e   |            |\n", i + 1,
+             _shannon_entropy);
     } else {
-      printf("|    %d     |    %.4e   |  %.6f  |\n", i, _shannon_entropy, _k);
+      printf("|    %d     |    %.4e   |  %.6f  |\n", i + 1, _shannon_entropy,
+             _k);
     }
   }
   printf("-------------------------------------------\n\n");
