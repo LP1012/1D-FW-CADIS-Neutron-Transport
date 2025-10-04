@@ -3,6 +3,8 @@
 #include <vector>
 
 class Region {
+  friend class RegionTest;
+
 public:
   Region(const double xmin, const double xmax, const unsigned int n_cells,
          const double Sigma_a, const double Sigma_s, const double nu_Sigma_f);
