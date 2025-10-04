@@ -80,9 +80,13 @@ void MCSlab::k_eigenvalue() {
           }
 
         } else {
-          collision_bins[collisionIndex(neutron)] +=
-              1; // add one collision to bin
-          MCSlab::collision(neutron);
+          bool isAbsorbed = testAbsorption(neutron);
+          if (isAbsorbed) {
+            collision_bins[collisionIndex(neutron)] +=
+                1; // add one collision to bin
+            MCSlab::absorption(neutron);
+          } else
+            MCSlab::scatter(neutron);
         }
       }
     }
@@ -94,36 +98,39 @@ void MCSlab::k_eigenvalue() {
   }
 }
 
-void MCSlab::collision(Neutron neutron) {
-  // test if collision or absorption
+bool MCSlab::testAbsorption(const Neutron &neutron) {
   double rn = _rng.generateRN();
-  if (rn < neutron.region().absorptionRatio()) {
-    // sample number of fission
-    double production_rn = _rng.generateRN(); // generate random number
-    Region neutron_region = neutron.region(); // hold region absorption occurs
+  return (rn < neutron.region().absorptionRatio());
+}
 
-    unsigned int n_born; // initialize number of neutrons born
+void MCSlab::absorption(Neutron &neutron) {
+  // sample number of fission
+  double production_rn = _rng.generateRN(); // generate random number
+  Region neutron_region = neutron.region(); // hold region absorption occurs
 
-    (production_rn < neutron_region.nPerAbsorption() -
-                         std::floor(neutron_region.nPerAbsorption()))
-        ? n_born = std::floor(neutron_region.nPerAbsorption())
-        : n_born = std::floor(neutron_region.nPerAbsorption()) +
-                   1; // determine number of neutrons born
+  unsigned int n_born; // initialize number of neutrons born
 
-    for (auto i = 0; i < n_born; i++) {
-      Neutron fission_neutron =
-          Neutron(neutron.pos(),
-                  _regions); // create neutron at location with isotropic angle
-      _new_fission_bank.push_back(fission_neutron); // add to fission bank
-    }
+  (production_rn < neutron_region.nPerAbsorption() -
+                       std::floor(neutron_region.nPerAbsorption()))
+      ? n_born = std::floor(neutron_region.nPerAbsorption())
+      : n_born = std::floor(neutron_region.nPerAbsorption()) +
+                 1; // determine number of neutrons born
 
-    neutron.kill(); // kill current neutron
-  } else {
-    // this would be where we could calculate the energy lost in scatter.
-    // however, because the material properties are energy-indendent, we only
-    // need the new angle to proceed.
-    neutron.randomIsoAngle();
+  for (auto i = 0; i < n_born; i++) {
+    Neutron fission_neutron =
+        Neutron(neutron.pos(),
+                _regions); // create neutron at location with isotropic angle
+    _new_fission_bank.push_back(fission_neutron); // add to fission bank
   }
+
+  neutron.kill(); // kill current neutron
+}
+
+void MCSlab::scatter(Neutron &neutron) {
+  // this would be where we could calculate the energy lost in scatter.
+  // however, because the material properties are energy-indendent, we only
+  // need the new angle to proceed.
+  neutron.randomIsoAngle();
 }
 
 void MCSlab::readInput() {

@@ -14,7 +14,10 @@ public:
   /// method to run simulation
   void k_eigenvalue();
 
-  void collision(Neutron neutron);
+  bool testAbsorption(const Neutron &neutron);
+  void absorption(Neutron &neutron);
+  void scatter(Neutron &neutron);
+
   double shannonEntropy(const std::vector<unsigned long int> &collision_bins);
 
   // define getter functions

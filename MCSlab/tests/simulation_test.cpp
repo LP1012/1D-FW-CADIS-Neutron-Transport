@@ -22,6 +22,7 @@ protected:
     return sim._n_total_cells;
   }
   std::vector<Region> regions(const MCSlab &sim) const { return sim._regions; }
+
   std::vector<Region> fissionRegions(const MCSlab &sim) const {
     return sim._fissionable_regions;
   }
@@ -55,4 +56,16 @@ TEST_F(MCSlabTest, ShannonEntropy) {
   ASSERT_EQ(getNTotalCells(test_sim_1), 10);
   std::vector<unsigned long int> collision_bins(getNTotalCells(test_sim_1), 1);
   EXPECT_TRUE(test_sim_1.shannonEntropy(collision_bins) > 0);
+}
+
+TEST_F(MCSlabTest, Absorption) {
+  Region test_region{-1, 1, 1, 1, 0, 1}; // purely-absorbing region
+  std::vector<Region> test_regions{test_region};
+
+  MCSlab test_abs{"../tests/input_files/test_pure_absorb.xml"};
+  Neutron test_neutron{0, test_regions};
+  EXPECT_TRUE(test_abs.testAbsorption(test_neutron));
+
+  test_abs.absorption(test_neutron);
+  EXPECT_FALSE(test_neutron.isAlive());
 }
