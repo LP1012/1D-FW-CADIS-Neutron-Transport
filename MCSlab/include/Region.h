@@ -25,6 +25,7 @@ public:
   std::vector<double> cellBounds() const { return _cell_bounds; }
   std::vector<std::vector<double>> cellLocs() const { return _cell_locs; }
   std::vector<double> cellCenters() const { return _cell_centers; }
+  unsigned int nCells() const { return _n_cells; }
 
 private:
   // bounds of slab

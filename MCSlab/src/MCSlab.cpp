@@ -180,6 +180,7 @@ void MCSlab::readInput() {
 
   // add cell bounds
   for (auto region : _regions) {
+    _n_total_cells += region.nCells();
     for (auto i = 0; i < region.cellBounds().size(); i++) {
       // each region holds its own set of bounds, so we need an inner
       // loop over each region's bounds
