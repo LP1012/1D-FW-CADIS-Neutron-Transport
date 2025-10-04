@@ -25,7 +25,7 @@ void MCSlab::k_eigenvalue() {
   // this is where the simulation will be run
   for (auto i = 0; i < _n_generations; i++) {
     // define bins
-    std::vector<unsigned long int> collision_bins(_n_total_cells, 0);
+    std::vector<unsigned long int> source_bins(_n_total_cells, 0);
 
     // put something in to not count tallies for (i-1)<n_inactive
     unsigned int fissions_in_old_bank = _old_fission_bank.size();
@@ -82,7 +82,7 @@ void MCSlab::k_eigenvalue() {
         } else {
           bool isAbsorbed = testAbsorption(neutron);
           if (isAbsorbed) {
-            collision_bins[collisionIndex(neutron)] +=
+            source_bins[collisionIndex(neutron)] +=
                 1; // add one collision to bin
             absorption(neutron);
           } else
@@ -90,14 +90,14 @@ void MCSlab::k_eigenvalue() {
         }
       }
     }
-    shannonEntropy(collision_bins);
+    shannonEntropy(source_bins);
     _k = static_cast<double>(_new_fission_bank.size()) /
          static_cast<double>(_n_particles); // calculate multiplication factor
     _old_fission_bank = _new_fission_bank;  // reassign fission bank
     _new_fission_bank.clear(); // clear new bank for next generation
 
     // spit out results
-    if (i < _n_inactive - 1) {
+    if (i < _n_inactive) {
       printf("%.6f\n", _shannon_entropy);
     } else {
       printf("%.6f                %.6f\n", _shannon_entropy, _k);
