@@ -15,6 +15,7 @@ public:
   void k_eigenvalue();
 
   void collision(Neutron neutron);
+  double shannonEntropy(const std::vector<unsigned long int> &collision_bins);
 
   // define getter functions
   unsigned int nParticles() { return _n_particles; }
@@ -57,5 +58,4 @@ protected:
   void setMinMax();
 
   unsigned int collisionIndex(const Neutron &neutron);
-  double shannonEntropy(const std::vector<unsigned long int> &collision_bins);
 };

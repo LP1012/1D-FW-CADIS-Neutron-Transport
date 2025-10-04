@@ -14,6 +14,8 @@
 
 MCSlab::MCSlab(const std::string input_file_name)
     : _input_file_name(input_file_name), _rng() {
+  _n_total_cells = 0;
+  _n_fissionable_regions = 0;
   readInput();
   setMinMax();
   fissionRegions();
@@ -84,6 +86,7 @@ void MCSlab::k_eigenvalue() {
         }
       }
     }
+    shannonEntropy(collision_bins);
     _k = static_cast<double>(_new_fission_bank.size()) /
          static_cast<double>(_n_particles); // calculate multiplication factor
     _old_fission_bank = _new_fission_bank;  // reassign fission bank
@@ -240,8 +243,10 @@ MCSlab::shannonEntropy(const std::vector<unsigned long int> &collision_bins) {
                              static_cast<double>(n_total_collisions);
 
   // calculate shannon entropy
-  for (auto collision_frac : normalized_col_bins)
-    shannon_entropy -= collision_frac * std::log2(collision_frac);
+  for (auto collision_frac : normalized_col_bins) {
+    if (collision_frac > 0)
+      shannon_entropy -= collision_frac * std::log2(collision_frac);
+  }
 
   return shannon_entropy;
 }
