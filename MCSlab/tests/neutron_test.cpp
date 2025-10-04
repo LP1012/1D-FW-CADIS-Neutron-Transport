@@ -55,6 +55,23 @@ TEST_F(NeutronTest, DistanceToCollision) {
 }
 
 TEST_F(NeutronTest, MovePositionAndRegion) {
+
+  // neutron inside new region
   neutron.movePositionAndRegion(1.5, regions);
   EXPECT_TRUE(neutron.region().regionIndex() == regions[1].regionIndex());
+
+  // neutron on boundary (forward)
+  setMu(1);
+  neutron.movePositionAndRegion(1, regions);
+  EXPECT_TRUE(neutron.region().regionIndex() == regions[1].regionIndex());
+
+  // neutron on boundary (backward)
+  setMu(-1);
+  neutron.movePositionAndRegion(1, regions);
+  EXPECT_TRUE(neutron.region().regionIndex() == regions[0].regionIndex());
+}
+
+TEST_F(NeutronTest, Kill) {
+  neutron.kill();
+  EXPECT_FALSE(neutron.isAlive());
 }
