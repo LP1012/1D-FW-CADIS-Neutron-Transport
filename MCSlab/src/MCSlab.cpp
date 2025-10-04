@@ -90,7 +90,7 @@ void MCSlab::k_eigenvalue() {
         }
       }
     }
-    shannonEntropy(source_bins);
+    _shannon_entropy = shannonEntropy(source_bins);
     _k = static_cast<double>(_new_fission_bank.size()) /
          static_cast<double>(_n_particles); // calculate multiplication factor
     _old_fission_bank = _new_fission_bank;  // reassign fission bank

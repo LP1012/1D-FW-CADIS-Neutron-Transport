@@ -52,7 +52,7 @@ protected:
 
   double _k; // multiplication constant
 
-  std::vector<double> _shannon_entropy;
+  double _shannon_entropy;
   std::vector<double> _scalar_flux; // flux at each point in mesh
 
   void readInput();
