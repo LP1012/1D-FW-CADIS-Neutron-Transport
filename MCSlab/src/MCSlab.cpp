@@ -23,6 +23,39 @@ MCSlab::MCSlab(const std::string input_file_name)
 
 void MCSlab::k_eigenvalue() {
   // this is where the simulation will be run
+
+  // Create code head
+  printf(
+      "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
+      "\n");
+  printf(
+      "* _____ ______   ________  ________  ___       ________  ________     "
+      "*\n"
+      "*|\\   _ \\  _   \\|\\   ____\\|\\   ____\\|\\  \\     |\\   __  \\|\\  "
+      " "
+      "__  \\    *\n"
+      "*\\ \\  \\\\\\__\\ \\  \\ \\  \\___|\\ \\  \\___|\\ \\  \\    \\ \\  "
+      "\\|\\  \\ \\  \\|\\ /_   *\n*"
+      " \\ \\  \\\\|__| \\  \\ \\  \\    \\ \\_____  \\ \\  \\    \\ \\   __  "
+      "\\ \\   __  \\  *\n*"
+      "  \\ \\  \\    \\ \\  \\ \\  \\____\\|____|\\  \\ \\  \\____\\ \\  \\ "
+      "\\  \\ \\  \\|\\  \\ *\n*"
+      "   \\ \\__\\    \\ \\__\\ \\_______\\____\\_\\  \\ \\_______\\ \\__\\ "
+      "\\__\\ \\_______\\*\n*"
+      "    \\|__|     "
+      "\\|__|\\|_______|\\_________\\|_______|\\|__|\\|__|\\|_______|*\n*"
+      "                            \\|_________|                             "
+      "*\n*"
+      "                                                                     "
+      "*\n");
+  printf(
+      "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
+      "\n");
+
+  printf("-------------------------------------------\n");
+  printf("|Generation| Shannon Entropy |    keff    |\n");
+  printf("-------------------------------------------\n");
+
   for (auto i = 0; i < _n_generations; i++) {
     // define bins
     std::vector<unsigned long int> source_bins(_n_total_cells, 0);
@@ -98,11 +131,13 @@ void MCSlab::k_eigenvalue() {
 
     // spit out results
     if (i < _n_inactive) {
-      printf("%.6f\n", _shannon_entropy);
+      printf("|    %d     |    %.4e   |            |\n", i, _shannon_entropy);
     } else {
-      printf("%.6f                %.6f\n", _shannon_entropy, _k);
+      printf("|    %d     |    %.4e   |  %.6f  |\n", i, _shannon_entropy, _k);
     }
   }
+  printf("-------------------------------------------\n\n");
+  printf("Simulation complete. :-)\n\n");
 }
 
 bool MCSlab::testAbsorption(const Neutron &neutron) {
