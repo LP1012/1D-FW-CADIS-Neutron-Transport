@@ -123,14 +123,6 @@ void MCSlab::collision(Neutron neutron) {
   }
 }
 
-// double MCSlab::MFP(const unsigned int id) {
-//   for (auto region : _regions) {
-//     if (region.id() == id)
-//       return region.mfp();
-//   }
-//   // add case for MFP in void
-// }
-
 void MCSlab::readInput() {
   tinyxml2::XMLDocument input_file;
 
