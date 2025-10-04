@@ -52,6 +52,13 @@ void MCSlab::k_eigenvalue() {
       "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
       "\n");
 
+  printf("\nSimulation Specification:\n");
+  printf("    Number of Regions:        %lu\n", _regions.size());
+  printf("    Particles per Generation: %d\n", _n_particles);
+  printf("    Number of Generations:    %d\n", _n_generations);
+  printf("        Inactive Cycles:      %d\n", _n_inactive);
+  printf("        Active Cycles:        %d\n\n", _n_generations - _n_inactive);
+
   printf("-------------------------------------------\n");
   printf("|Generation| Shannon Entropy |    keff    |\n");
   printf("-------------------------------------------\n");
