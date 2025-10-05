@@ -133,7 +133,7 @@ void MCSlab::k_eigenvalue() {
         }
       }
     }
-    shannonEntropy(source_bins);
+    _shannon_entropy = shannonEntropy(source_bins);
 
     // need to calculate both generational k and simulation k
     calculateK();
@@ -293,8 +293,8 @@ unsigned int MCSlab::collisionIndex(const Neutron &neutron) {
   throw std::runtime_error("Collision location not within domain of problem!");
 }
 
-void MCSlab::shannonEntropy(
-    const std::vector<unsigned long int> &collision_bins) {
+double
+MCSlab::shannonEntropy(const std::vector<unsigned long int> &collision_bins) {
   double shannon_entropy = 0; // initialize
 
   // calculate total number of collisions
@@ -314,7 +314,7 @@ void MCSlab::shannonEntropy(
       shannon_entropy -= collision_frac * std::log2(collision_frac);
   }
 
-  _shannon_entropy = shannon_entropy;
+  return shannon_entropy;
 }
 
 void MCSlab::calculateK() {

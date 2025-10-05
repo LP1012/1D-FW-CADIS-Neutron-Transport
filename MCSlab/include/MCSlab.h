@@ -18,7 +18,7 @@ public:
   void absorption(Neutron &neutron);
   void scatter(Neutron &neutron);
 
-  void shannonEntropy(const std::vector<unsigned long int> &collision_bins);
+  double shannonEntropy(const std::vector<unsigned long int> &collision_bins);
 
   // define getter functions
   unsigned int nParticles() { return _n_particles; }
