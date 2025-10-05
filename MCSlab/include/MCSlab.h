@@ -18,7 +18,7 @@ public:
   void absorption(Neutron &neutron);
   void scatter(Neutron &neutron);
 
-  double shannonEntropy(const std::vector<unsigned long int> &collision_bins);
+  void shannonEntropy(const std::vector<unsigned long int> &collision_bins);
 
   // define getter functions
   unsigned int nParticles() { return _n_particles; }
@@ -45,6 +45,9 @@ protected:
 
   // initialize RNG
   UniformRNG _rng;
+
+  unsigned int
+      _n_neutrons_born; // the number of fission neutrons born in generation
 
   // banks of source sites
   std::vector<Neutron> _old_fission_bank;

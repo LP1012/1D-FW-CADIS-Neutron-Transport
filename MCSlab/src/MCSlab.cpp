@@ -69,6 +69,9 @@ void MCSlab::k_eigenvalue() {
 
     // put something in to not count tallies for (i-1)<n_inactive
     unsigned int fissions_in_old_bank = _old_fission_bank.size();
+
+    _n_neutrons_born = 0; // initialize to 0
+
     for (auto j = 0; j < _n_particles; j++) {
       // generate neutrons from fission bank positions first
       Neutron neutron(0, _regions); // initialize neutron
@@ -164,12 +167,13 @@ void MCSlab::absorption(Neutron &neutron) {
 
   unsigned int n_born; // initialize number of neutrons born
 
-  (production_rn < neutron_region.nPerAbsorption() -
-                       std::floor(neutron_region.nPerAbsorption()))
-      ? n_born = std::ceil(neutron_region.nPerAbsorption())
-      : n_born = std::floor(
-            neutron_region
-                .nPerAbsorption()); // determine number of neutrons born
+  if (production_rn < neutron_region.nPerAbsorption() -
+                          std::floor(neutron_region.nPerAbsorption()))
+    n_born = std::ceil(neutron_region.nPerAbsorption());
+  else
+    n_born = std::floor(neutron_region.nPerAbsorption());
+
+  _n_neutrons_born += n_born;
 
   for (auto i = 0; i < n_born; i++) {
     Neutron fission_neutron =
@@ -314,7 +318,7 @@ void MCSlab::shannonEntropy(
 }
 
 void MCSlab::calculateK() {
-  _k_gen = static_cast<double>(_new_fission_bank.size()) /
+  _k_gen = static_cast<double>(_n_neutrons_born) /
            static_cast<double>(_n_particles); // calculate multiplication factor
   _k_gen_vec.push_back(_k_gen);               // add value to running list
 
