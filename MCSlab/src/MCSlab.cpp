@@ -9,6 +9,7 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <vector>
@@ -64,8 +65,9 @@ void MCSlab::k_eigenvalue() {
   printf("|Generation| Shannon Entropy |    keff    |  std_dev   |\n");
   printf("--------------------------------------------------------\n");
 
+  std::vector<double> flux_bins(_n_total_cells, 0);
+
   for (auto i = 0; i < _n_generations; i++) {
-    // define bins
     std::vector<unsigned long int> source_bins(_n_total_cells, 0);
 
     // put something in to not count tallies for (i-1)<n_inactive
@@ -96,6 +98,9 @@ void MCSlab::k_eigenvalue() {
           // neutron has reached edge of region
           unsigned int current_index = neutron.region().regionIndex();
           if (neutron.mu() > 0) {
+            if (i == _n_generations - 1)
+              updatePathLengths(flux_bins, neutron.pos(),
+                                _regions[current_index].xMax(), neutron.mu());
             if (current_index == _regions.size() - 1)
               // neutron escapes on right side
               neutron.kill();
@@ -109,6 +114,9 @@ void MCSlab::k_eigenvalue() {
               neutron.movePositionAndRegion(new_position, _regions);
             }
           } else {
+            if (i == _n_generations - 1)
+              updatePathLengths(flux_bins, neutron.pos(),
+                                _regions[current_index].xMin(), neutron.mu());
             if (current_index == 0)
               // neutron escapes on left side
               neutron.kill();
@@ -124,10 +132,19 @@ void MCSlab::k_eigenvalue() {
           }
 
         } else {
+          // calculate where collision occurred
+          double collision_location =
+              neutron.pos() + distanceToCollision * neutron.mu();
+
+          // update pathlength (regardless of scatter or absorption)
+          if (i == _n_generations - 1)
+            updatePathLengths(flux_bins, neutron.pos(), collision_location,
+                              neutron.mu());
+
           bool isAbsorbed = testAbsorption(neutron);
           if (isAbsorbed) {
-            source_bins[collisionIndex(neutron)] +=
-                1; // add one collision to bin
+            // add one collision to bin
+            source_bins[collisionIndex(neutron)] += 1;
             absorption(neutron);
           } else
             scatter(neutron);
@@ -163,8 +180,19 @@ void MCSlab::k_eigenvalue() {
              _shannon_entropy, _k_eff, _k_std);
     }
   }
+
   printf("-------------------------------------------\n\n");
+
+  // normalize path lengths by the number of particles and the cell width
+  for (auto i = 0; i < flux_bins.size(); i++)
+    flux_bins[i] /= (static_cast<double>(_n_particles) * _cell_widths[i]);
+
+  printf("Exporting flux...");
+  exportFlux(flux_bins);
+  printf("Done\n\n");
+
   printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
+
   printf("Simulation complete. :-)\n\n");
 }
 
@@ -253,7 +281,7 @@ void MCSlab::readInput() {
     region = region->NextSiblingElement("region"); // move to next
   }
 
-  // add cell bounds
+  // add cell bounds and widths
   for (auto region : _regions) {
     _n_total_cells += region.nCells();
     for (auto i = 0; i < region.cellBounds().size(); i++) {
@@ -261,6 +289,11 @@ void MCSlab::readInput() {
       // loop over each region's bounds
       _all_cell_bounds.push_back(region.cellBounds()[i]);
     }
+    for (auto i = 0; i < region.cellLocs().size(); i++)
+      _cell_widths.push_back(region.cellLocs()[i][1] - region.cellLocs()[i][0]);
+
+    for (auto center : region.cellCenters())
+      _all_cell_centers.push_back(center);
   }
 
   // load settings
@@ -351,4 +384,57 @@ void MCSlab::calculateK() {
       std::sqrt(sum_sqrd_error /
                 static_cast<double>(_k_gen_vec.size() -
                                     1)); // calcuate SAMPLE standard deviation
+}
+
+void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
+                               const double x_start, const double x_end,
+                               const double mu) {
+  assert((x_end - x_start) * mu >
+         0); // make sure we are going the right direction
+
+  // calculation always goes from left to right
+  double mu_abs = std::abs(mu); // angle will be flipped positive if necessary
+  double x_left = x_start;
+  double x_right = x_end;
+  if (x_start > x_end) {
+    // swap left and right if we are flipping
+    x_left = x_end;
+    x_right = x_start;
+  }
+
+  for (auto i = 0; i < _n_total_cells; i++) {
+    if (x_left > _all_cell_bounds[i] && x_left < _all_cell_bounds[i + 1] &&
+        x_right > _all_cell_bounds[i + 1]) {
+      // left bound
+      path_len_cells[i] += (_all_cell_bounds[i + 1] - x_left) / mu_abs;
+    } else if (x_left < _all_cell_bounds[i] &&
+               x_right > _all_cell_bounds[i + 1]) {
+      // cross internal cells
+      path_len_cells[i] +=
+          (_all_cell_bounds[i + 1] - _all_cell_bounds[i]) / mu_abs;
+    } else if (x_left < _all_cell_bounds[i] &&
+               x_right < _all_cell_bounds[i + 1] &&
+               x_right > _all_cell_bounds[i]) {
+      // right bound
+      path_len_cells[i] += (x_right - _all_cell_bounds[i]) / mu_abs;
+    } else if (x_left >= _all_cell_bounds[i] &&
+               x_right <= _all_cell_bounds[i + 1]) {
+      // strictly within one cell
+      path_len_cells[i] += (x_right - x_left) / mu_abs;
+    }
+  }
+}
+
+void MCSlab::exportFlux(const std::vector<double> &flux) {
+  std::fstream fout;
+
+  std::string outfile_name = _input_file_name + "_out.csv";
+  fout.open(outfile_name, std::ios::out | std::ios::trunc);
+
+  for (auto flux_val : flux)
+    fout << flux_val << ",";
+  fout << "\n";
+
+  for (auto center : _all_cell_centers)
+    fout << center << ",";
 }

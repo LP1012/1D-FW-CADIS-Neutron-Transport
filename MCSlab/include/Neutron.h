@@ -17,6 +17,8 @@ public:
   void movePositionAndRegion(const double new_position,
                              std::vector<Region> &regions);
 
+  void movePositionWithinRegion(const double new_position);
+
   /// @brief Set start position of neutron randomly in fissionable regionss
   /// @param fissionable_regions
   void setRandomStartPosition(const std::vector<Region> &fissionable_regions);

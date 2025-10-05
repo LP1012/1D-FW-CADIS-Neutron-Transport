@@ -59,6 +59,10 @@ void Neutron::movePositionAndRegion(const double new_position,
   setRegion(regions);
 }
 
+void Neutron::movePositionWithinRegion(const double new_position) {
+  _pos = new_position;
+}
+
 void Neutron::setRegion(std::vector<Region> &regions) {
   _region = nullptr;
   for (auto &region : regions) {
