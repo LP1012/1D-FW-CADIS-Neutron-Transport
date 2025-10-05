@@ -429,7 +429,7 @@ void MCSlab::exportFlux(const std::vector<double> &flux) {
   std::fstream fout;
 
   std::string outfile_name = _input_file_name + "_out.csv";
-  fout.open(outfile_name, std::ios::out | std::ios::app);
+  fout.open(outfile_name, std::ios::out | std::ios::trunc);
 
   for (auto flux_val : flux)
     fout << flux_val << ",";
