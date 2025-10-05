@@ -164,6 +164,7 @@ void MCSlab::k_eigenvalue() {
     }
   }
   printf("-------------------------------------------\n\n");
+  printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
   printf("Simulation complete. :-)\n\n");
 }
 
