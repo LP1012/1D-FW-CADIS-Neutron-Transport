@@ -4,6 +4,7 @@
 #include "Region.h"
 #include "XMLUtils.h"
 #include "tinyxml2.h"
+#include "utils.h"
 
 #include <algorithm> // for std::sort
 #include <array>
@@ -411,13 +412,26 @@ void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
 void MCSlab::exportFlux(const std::vector<double> &flux) {
   std::fstream fout;
 
-  std::string outfile_name = _input_file_name + "_out.csv";
+  std::string outfile_name = _input_file_name;
+  removeSuffix(outfile_name, ".xml");
+  outfile_name += "_out.csv";
+  // trim output filename
+
   fout.open(outfile_name, std::ios::out | std::ios::trunc);
 
+  // explort flux values
   for (auto flux_val : flux)
     fout << flux_val << ",";
   fout << "\n";
 
+  // export cell centeres
   for (auto center : _all_cell_centers)
     fout << center << ",";
+  fout << "\n";
+
+  // export region bounds
+  for (auto region : _regions) {
+    fout << region.xMin() << ",";
+  }
+  fout << _regions.back().xMax();
 }
