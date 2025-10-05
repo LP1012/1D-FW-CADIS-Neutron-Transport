@@ -382,8 +382,10 @@ void MCSlab::calculateK() {
   }
   _k_std =
       std::sqrt(sum_sqrd_error /
-                static_cast<double>(_k_gen_vec.size() -
-                                    1)); // calcuate SAMPLE standard deviation
+                static_cast<double>(
+                    _k_gen_vec.size() *
+                    (_k_gen_vec.size() -
+                     1))); // calcuate SAMPLE standard deviation of the mean
 }
 
 void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
@@ -394,34 +396,15 @@ void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
 
   // calculation always goes from left to right
   double mu_abs = std::abs(mu); // angle will be flipped positive if necessary
-  double x_left = x_start;
-  double x_right = x_end;
-  if (x_start > x_end) {
-    // swap left and right if we are flipping
-    x_left = x_end;
-    x_right = x_start;
-  }
+  double x_left = std::min(x_start, x_end);
+  double x_right = std::max(x_start, x_end);
+  const double eps = 1e-12;
 
-  for (auto i = 0; i < _n_total_cells; i++) {
-    if (x_left > _all_cell_bounds[i] && x_left < _all_cell_bounds[i + 1] &&
-        x_right > _all_cell_bounds[i + 1]) {
-      // left bound
-      path_len_cells[i] += (_all_cell_bounds[i + 1] - x_left) / mu_abs;
-    } else if (x_left < _all_cell_bounds[i] &&
-               x_right > _all_cell_bounds[i + 1]) {
-      // cross internal cells
-      path_len_cells[i] +=
-          (_all_cell_bounds[i + 1] - _all_cell_bounds[i]) / mu_abs;
-    } else if (x_left < _all_cell_bounds[i] &&
-               x_right < _all_cell_bounds[i + 1] &&
-               x_right > _all_cell_bounds[i]) {
-      // right bound
-      path_len_cells[i] += (x_right - _all_cell_bounds[i]) / mu_abs;
-    } else if (x_left >= _all_cell_bounds[i] &&
-               x_right <= _all_cell_bounds[i + 1]) {
-      // strictly within one cell
-      path_len_cells[i] += (x_right - x_left) / mu_abs;
-    }
+  for (std::size_t i = 0; i < _n_total_cells; ++i) {
+    double overlap_left = std::max(x_left, _all_cell_bounds[i]);
+    double overlap_right = std::min(x_right, _all_cell_bounds[i + 1]);
+    if (overlap_right - overlap_left > eps)
+      path_len_cells[i] += (overlap_right - overlap_left) / mu_abs;
   }
 }
 
