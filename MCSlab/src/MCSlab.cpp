@@ -59,9 +59,9 @@ void MCSlab::k_eigenvalue() {
   printf("        Inactive Cycles:      %d\n", _n_inactive);
   printf("        Active Cycles:        %d\n\n", _n_generations - _n_inactive);
 
-  printf("-------------------------------------------\n");
-  printf("|Generation| Shannon Entropy |    keff    |\n");
-  printf("-------------------------------------------\n");
+  printf("--------------------------------------------------------\n");
+  printf("|Generation| Shannon Entropy |    keff    |  std_dev   |\n");
+  printf("--------------------------------------------------------\n");
 
   for (auto i = 0; i < _n_generations; i++) {
     // define bins
@@ -136,19 +136,25 @@ void MCSlab::k_eigenvalue() {
     _shannon_entropy = shannonEntropy(source_bins);
 
     // need to calculate both generational k and simulation k
-    calculateK();
+    if (i > _n_inactive - 1)
+      calculateK();
 
     // updating here is incorrect--need to add on new values and drop old ones
     _old_fission_bank = _new_fission_bank; // reassign fission bank
     _new_fission_bank.clear();             // clear new bank for next generation
 
     // spit out results
-    if (i < _n_inactive) {
-      printf("|    %d     |    %.4e   |            |\n", i + 1,
+    if (i < _n_inactive - 1) {
+      // k-eff not calculated for inactive cycles
+      printf("|    %d     |    %.4e   |            |            |\n", i + 1,
              _shannon_entropy);
-    } else {
-      printf("|    %d     |    %.4e   |  %.6f  |\n", i + 1, _shannon_entropy,
-             _k_eff);
+    } else if (i == _n_inactive - 1 || i == _n_inactive)
+      printf("|    %d     |    %.4e   |  %.6f  |            |\n", i + 1,
+             _shannon_entropy, _k_eff);
+    else {
+      // only print std-dev after 3 approximations have been made
+      printf("|    %d     |    %.4e   |  %.6f  |  %.6f  |\n", i + 1,
+             _shannon_entropy, _k_eff, _k_std);
     }
   }
   printf("-------------------------------------------\n\n");
@@ -320,7 +326,8 @@ MCSlab::shannonEntropy(const std::vector<unsigned long int> &collision_bins) {
 void MCSlab::calculateK() {
   _k_gen = static_cast<double>(_n_neutrons_born) /
            static_cast<double>(_n_particles); // calculate multiplication factor
-  _k_gen_vec.push_back(_k_gen);               // add value to running list
+
+  _k_gen_vec.push_back(_k_gen); // add value to running list
 
   double running_sum = 0;
   for (auto k : _k_gen_vec)

@@ -3,5 +3,5 @@
   <regions>
     <region xmin="-1" xmax="1" n_cells="10" Sigma_a="1" Sigma_s="2" nuSigma_f="2.4"/>
   </regions>
-  <settings n_particles="10000" n_generations="100" n_inactive="25"/>
+  <settings n_particles="1000" n_generations="100" n_inactive="25"/>
 </simulation>
