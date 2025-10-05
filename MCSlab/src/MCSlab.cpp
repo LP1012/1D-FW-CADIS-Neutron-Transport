@@ -97,6 +97,8 @@ void MCSlab::k_eigenvalue() {
           // neutron has reached edge of region
           unsigned int current_index = neutron.region().regionIndex();
           if (neutron.mu() > 0) {
+            updatePathLengths(flux_bins, neutron.pos(),
+                              _regions[current_index].xMax(), neutron.mu());
             if (current_index == _regions.size() - 1)
               // neutron escapes on right side
               neutron.kill();
@@ -110,6 +112,8 @@ void MCSlab::k_eigenvalue() {
               neutron.movePositionAndRegion(new_position, _regions);
             }
           } else {
+            updatePathLengths(flux_bins, neutron.pos(),
+                              _regions[current_index].xMin(), neutron.mu());
             if (current_index == 0)
               // neutron escapes on left side
               neutron.kill();
@@ -125,10 +129,18 @@ void MCSlab::k_eigenvalue() {
           }
 
         } else {
+          // calculate where collision occurred
+          double collision_location =
+              neutron.pos() + distanceToCollision * neutron.mu();
+
+          // update pathlength (regardless of scatter or absorption)
+          updatePathLengths(flux_bins, neutron.pos(), collision_location,
+                            neutron.mu());
+
           bool isAbsorbed = testAbsorption(neutron);
           if (isAbsorbed) {
-            source_bins[collisionIndex(neutron)] +=
-                1; // add one collision to bin
+            // add one collision to bin
+            source_bins[collisionIndex(neutron)] += 1;
             absorption(neutron);
           } else
             scatter(neutron);
@@ -370,13 +382,18 @@ void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
     x_right = x_start;
   }
 
-  // finish filling this in!!!
   for (auto i = 0; i < _n_total_cells; i++) {
     if (x_left > _all_cell_bounds[i] && x_left < _all_cell_bounds[i + 1]) {
+      // left bound
+      path_len_cells[i] += (_all_cell_bounds[i + 1] - x_left) / mu;
     } else if (x_left < _all_cell_bounds[i] &&
                x_right > _all_cell_bounds[i + 1]) {
+      path_len_cells[i] += (_all_cell_bounds[i + 1] - _all_cell_bounds[i]) / mu;
+      // inside
     } else if (x_left < _all_cell_bounds[i] &&
                x_right < _all_cell_bounds[i + 1]) {
+      // right bound
+      path_len_cells[i] += (x_right - _all_cell_bounds[i]) / mu;
     }
   }
 }
