@@ -64,10 +64,10 @@ void MCSlab::k_eigenvalue() {
   printf("|Generation| Shannon Entropy |    keff    |  std_dev   |\n");
   printf("--------------------------------------------------------\n");
 
+  std::vector<double> flux_bins(_n_total_cells, 0);
+
   for (auto i = 0; i < _n_generations; i++) {
-    // define bins
     std::vector<unsigned long int> source_bins(_n_total_cells, 0);
-    std::vector<double> flux_bins(_n_total_cells, 0);
 
     // put something in to not count tallies for (i-1)<n_inactive
     unsigned int fissions_in_old_bank = _old_fission_bank.size();
@@ -97,8 +97,9 @@ void MCSlab::k_eigenvalue() {
           // neutron has reached edge of region
           unsigned int current_index = neutron.region().regionIndex();
           if (neutron.mu() > 0) {
-            updatePathLengths(flux_bins, neutron.pos(),
-                              _regions[current_index].xMax(), neutron.mu());
+            if (i == _n_generations - 1)
+              updatePathLengths(flux_bins, neutron.pos(),
+                                _regions[current_index].xMax(), neutron.mu());
             if (current_index == _regions.size() - 1)
               // neutron escapes on right side
               neutron.kill();
@@ -112,8 +113,9 @@ void MCSlab::k_eigenvalue() {
               neutron.movePositionAndRegion(new_position, _regions);
             }
           } else {
-            updatePathLengths(flux_bins, neutron.pos(),
-                              _regions[current_index].xMin(), neutron.mu());
+            if (i == _n_generations - 1)
+              updatePathLengths(flux_bins, neutron.pos(),
+                                _regions[current_index].xMin(), neutron.mu());
             if (current_index == 0)
               // neutron escapes on left side
               neutron.kill();
@@ -134,8 +136,9 @@ void MCSlab::k_eigenvalue() {
               neutron.pos() + distanceToCollision * neutron.mu();
 
           // update pathlength (regardless of scatter or absorption)
-          updatePathLengths(flux_bins, neutron.pos(), collision_location,
-                            neutron.mu());
+          if (i == _n_generations - 1)
+            updatePathLengths(flux_bins, neutron.pos(), collision_location,
+                              neutron.mu());
 
           bool isAbsorbed = testAbsorption(neutron);
           if (isAbsorbed) {
@@ -369,7 +372,7 @@ void MCSlab::calculateK() {
 void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
                                const double x_start, const double x_end,
                                const double mu) {
-  assert((x_start - x_end) * mu >
+  assert((x_end - x_start) * mu >
          0); // make sure we are going the right direction
 
   // calculation always goes from left to right
