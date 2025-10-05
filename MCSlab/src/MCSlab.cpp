@@ -9,6 +9,7 @@
 #include <array>
 #include <cassert>
 #include <cmath>
+#include <fstream>
 #include <iostream>
 #include <random>
 #include <vector>
@@ -179,8 +180,19 @@ void MCSlab::k_eigenvalue() {
              _shannon_entropy, _k_eff, _k_std);
     }
   }
+
   printf("-------------------------------------------\n\n");
+
+  // normalize path lengths by the number of particles and the cell width
+  for (auto i = 0; i < flux_bins.size(); i++)
+    flux_bins[i] /= (static_cast<double>(_n_particles) * _cell_widths[i]);
+
+  printf("Exporting flux...");
+  exportFlux(flux_bins);
+  printf("Done\n\n");
+
   printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
+
   printf("Simulation complete. :-)\n\n");
 }
 
@@ -269,7 +281,7 @@ void MCSlab::readInput() {
     region = region->NextSiblingElement("region"); // move to next
   }
 
-  // add cell bounds
+  // add cell bounds and widths
   for (auto region : _regions) {
     _n_total_cells += region.nCells();
     for (auto i = 0; i < region.cellBounds().size(); i++) {
@@ -277,6 +289,11 @@ void MCSlab::readInput() {
       // loop over each region's bounds
       _all_cell_bounds.push_back(region.cellBounds()[i]);
     }
+    for (auto i = 0; i < region.cellLocs().size(); i++)
+      _cell_widths.push_back(region.cellLocs()[i][1] - region.cellLocs()[i][0]);
+
+    for (auto center : region.cellCenters())
+      _all_cell_centers.push_back(center);
   }
 
   // load settings
@@ -386,17 +403,38 @@ void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
   }
 
   for (auto i = 0; i < _n_total_cells; i++) {
-    if (x_left > _all_cell_bounds[i] && x_left < _all_cell_bounds[i + 1]) {
+    if (x_left > _all_cell_bounds[i] && x_left < _all_cell_bounds[i + 1] &&
+        x_right > _all_cell_bounds[i + 1]) {
       // left bound
-      path_len_cells[i] += (_all_cell_bounds[i + 1] - x_left) / mu;
+      path_len_cells[i] += (_all_cell_bounds[i + 1] - x_left) / mu_abs;
     } else if (x_left < _all_cell_bounds[i] &&
                x_right > _all_cell_bounds[i + 1]) {
-      path_len_cells[i] += (_all_cell_bounds[i + 1] - _all_cell_bounds[i]) / mu;
-      // inside
+      // cross internal cells
+      path_len_cells[i] +=
+          (_all_cell_bounds[i + 1] - _all_cell_bounds[i]) / mu_abs;
     } else if (x_left < _all_cell_bounds[i] &&
-               x_right < _all_cell_bounds[i + 1]) {
+               x_right < _all_cell_bounds[i + 1] &&
+               x_right > _all_cell_bounds[i]) {
       // right bound
-      path_len_cells[i] += (x_right - _all_cell_bounds[i]) / mu;
+      path_len_cells[i] += (x_right - _all_cell_bounds[i]) / mu_abs;
+    } else if (x_left >= _all_cell_bounds[i] &&
+               x_right <= _all_cell_bounds[i + 1]) {
+      // strictly within one cell
+      path_len_cells[i] += (x_right - x_left) / mu_abs;
     }
   }
+}
+
+void MCSlab::exportFlux(const std::vector<double> &flux) {
+  std::fstream fout;
+
+  std::string outfile_name = _input_file_name + "_out.csv";
+  fout.open(outfile_name, std::ios::out | std::ios::app);
+
+  for (auto flux_val : flux)
+    fout << flux_val << ",";
+  fout << "\n";
+
+  for (auto center : _all_cell_centers)
+    fout << center << ",";
 }

@@ -38,6 +38,8 @@ protected:
   unsigned int _n_fissionable_regions;      // number of fissionable regions
   std::vector<double> _all_cell_bounds;     // all cell boundaries
   unsigned int _n_total_cells;              // number of cells in all regions
+  std::vector<double> _cell_widths;         // width of each cell
+  std::vector<double> _all_cell_centers; // vector of all cell center locations
 
   // hold  min and max of computation domain
   double _domainMin;
@@ -72,4 +74,6 @@ protected:
   void updatePathLengths(std::vector<double> &path_len_cells,
                          const double x_start, const double x_end,
                          const double mu);
+
+  void exportFlux(const std::vector<double> &flux);
 };
