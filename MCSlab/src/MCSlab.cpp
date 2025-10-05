@@ -7,6 +7,7 @@
 
 #include <algorithm> // for std::sort
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -136,19 +137,24 @@ void MCSlab::k_eigenvalue() {
     _shannon_entropy = shannonEntropy(source_bins);
 
     // need to calculate both generational k and simulation k
-    if (i > _n_inactive - 1)
+    if (i >= _n_inactive)
       calculateK();
 
-    // updating here is incorrect--need to add on new values and drop old ones
+    // if too many fission sites are stored, remove the old ones
+    while (_new_fission_bank.size() > _n_particles) {
+      _new_fission_bank.front() = _new_fission_bank.back();
+      _new_fission_bank.pop_back();
+    }
+    assert(_new_fission_bank.size() <= _n_particles);
+
     _old_fission_bank = _new_fission_bank; // reassign fission bank
-    _new_fission_bank.clear();             // clear new bank for next generation
 
     // spit out results
-    if (i < _n_inactive - 1) {
+    if (i < _n_inactive) {
       // k-eff not calculated for inactive cycles
       printf("|    %d     |    %.4e   |            |            |\n", i + 1,
              _shannon_entropy);
-    } else if (i == _n_inactive - 1 || i == _n_inactive)
+    } else if (i == _n_inactive)
       printf("|    %d     |    %.4e   |  %.6f  |            |\n", i + 1,
              _shannon_entropy, _k_eff);
     else {
