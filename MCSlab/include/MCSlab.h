@@ -68,4 +68,8 @@ protected:
   void setMinMax();
 
   unsigned int collisionIndex(const Neutron &neutron);
+
+  void updatePathLengths(std::vector<double> &path_len_cells,
+                         const double x_start, const double x_end,
+                         const double mu);
 };

@@ -67,6 +67,7 @@ void MCSlab::k_eigenvalue() {
   for (auto i = 0; i < _n_generations; i++) {
     // define bins
     std::vector<unsigned long int> source_bins(_n_total_cells, 0);
+    std::vector<double> flux_bins(_n_total_cells, 0);
 
     // put something in to not count tallies for (i-1)<n_inactive
     unsigned int fissions_in_old_bank = _old_fission_bank.size();
@@ -351,4 +352,31 @@ void MCSlab::calculateK() {
       std::sqrt(sum_sqrd_error /
                 static_cast<double>(_k_gen_vec.size() -
                                     1)); // calcuate SAMPLE standard deviation
+}
+
+void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
+                               const double x_start, const double x_end,
+                               const double mu) {
+  assert((x_start - x_end) * mu >
+         0); // make sure we are going the right direction
+
+  // calculation always goes from left to right
+  double mu_abs = std::abs(mu); // angle will be flipped positive if necessary
+  double x_left = x_start;
+  double x_right = x_end;
+  if (x_start > x_end) {
+    // swap left and right if we are flipping
+    x_left = x_end;
+    x_right = x_start;
+  }
+
+  // finish filling this in!!!
+  for (auto i = 0; i < _n_total_cells; i++) {
+    if (x_left > _all_cell_bounds[i] && x_left < _all_cell_bounds[i + 1]) {
+    } else if (x_left < _all_cell_bounds[i] &&
+               x_right > _all_cell_bounds[i + 1]) {
+    } else if (x_left < _all_cell_bounds[i] &&
+               x_right < _all_cell_bounds[i + 1]) {
+    }
+  }
 }
