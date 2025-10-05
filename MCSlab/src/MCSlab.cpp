@@ -131,10 +131,13 @@ void MCSlab::k_eigenvalue() {
       }
     }
     _shannon_entropy = shannonEntropy(source_bins);
-    _k = static_cast<double>(_new_fission_bank.size()) /
-         static_cast<double>(_n_particles); // calculate multiplication factor
-    _old_fission_bank = _new_fission_bank;  // reassign fission bank
-    _new_fission_bank.clear(); // clear new bank for next generation
+
+    // need to calculate both generational k and simulation k
+    calculateK();
+
+    // updating here is incorrect--need to add on new values and drop old ones
+    _old_fission_bank = _new_fission_bank; // reassign fission bank
+    _new_fission_bank.clear();             // clear new bank for next generation
 
     // spit out results
     if (i < _n_inactive) {
@@ -142,7 +145,7 @@ void MCSlab::k_eigenvalue() {
              _shannon_entropy);
     } else {
       printf("|    %d     |    %.4e   |  %.6f  |\n", i + 1, _shannon_entropy,
-             _k);
+             _k_eff);
     }
   }
   printf("-------------------------------------------\n\n");
@@ -308,4 +311,26 @@ MCSlab::shannonEntropy(const std::vector<unsigned long int> &collision_bins) {
   }
 
   return shannon_entropy;
+}
+
+void MCSlab::calculateK() {
+  _k_gen = static_cast<double>(_new_fission_bank.size()) /
+           static_cast<double>(_n_particles); // calculate multiplication factor
+  _k_gen_vec.push_back(_k_gen);               // add value to running list
+
+  double running_sum = 0;
+  for (auto k : _k_gen_vec)
+    running_sum += k;
+  _k_eff = running_sum /
+           static_cast<double>(_k_gen_vec.size()); // update simulation k-eff
+
+  double sum_sqrd_error = 0;
+  for (auto k : _k_gen_vec) {
+    double error = k - _k_eff;
+    sum_sqrd_error += std::pow(error, 2); // sum of squared errors
+  }
+  _k_std =
+      std::sqrt(sum_sqrd_error /
+                static_cast<double>(_k_gen_vec.size() -
+                                    1)); // calcuate SAMPLE standard deviation
 }
