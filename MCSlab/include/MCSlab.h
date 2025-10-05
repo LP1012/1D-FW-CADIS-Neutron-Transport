@@ -46,13 +46,20 @@ protected:
   // initialize RNG
   UniformRNG _rng;
 
+  unsigned int
+      _n_neutrons_born; // the number of fission neutrons born in generation
+
   // banks of source sites
   std::vector<Neutron> _old_fission_bank;
   std::vector<Neutron> _new_fission_bank;
 
-  double _k; // multiplication constant
+  void calculateK();
+  double _k_gen;                  // multiplication constant of the generation
+  std::vector<double> _k_gen_vec; // vector containing running k-gen values
+  double _k_eff;                  // running k-eff value of simulation
+  double _k_std;                  // std_dev of k-eff
 
-  std::vector<double> _shannon_entropy;
+  double _shannon_entropy;
   std::vector<double> _scalar_flux; // flux at each point in mesh
 
   void readInput();

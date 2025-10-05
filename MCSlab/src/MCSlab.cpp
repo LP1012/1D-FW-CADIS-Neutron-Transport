@@ -7,6 +7,7 @@
 
 #include <algorithm> // for std::sort
 #include <array>
+#include <cassert>
 #include <cmath>
 #include <iostream>
 #include <random>
@@ -23,18 +24,61 @@ MCSlab::MCSlab(const std::string input_file_name)
 
 void MCSlab::k_eigenvalue() {
   // this is where the simulation will be run
+
+  // Create code head
+  printf(
+      "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
+      "\n");
+  printf(
+      "* _____ ______   ________  ________  ___       ________  ________     "
+      "*\n"
+      "*|\\   _ \\  _   \\|\\   ____\\|\\   ____\\|\\  \\     |\\   __  \\|\\  "
+      " "
+      "__  \\    *\n"
+      "*\\ \\  \\\\\\__\\ \\  \\ \\  \\___|\\ \\  \\___|\\ \\  \\    \\ \\  "
+      "\\|\\  \\ \\  \\|\\ /_   *\n*"
+      " \\ \\  \\\\|__| \\  \\ \\  \\    \\ \\_____  \\ \\  \\    \\ \\   __  "
+      "\\ \\   __  \\  *\n*"
+      "  \\ \\  \\    \\ \\  \\ \\  \\____\\|____|\\  \\ \\  \\____\\ \\  \\ "
+      "\\  \\ \\  \\|\\  \\ *\n*"
+      "   \\ \\__\\    \\ \\__\\ \\_______\\____\\_\\  \\ \\_______\\ \\__\\ "
+      "\\__\\ \\_______\\*\n*"
+      "    \\|__|     "
+      "\\|__|\\|_______|\\_________\\|_______|\\|__|\\|__|\\|_______|*\n*"
+      "                            \\|_________|                             "
+      "*\n*"
+      "                                                                     "
+      "*\n");
+  printf(
+      "* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
+      "\n");
+
+  printf("\nSimulation Specification:\n");
+  printf("    Number of Regions:        %lu\n", _regions.size());
+  printf("    Particles per Generation: %d\n", _n_particles);
+  printf("    Number of Generations:    %d\n", _n_generations);
+  printf("        Inactive Cycles:      %d\n", _n_inactive);
+  printf("        Active Cycles:        %d\n\n", _n_generations - _n_inactive);
+
+  printf("--------------------------------------------------------\n");
+  printf("|Generation| Shannon Entropy |    keff    |  std_dev   |\n");
+  printf("--------------------------------------------------------\n");
+
   for (auto i = 0; i < _n_generations; i++) {
     // define bins
-    std::vector<unsigned long int> collision_bins(_n_total_cells, 0);
+    std::vector<unsigned long int> source_bins(_n_total_cells, 0);
 
     // put something in to not count tallies for (i-1)<n_inactive
     unsigned int fissions_in_old_bank = _old_fission_bank.size();
+
+    _n_neutrons_born = 0; // initialize to 0
+
     for (auto j = 0; j < _n_particles; j++) {
       // generate neutrons from fission bank positions first
       Neutron neutron(0, _regions); // initialize neutron
 
       // adjust neutron start position based on randomness or fission bank
-      if (j < fissions_in_old_bank - 1)
+      if (fissions_in_old_bank > 0 && j < fissions_in_old_bank - 1)
         neutron.movePositionAndRegion(_old_fission_bank[j].pos(), _regions);
       else
         neutron.setRandomStartPosition(
@@ -82,7 +126,7 @@ void MCSlab::k_eigenvalue() {
         } else {
           bool isAbsorbed = testAbsorption(neutron);
           if (isAbsorbed) {
-            collision_bins[collisionIndex(neutron)] +=
+            source_bins[collisionIndex(neutron)] +=
                 1; // add one collision to bin
             absorption(neutron);
           } else
@@ -90,12 +134,38 @@ void MCSlab::k_eigenvalue() {
         }
       }
     }
-    shannonEntropy(collision_bins);
-    _k = static_cast<double>(_new_fission_bank.size()) /
-         static_cast<double>(_n_particles); // calculate multiplication factor
-    _old_fission_bank = _new_fission_bank;  // reassign fission bank
-    _new_fission_bank.clear(); // clear new bank for next generation
+    _shannon_entropy = shannonEntropy(source_bins);
+
+    // need to calculate both generational k and simulation k
+    if (i >= _n_inactive)
+      calculateK();
+
+    // if too many fission sites are stored, remove the old ones
+    while (_new_fission_bank.size() > _n_particles) {
+      _new_fission_bank.front() = _new_fission_bank.back();
+      _new_fission_bank.pop_back();
+    }
+    assert(_new_fission_bank.size() <= _n_particles);
+
+    _old_fission_bank = _new_fission_bank; // reassign fission bank
+
+    // spit out results
+    if (i < _n_inactive) {
+      // k-eff not calculated for inactive cycles
+      printf("|    %d     |    %.4e   |            |            |\n", i + 1,
+             _shannon_entropy);
+    } else if (i == _n_inactive)
+      printf("|    %d     |    %.4e   |  %.6f  |            |\n", i + 1,
+             _shannon_entropy, _k_eff);
+    else {
+      // only print std-dev after 3 approximations have been made
+      printf("|    %d     |    %.4e   |  %.6f  |  %.6f  |\n", i + 1,
+             _shannon_entropy, _k_eff, _k_std);
+    }
   }
+  printf("-------------------------------------------\n\n");
+  printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
+  printf("Simulation complete. :-)\n\n");
 }
 
 bool MCSlab::testAbsorption(const Neutron &neutron) {
@@ -110,12 +180,13 @@ void MCSlab::absorption(Neutron &neutron) {
 
   unsigned int n_born; // initialize number of neutrons born
 
-  (production_rn < neutron_region.nPerAbsorption() -
-                       std::floor(neutron_region.nPerAbsorption()))
-      ? n_born = std::ceil(neutron_region.nPerAbsorption())
-      : n_born = std::floor(
-            neutron_region
-                .nPerAbsorption()); // determine number of neutrons born
+  if (production_rn < neutron_region.nPerAbsorption() -
+                          std::floor(neutron_region.nPerAbsorption()))
+    n_born = std::ceil(neutron_region.nPerAbsorption());
+  else
+    n_born = std::floor(neutron_region.nPerAbsorption());
+
+  _n_neutrons_born += n_born;
 
   for (auto i = 0; i < n_born; i++) {
     Neutron fission_neutron =
@@ -257,4 +328,27 @@ MCSlab::shannonEntropy(const std::vector<unsigned long int> &collision_bins) {
   }
 
   return shannon_entropy;
+}
+
+void MCSlab::calculateK() {
+  _k_gen = static_cast<double>(_n_neutrons_born) /
+           static_cast<double>(_n_particles); // calculate multiplication factor
+
+  _k_gen_vec.push_back(_k_gen); // add value to running list
+
+  double running_sum = 0;
+  for (auto k : _k_gen_vec)
+    running_sum += k;
+  _k_eff = running_sum /
+           static_cast<double>(_k_gen_vec.size()); // update simulation k-eff
+
+  double sum_sqrd_error = 0;
+  for (auto k : _k_gen_vec) {
+    double error = k - _k_eff;
+    sum_sqrd_error += std::pow(error, 2); // sum of squared errors
+  }
+  _k_std =
+      std::sqrt(sum_sqrd_error /
+                static_cast<double>(_k_gen_vec.size() -
+                                    1)); // calcuate SAMPLE standard deviation
 }
