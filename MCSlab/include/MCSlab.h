@@ -40,6 +40,7 @@ protected:
   unsigned int _n_total_cells;              // number of cells in all regions
   std::vector<double> _cell_widths;         // width of each cell
   std::vector<double> _all_cell_centers; // vector of all cell center locations
+  std::vector<double> _Sigma_t_vals;
 
   // hold  min and max of computation domain
   double _domainMin;
@@ -74,6 +75,8 @@ protected:
   void updatePathLengths(std::vector<double> &path_len_cells,
                          const double x_start, const double x_end,
                          const double mu);
+  void updateCollisions(std::vector<double> &collision_cells, double position);
 
-  void exportFlux(const std::vector<double> &flux);
+  void exportFlux(const std::vector<double> &flux_pl,
+                  const std::vector<double> &flux_col);
 };
