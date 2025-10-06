@@ -112,9 +112,11 @@ void MCSlab::k_eigenvalue() {
                 new_index++; // skip over void regions
 
               double new_position = _regions[new_index].xMin();
-              if (i == _n_generations - 1)
-                updatePathLengths(flux_bins, _regions[current_index].xMax(),
-                                  new_position, neutron.mu());
+              if (i == _n_generations - 1) {
+                if (new_position != _regions[current_index].xMax())
+                  updatePathLengths(flux_bins, _regions[current_index].xMax(),
+                                    new_position, neutron.mu());
+              }
               neutron.movePositionAndRegion(new_position, _regions);
             }
           } else {
@@ -131,9 +133,11 @@ void MCSlab::k_eigenvalue() {
                 new_index--; // skip over void regions
 
               double new_position = _regions[new_index].xMax();
-              if (i == _n_generations - 1)
-                updatePathLengths(flux_bins, _regions[current_index].xMin(),
-                                  new_position, neutron.mu());
+              if (i == _n_generations - 1) {
+                if (new_position != _regions[current_index].xMin())
+                  updatePathLengths(flux_bins, _regions[current_index].xMin(),
+                                    new_position, neutron.mu());
+              }
               neutron.movePositionAndRegion(new_position, _regions);
             }
           }
