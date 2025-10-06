@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <simulation>
   <regions>
-    <region xmin="-1" xmax="1" n_cells="20" Sigma_a="1" Sigma_s="2" nuSigma_f="3"/>
-    <region xmin="2" xmax="5" n_cells="20" Sigma_a="0.5" Sigma_s="8" nuSigma_f="0.1"/>
+    <region xmin="-1" xmax="0" n_cells="20" Sigma_a="1" Sigma_s="2" nuSigma_f="3"/>
+    <region xmin="1" xmax="2" n_cells="20" Sigma_a="0.5" Sigma_s="8" nuSigma_f="0.1"/>
   </regions>
-  <settings n_particles="2000" n_generations="10" n_inactive="2"/>
+  <settings n_particles="25000" n_generations="50" n_inactive="10"/>
 </simulation>
