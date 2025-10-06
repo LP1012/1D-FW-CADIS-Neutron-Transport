@@ -1,6 +1,7 @@
 \documentclass{hw_report}
 \usepackage{booktabs}
 \usepackage{rotating}
+\usepackage{wrapfig}
 \newcommand{\keff}{k_{\text{eff}}}
 
 \onehalfspacing
@@ -16,41 +17,60 @@ NPRE 555: Reactor Theory I}
 %\tableofcontents
 %\clearpage
 
-    \begin{abstract}
-
-    \end{abstract}
-
 
     \section{Premise}
-    The purpose of this paper is to outline the methods used to determine a $k$-eigenvalue solution along with a flux profile for a simple slab of two fissile material in 1-D cartesian, monoenergetic
+    The purpose of this paper is to outline the methods used to determine a $k$-eigenvalue solution along with a flux profile for a simple slab of two fissile material in 1-D cartesian with monoenergetic neutrons.
+    A simple schematic of this can be seen in \cref{fig:problem-schematic}.
+    \begin{wrapfigure}{r}{0.6\textwidth} % 'r' for right side, 'l' for left side
+        \centering
+        \vspace{-10pt} % optional: adjust vertical spacing
+        \includegraphics[width=0.58\textwidth]{figs/problem-schematic.jpg}
+        \caption{Problem schematic}
+        \label{fig:problem-schematic}
+        \vspace{-10pt} % optional: tighten space below the figure
+    \end{wrapfigure}
+    Though this problem is simple enough that a straightforward \texttt{Python} script could be created and generate good results, I proposed an additional constraint: the code must be able to calculate the $\keff$ and flux profile for arbitrary 1D cells (assuming no overlap).
+    This additional goal dramatically changed the coding practices from script- to modular-oriented, where the focus has been on flexibility, clarity, and reusability.
 
 
     \section{Theory}
-
+    The eigenvalue for each generation of neutrons is calculated with:
     \begin{equation}
         \label{eq:k-sample}
         k_\text{gen}=\frac{\text{Number of Neutrons Produced}}{\text{Number of Source Neutrons}}
     \end{equation}
+    Then, for each additional generation, the next system $\keff$ value is estimated with:
     \begin{equation}
         \label{eq:keff}
-        \keff \approx \sum_{i=1}^{N} \hat{k}_i
+        \keff \approx \sum_{i=1}^{N} k_{\text{gen},i}
     \end{equation}
-    The variance of $\keff$ must be calculated differently because it is the variance of \textit{mean}.
+    where $N$ is the number of $k_\text{gen}$'s that have been calculated.
+    To get an estimate of the error of $\keff$, the variance is estimated.
+    However, variance of $\keff$ must be calculated differently because it is the variance of \textit{mean}.
     To handle this special case, it can be shown~\cite{ 244MeanVariance} that the variance scales with an additional factor of $1/N$:
     \begin{equation}
         \label{eq:variance-of-the-mean-of-k}
-        \sigma^2_k=\frac{1}{N(N-1)}\sum_{i=1}^{N} \left( k_i-\hat{k} \right)^2
+        \sigma^2_k=\frac{1}{N(N-1)}\sum_{i=1}^{N} \left( k_i-\keff \right)^2
     \end{equation}
+    This ensures that for each additional $k_\text{gen}$, the variance will shrink.
 
+    For cell $i$, the flux has been estimated in two ways.
+    First, the collision estimate:
     \begin{equation}
-        \label{distance to boundary}
-        d_b = \frac{x_n-x_b}{\mu}
+        \label{eq:collision-estimate}
+        \phi_i \approx \frac{C_i}{NV_i\Sigma^i_t}
     \end{equation}
-    where $\mu=\cos\theta$.
+    where $C_i$ is the number of collisions that occurred in cell $i$, $N$ is the total number of source particles, $V_i$ is the cell volume\footnote{For 1D, the cell volume is just the cell length.}, and $\Sigma^i_t$ is the total macroscopic cross section in cell $i$.
+    Next, the path-length estimate:
+    \begin{equation}
+        \label{eq:path-length}
+        \phi_i \approx \frac{l_i}{NV_i}
+    \end{equation}
+    where $N$ and $V_i$ are as before, and $l_i$ is the total length traversed through the cell be all neutrons in the simulation.
 
 
     \section{Code Design}
-    A code was written in \texttt{C++} to fascilite the computations of arbitrary 1D regions either connected or separated by a void.
+    A code was written in \texttt{C++} to facilitate the computations of arbitrary 1D regions either connected or separated by a void.
     It was designed to be as reusable and flexible as possible.
     Three major classes were created: \texttt{MCSlab}, \texttt{Region}, and \texttt{Neutron}.
     The first of these holds the major computational methods for $k$-eigenvalue and flux calculations, the second holds material and geometry information for each users-specified region, and the last holds information and methods pertaining to neutrons and their position within the simulation.
@@ -61,48 +81,50 @@ NPRE 555: Reactor Theory I}
             \toprule
             \textbf{Class} & \textbf{Item}                   & \textbf{Type} & \textbf{Description}                                                                 \\
             \midrule
-            MCSlab         & \texttt{k\_eigenvalue}           & Method                      & Holds random walk algorithm, tally calculations                                      \\
+            MCSlab         & \texttt{k\_eigenvalue}          & Method        & Holds random walk algorithm, tally calculations                                      \\
 
-            & \texttt{readInput }             & Method                      & Read user-supplied input file and initialize attributes                              \\
+            & \texttt{readInput }             & Method        & Read user-supplied input file and initialize attributes                              \\
 
-            & \texttt{absorption}             & Method                      & If absorption occurs, calculate number of neutrons born and kill particle            \\
+            & \texttt{absorption}             & Method        & If absorption occurs, calculate number of neutrons born and kill particle            \\
 
-            & \texttt{scatter}                & Method                      & If scatter occurs, change the particle’s direction                                   \\
+            & \texttt{scatter}                & Method        & If scatter occurs, change the particle’s direction                                   \\
 
-            & \texttt{calculateK}             & Method                      & Calculate $k_{\text{gen}}$, $\keff$, and the standard deviation                      \\
+            & \texttt{calculateK}             & Method        & Calculate $k_{\text{gen}}$, $\keff$, and the standard deviation                      \\
 
-            & \texttt{updatePathLengths}      & Method                      & For every movement, add the flight distance of the neutron to bins                   \\
+            & \texttt{updatePathLengths}      & Method        & For every movement, add the flight distance of the neutron to bins                   \\
 
-            & \texttt{updateCollisions}       & Method                      & For every collision, add 1 to bin of collision location                              \\
+            & \texttt{updateCollisions}       & Method        & For every collision, add 1 to bin of collision location                              \\
 
-            & \texttt{exportFlux}             & Method                      & Export flux values to \texttt{.csv} file                                             \\
-            Region         & \texttt{\_Sigma\_s}               & Attribute                   & Scattering macroscopic cross section                                                 \\
+            & \texttt{exportFlux}             & Method        & Export flux values to \texttt{.csv} file                                             \\
+            Region         & \texttt{\_Sigma\_s}             & Attribute     & Scattering macroscopic cross section                                                 \\
 
-            & \texttt{\_Sigma\_a}               & Attribute                   & Absorption macroscopic cross section                                                 \\
+            & \texttt{\_Sigma\_a}             & Attribute     & Absorption macroscopic cross section                                                 \\
 
-            & \texttt{\_nu\_Sigma\_f}            & Attribute                   & Fission macroscopic cross section multiplied by the number neutrons born per fission \\
+            & \texttt{\_nu\_Sigma\_f}         & Attribute     & Fission macroscopic cross section multiplied by the number neutrons born per fission \\
 
-            & \texttt{\_Sigma\_t}               & Attribute                   & Total macroscopic cross section                                                      \\
+            & \texttt{\_Sigma\_t}             & Attribute     & Total macroscopic cross section                                                      \\
 
-            & \texttt{\_n\_per\_fission}         & Attribute                   & Number of neutrons produced per absorption                                           \\
+            & \texttt{\_n\_per\_fission}      & Attribute     & Number of neutrons produced per absorption                                           \\
 
-            & \texttt{populateCellLocs}       & Method                      & Populate cell centers and bounds within a single region                              \\
-            Neutron        & \texttt{movePositionAndRegion}         & Method                      & Move neutron position and change its region accordingly                              \\
+            & \texttt{populateCellLocs}       & Method        & Populate cell centers and bounds within a single region                              \\
+            Neutron        & \texttt{movePositionAndRegion}  & Method        & Move neutron position and change its region accordingly                              \\
 
-            & \texttt{setRandomStartPosition} & Method                      & Set a random start position within fissionable material                              \\
+            & \texttt{setRandomStartPosition} & Method        & Set a random start position within fissionable material                              \\
 
-            & \texttt{distanceToCollisions}   & Method                      & Calculate the distance to next collision within region                               \\
+            & \texttt{distanceToCollisions}   & Method        & Calculate the distance to next collision within region                               \\
 
-            & \texttt{distanceToEdge}         & Method                      & Calculate the distance to the nearest edge in the direction of $\mu$                 \\
+            & \texttt{distanceToEdge}         & Method        & Calculate the distance to the nearest edge in the direction of $\mu$                 \\
 
-            & \texttt{\_is\_alive}              & Attribute                   & Boolean value holding whether particle is still alive                                \\
+            & \texttt{\_is\_alive}            & Attribute     & Boolean value holding whether particle is still alive                                \\
 
-            & \texttt{kill}                   & Method                      & Switches \texttt{\_is\_alive} to \texttt{False}, terminating the walk                  \\
+            & \texttt{kill}                   & Method        & Switches \texttt{\_is\_alive} to \texttt{False}, terminating the walk                \\
             \bottomrule
         \end{tabular}
         \caption{Major classes within code and their description}
         \label{tab: code classes}
     \end{sidewaystable}
+    As recommended by the instructor, each class also has an associated test created using the \texttt{gtest} framework.
+    These tests are simple unit tests that were an integral part of the debugging and implementation process.
 
     In addition, a flowchart has been provided in \cref{fig:flowchart} that outlines the steps taken in a single generation of neutrons.
     Note that after each generation, the Shannon-Entropy, running $\keff$ value, and standard deviation are reported to the user as commandline output.
@@ -114,9 +136,10 @@ NPRE 555: Reactor Theory I}
         \label{fig:flowchart}
     \end{figure}
 
-    \section{Results}
-    
 
+    \section{Results}
+    For the requested problem shown in \cref{fig:problem-schematic}, \cref{fig:submission_combined} has been included.
+    It reports the flux profiles using both \cref{eq:collision-estimate} and \cref{eq:path-length} along with the estimate of $\keff$ and its standard-deviation.
     \begin{figure}[!htb]
         \centering
         \begin{subfigure}[b]{0.48\textwidth}
@@ -135,9 +158,15 @@ NPRE 555: Reactor Theory I}
         \caption{Comparison of simulation estimates. $k_{\text{eff}}=1.183377 \pm 0.000328$}
         \label{fig:submission_combined}
     \end{figure}
+    As seen, both methods produce extremely similar results, differing only in the magnitude (which can be solved with a normalization).
+    \texttt{README} files have been included in the GitHub repository that will allow the user to replicate these results.
 
 
     \section{Future Work}
+    Though tests were provided and successful, additional tests would be worthwhile to ensure complete functionality.
+    Additionally, a regression test of sorts could be implemented for a simple analytically-known problem to verify the code works as intended on each machine.
+    Lastly, due to time constraints, there is still some work to be done to ensure proper documentation in the header files.
+
     \bibliographystyle{plain}
     \bibliography{CP1}
 
@@ -147,6 +176,14 @@ NPRE 555: Reactor Theory I}
 
 
     \section{Additional Example Solutions}
+    To prove the success of the code, three additional simulations were run as example cases.
+    They demonstrate the ability of the code to handle single and multi-region calculations and transport neutrons across voids between regions where necessary.
+    \begin{enumerate}
+        \item Single region: \cref{fig:single_combined}
+        \item Connected double region: \cref{fig:double-connected-combined}
+        \item Separated double region: \cref{fig:split-path-length}
+    \end{enumerate}
+
     \begin{figure}[!htb]
         \centering
         \begin{subfigure}[b]{0.48\textwidth}
@@ -162,7 +199,7 @@ NPRE 555: Reactor Theory I}
             \caption{Single region collision estimate}
             \label{single_collision}
         \end{subfigure}
-        \caption{Comparison of simulation estimates. $k_{\text{eff}}=1.183377 \pm 0.000328$}
+        \caption{Comparison of simulation estimates.}
         \label{fig:single_combined}
     \end{figure}
 
@@ -181,28 +218,16 @@ NPRE 555: Reactor Theory I}
             \caption{Double region connected collision estimate}
             \label{double_connected_collision}
         \end{subfigure}
-        \caption{Comparison of simulation estimates. $k_{\text{eff}}=1.183377 \pm 0.000328$}
+        \caption{Comparison of simulation estimates.}
         \label{fig:double-connected-combined}
     \end{figure}
 
 
     \begin{figure}[!htb]
         \centering
-        \begin{subfigure}[b]{0.48\textwidth}
-            \centering
-            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_2_region_split_pl}
-            \caption{Double region split path length estimate}
-            \label{double_split_path_length}
-        \end{subfigure}
-        \hfill
-        \begin{subfigure}[b]{0.48\textwidth}
-            \centering
-            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_2_region_split_col}
-            \caption{Double region split collision estimate}
-            \label{double_split_collision}
-        \end{subfigure}
-        \caption{Comparison of simulation estimates. $k_{\text{eff}}=1.183377 \pm 0.000328$}
-        \label{fig:double_split_combined}
+        \includegraphics[width=\textwidth]{../MCSlab/examples/plot_2_region_split_pl}
+        \caption{Double region split path length estimate}
+        \label{fig:split-path-length}
     \end{figure}
 
 \end{document}
