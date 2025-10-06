@@ -142,6 +142,8 @@ void MCSlab::k_eigenvalue() {
             updatePathLengths(flux_bins, neutron.pos(), collision_location,
                               neutron.mu());
 
+          neutron.movePositionWithinRegion(collision_location);
+
           bool isAbsorbed = testAbsorption(neutron);
           if (isAbsorbed) {
             // add one collision to bin
@@ -284,18 +286,29 @@ void MCSlab::readInput() {
   }
 
   // add cell bounds and widths
+  unsigned int count = 0;
   for (auto region : _regions) {
     _n_total_cells += region.nCells();
-    for (auto i = 0; i < region.cellBounds().size(); i++) {
-      // each region holds its own set of bounds, so we need an inner
-      // loop over each region's bounds
-      _all_cell_bounds.push_back(region.cellBounds()[i]);
+    if (count == 0) {
+      for (auto i = 0; i < region.cellBounds().size(); i++) {
+        // each region holds its own set of bounds, so we need an inner
+        // loop over each region's bounds
+        _all_cell_bounds.push_back(region.cellBounds()[i]);
+      }
+    } else {
+      for (auto i = 1; i < region.cellBounds().size(); i++) {
+        // each region holds its own set of bounds, so we need an inner
+        // loop over each region's bounds
+        _all_cell_bounds.push_back(region.cellBounds()[i]);
+      }
     }
     for (auto i = 0; i < region.cellLocs().size(); i++)
       _cell_widths.push_back(region.cellLocs()[i][1] - region.cellLocs()[i][0]);
 
     for (auto center : region.cellCenters())
       _all_cell_centers.push_back(center);
+
+    count++;
   }
 
   // load settings
@@ -394,8 +407,6 @@ void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
                                const double x_start, const double x_end,
                                const double mu) {
 
-  if (std::abs(x_end - x_start) < 1e-12)
-    return;
   assert((x_end - x_start) * mu >
          0); // make sure we are going the right direction
 
