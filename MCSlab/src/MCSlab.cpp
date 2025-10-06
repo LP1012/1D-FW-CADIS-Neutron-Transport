@@ -84,8 +84,8 @@ void MCSlab::k_eigenvalue() {
       if (fissions_in_old_bank > 0 && j < fissions_in_old_bank - 1)
         neutron.movePositionAndRegion(_old_fission_bank[j].pos(), _regions);
       else
-        neutron.setRandomStartPosition(
-            _fissionable_regions); // set location in fuel
+        neutron.setRandomStartPosition(_fissionable_regions,
+                                       _regions); // set location in fuel
 
       // begin random walk
       while (neutron.isAlive()) {
@@ -112,6 +112,11 @@ void MCSlab::k_eigenvalue() {
                 new_index++; // skip over void regions
 
               double new_position = _regions[new_index].xMin();
+              if (i == _n_generations - 1) {
+                if (new_position != _regions[current_index].xMax())
+                  updatePathLengths(flux_bins, _regions[current_index].xMax(),
+                                    new_position, neutron.mu());
+              }
               neutron.movePositionAndRegion(new_position, _regions);
             }
           } else {
@@ -128,6 +133,11 @@ void MCSlab::k_eigenvalue() {
                 new_index--; // skip over void regions
 
               double new_position = _regions[new_index].xMax();
+              if (i == _n_generations - 1) {
+                if (new_position != _regions[current_index].xMin())
+                  updatePathLengths(flux_bins, _regions[current_index].xMin(),
+                                    new_position, neutron.mu());
+              }
               neutron.movePositionAndRegion(new_position, _regions);
             }
           }
@@ -141,6 +151,8 @@ void MCSlab::k_eigenvalue() {
           if (i == _n_generations - 1)
             updatePathLengths(flux_bins, neutron.pos(), collision_location,
                               neutron.mu());
+
+          neutron.movePositionWithinRegion(collision_location);
 
           bool isAbsorbed = testAbsorption(neutron);
           if (isAbsorbed) {
@@ -182,7 +194,7 @@ void MCSlab::k_eigenvalue() {
     }
   }
 
-  printf("-------------------------------------------\n\n");
+  printf("--------------------------------------------------------\n");
 
   // normalize path lengths by the number of particles and the cell width
   for (auto i = 0; i < flux_bins.size(); i++)
@@ -277,24 +289,36 @@ void MCSlab::readInput() {
             "Error! Regions are not sorted"); // check regions are sorted
     }
 
+    region_obj.setIndex(_regions.size());
     _regions.push_back(region_obj); // add region to list of regions
 
     region = region->NextSiblingElement("region"); // move to next
   }
 
   // add cell bounds and widths
+  unsigned int count = 0;
   for (auto region : _regions) {
     _n_total_cells += region.nCells();
-    for (auto i = 0; i < region.cellBounds().size(); i++) {
-      // each region holds its own set of bounds, so we need an inner
-      // loop over each region's bounds
-      _all_cell_bounds.push_back(region.cellBounds()[i]);
+    if (count == 0) {
+      for (auto i = 0; i < region.cellBounds().size(); i++) {
+        // each region holds its own set of bounds, so we need an inner
+        // loop over each region's bounds
+        _all_cell_bounds.push_back(region.cellBounds()[i]);
+      }
+    } else {
+      for (auto i = 1; i < region.cellBounds().size(); i++) {
+        // each region holds its own set of bounds, so we need an inner
+        // loop over each region's bounds
+        _all_cell_bounds.push_back(region.cellBounds()[i]);
+      }
     }
     for (auto i = 0; i < region.cellLocs().size(); i++)
       _cell_widths.push_back(region.cellLocs()[i][1] - region.cellLocs()[i][0]);
 
     for (auto center : region.cellCenters())
       _all_cell_centers.push_back(center);
+
+    count++;
   }
 
   // load settings
@@ -333,9 +357,9 @@ void MCSlab::setMinMax() {
 
 unsigned int MCSlab::collisionIndex(const Neutron &neutron) {
   double collision_location = neutron.pos();
-  for (auto i = 1; i < _n_total_cells + 1; i++) {
+  for (auto i = 1; i <= _n_total_cells + 1; i++) {
     if (collision_location < _all_cell_bounds[i])
-      return i - 1; // CHECK THIS LOGIC
+      return i - 1;
   }
   throw std::runtime_error("Collision location not within domain of problem!");
 }
@@ -392,6 +416,7 @@ void MCSlab::calculateK() {
 void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
                                const double x_start, const double x_end,
                                const double mu) {
+
   assert((x_end - x_start) * mu >
          0); // make sure we are going the right direction
 

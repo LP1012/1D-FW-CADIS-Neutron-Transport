@@ -29,7 +29,8 @@ double Neutron::distanceToEdge() {
 }
 
 void Neutron::setRandomStartPosition(
-    const std::vector<Region> &fissionable_regions) {
+    const std::vector<Region> &fissionable_regions,
+    std::vector<Region> &regions) {
 
   unsigned int n_fissionable_regions = fissionable_regions.size();
   double region_width = 1.0 / static_cast<double>(n_fissionable_regions);
@@ -44,6 +45,7 @@ void Neutron::setRandomStartPosition(
       _pos = _rng.generateRN() *
                  (selected_region.xMax() - selected_region.xMin()) +
              selected_region.xMin(); // neutron position in region
+      setRegion(regions);
       break;
     }
   }

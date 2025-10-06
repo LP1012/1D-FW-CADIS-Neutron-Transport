@@ -51,4 +51,5 @@ MCSlab/include/Makefile
 
 .vscode/
 
-!examples/*
+MCSlab/examples/*.csv
+

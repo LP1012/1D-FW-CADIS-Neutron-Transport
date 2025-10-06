@@ -24,7 +24,7 @@ TEST_F(NeutronTest, InitialState) {
 
 TEST_F(NeutronTest, SetRandomPositionInFuel) {
   std::vector<Region> fissionable_regions = {regions[1]};
-  neutron.setRandomStartPosition(fissionable_regions);
+  neutron.setRandomStartPosition(fissionable_regions, regions);
   EXPECT_TRUE(neutron.pos() < fissionable_regions[0].xMax());
   EXPECT_TRUE(neutron.pos() > fissionable_regions[0].xMin());
 }

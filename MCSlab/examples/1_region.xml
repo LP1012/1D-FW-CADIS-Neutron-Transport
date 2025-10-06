@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <simulation>
   <regions>
-    <region xmin="-1" xmax="1" n_cells="10" Sigma_a="1" Sigma_s="2" nuSigma_f="2.4"/>
+    <region xmin="-1" xmax="1" n_cells="20" Sigma_a="1" Sigma_s="2" nuSigma_f="2.4"/>
   </regions>
-  <settings n_particles="20000" n_generations="50" n_inactive="10"/>
+  <settings n_particles="20000" n_generations="25" n_inactive="5"/>
 </simulation>
