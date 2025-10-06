@@ -29,6 +29,9 @@ borders = df.iloc[2, :].to_numpy()
 
 max_flux = max(flux_vals)
 
+# prepare name
+name_without_extension = outfile_name.rsplit(".", 1)[0]
+
 # create plot
 plt.figure(figsize=(8, 6))
 sns.lineplot(x=x_vals, y=flux_vals)
@@ -36,4 +39,4 @@ plt.vlines(borders, 0, max_flux, linestyles="dashed", colors="black")
 plt.xlabel("x [cm]")
 plt.ylabel(r"Flux [cm$^{-2}$-s$^{-1}$-source]")
 plt.title("MCSlab 1D Flux Plot")
-plt.savefig(f"plot_{outfile_name}.png", dpi=300)
+plt.savefig(f"plot_{name_without_extension}.png", dpi=300)
