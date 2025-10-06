@@ -21,7 +21,8 @@ public:
 
   /// @brief Set start position of neutron randomly in fissionable regionss
   /// @param fissionable_regions
-  void setRandomStartPosition(const std::vector<Region> &fissionable_regions);
+  void setRandomStartPosition(const std::vector<Region> &fissionable_regions,
+                              std::vector<Region> &regions);
 
   /// @brief Calculates distance to collision
   double distanceToCollision();
