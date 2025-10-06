@@ -1,4 +1,5 @@
 \documentclass{hw_report}
+\newcommand{\keff}{k_{\text{eff}}}
 
 \onehalfspacing
 
@@ -6,28 +7,151 @@
 NPRE 555: Reactor Theory I}
 \author{Liam Pohlmann\\Nuclear, Plasma, \& Radiological Engineering, University of Illinois Urbana-Champaign\\\url{liamp2@illinois.edu}}
 
-\date{\textbf{Due: 5 October 2025}}
+\date{\textbf{Due: 6 October 2025}}
 
 \begin{document}
-\maketitle
-\tableofcontents
+    \maketitle
+%\tableofcontents
+%\clearpage
+
+    \begin{abstract}
+
+    \end{abstract}
+
+
+    \section{Premise}
+    The purpose of this paper is to outline the methods used to determine a $k$-eigenvalue solution along with a flux profile for a simple slab of two fissile material in 1-D cartesian, monoenergetic
+
+
+    \section{Theory}
+
+    \begin{equation}
+        \label{eq:k-sample}
+        k_\text{gen}=\frac{\text{Number of Neutrons Produced}}{\text{Number of Source Neutrons}}
+    \end{equation}
+    \begin{equation}
+        \label{eq:keff}
+        \keff \approx \sum_{i=1}^{N} \hat{k}_i
+    \end{equation}
+    The variance of $\keff$ must be calculated differently because it is the variance of \textit{mean}.
+    To handle this special case, it can be shown~\cite{ 244MeanVariance} that the variance scales with an additional factor of $1/N$:
+    \begin{equation}
+        \label{eq:variance-of-the-mean-of-k}
+        \sigma^2_k=\frac{1}{N(N-1)}\sum_{i=1}^{N} \left( k_i-\hat{k} \right)^2
+    \end{equation}
+
+    \begin{equation}
+        \label{distance to boundary}
+        d_b = \frac{x_n-x_b}{\mu}
+    \end{equation}
+    where $mu=\cos\theta$.
+
+
+    \section{Code Design}
+    Three major classes were created:
+    \begin{enumerate}
+        \item \texttt{MCSlab}
+        \begin{enumerate}
+            \item
+        \end{enumerate}
+        \item \texttt{Region}
+        \begin{enumerate}
+            \item
+        \end{enumerate}
+        \item \texttt{Neutron}
+        \begin{enumerate}
+            \item
+        \end{enumerate}
+    \end{enumerate}
+
+
+    \section{Results}
+
+    \begin{figure}[!htb]
+        \centering
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_submission_simulation_pl}
+            \caption{Path length estimate}
+            \label{submission_path_length}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_submission_simulation_col}
+            \caption{Collision estimate}
+            \label{submission_collision}
+        \end{subfigure}
+        \caption{Comparison of simulation estimates. $k_{\text{eff}}=1.183377 \pm 0.000328$}
+        \label{fig:submission_combined}
+    \end{figure}
+
+
+    \section{Future Work}
+    \bibliographystyle{plain}
+    \bibliography{CP1}
+
 \clearpage
 
-\begin{abstract}
+    \appendix
 
-\end{abstract}
+    \section{Additional Example Solutions}
+    \begin{figure}[!htb]
+        \centering
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_1_region_pl}
+            \caption{Single region path length estimate}
+            \label{single_path_length}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_1_region_col}
+            \caption{Single region collision estimate}
+            \label{single_collision}
+        \end{subfigure}
+        \caption{Comparison of simulation estimates. $k_{\text{eff}}=1.183377 \pm 0.000328$}
+        \label{fig:single_combined}
+    \end{figure}
 
-\section{Premise}
-The purpose of this paper is to outline the methods used to determine a $k$-eigenvalue solution along with a flux profile for a simple slab of two fissile material in 1-D cartesian, monoenergetic
+    \begin{figure}[!htb]
+        \centering
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_2_region_connected_pl}
+            \caption{Double region connected path length estimate}
+            \label{double_connected_path_length}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_2_region_connected_col}
+            \caption{Double region connected collision estimate}
+            \label{double_connected_collision}
+        \end{subfigure}
+        \caption{Comparison of simulation estimates. $k_{\text{eff}}=1.183377 \pm 0.000328$}
+        \label{fig:double-connected-combined}
+    \end{figure}
 
-\section{Theory}
-\section{Code Design}
-\section{Results}
-\section{Future Work}
-\bibliographystyle{ieeetr}
-\bibliography{CP1.bib}
 
-\appendix
-\section{Additional Example Solutions}
+    \begin{figure}[!htb]
+        \centering
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_2_region_split_pl}
+            \caption{Double region split path length estimate}
+            \label{double_split_path_length}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_2_region_split_col}
+            \caption{Double region split collision estimate}
+            \label{double_split_collision}
+        \end{subfigure}
+        \caption{Comparison of simulation estimates. $k_{\text{eff}}=1.183377 \pm 0.000328$}
+        \label{fig:double_split_combined}
+    \end{figure}
 
 \end{document}
