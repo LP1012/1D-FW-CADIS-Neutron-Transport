@@ -20,7 +20,6 @@ MCSlab::MCSlab(const std::string input_file_name)
   _n_total_cells = 0;
   _n_fissionable_regions = 0;
   readInput();
-  setMinMax();
   fissionRegions();
 };
 
@@ -354,18 +353,6 @@ void MCSlab::fissionRegions() {
       _fissionable_regions.push_back(region);
   }
   _n_fissionable_regions = _fissionable_regions.size();
-}
-
-void MCSlab::setMinMax() {
-  _domainMin = _regions[0].xMin();
-  _domainMax = _regions[0].xMax();
-
-  for (auto region : _regions) {
-    if (region.xMin() < _domainMin)
-      _domainMin = region.xMin();
-    if (region.xMax() > _domainMax)
-      _domainMax = region.xMax();
-  }
 }
 
 unsigned int MCSlab::collisionIndex(const Neutron &neutron) {

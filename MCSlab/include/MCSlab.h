@@ -14,21 +14,28 @@ public:
   /// method to run simulation
   void k_eigenvalue();
 
+  /// @brief throws a random number to see if absorption occurred
   bool testAbsorption(const Neutron &neutron);
+  /// @brief carries out events of an absorption, assuming one occurs
   void absorption(Neutron &neutron);
+  /// @brief carries out events of a scattering, assuming one occurs
   void scatter(Neutron &neutron);
 
+  /// @brief computes Shannon Entropy for source convergence
   double shannonEntropy(const std::vector<unsigned long int> &collision_bins);
 
-  // define getter functions
+  /// define getter functions
   unsigned int nParticles() { return _n_particles; }
   unsigned int nGenerations() { return _n_generations; }
   unsigned int nInactive() { return _n_inactive; }
 
 protected:
-  unsigned int _n_particles;   // number of neutrons per generation
-  unsigned int _n_generations; // number of generations
-  unsigned int _n_inactive;    // number of inactive cycles
+  /// number of neutrons per generation
+  unsigned int _n_particles;
+  /// number of generations
+  unsigned int _n_generations;
+  /// number of inactive cycles
+  unsigned int _n_inactive;
 
   /// simulation input file
   const std::string _input_file_name;
@@ -41,10 +48,6 @@ protected:
   std::vector<double> _cell_widths;         // width of each cell
   std::vector<double> _all_cell_centers; // vector of all cell center locations
   std::vector<double> _Sigma_t_vals;
-
-  // hold  min and max of computation domain
-  double _domainMin;
-  double _domainMax;
 
   // initialize RNG
   UniformRNG _rng;
@@ -67,8 +70,6 @@ protected:
 
   void readInput();
   void fissionRegions();
-
-  void setMinMax();
 
   unsigned int collisionIndex(const Neutron &neutron);
 
