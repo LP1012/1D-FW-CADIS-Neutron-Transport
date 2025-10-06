@@ -50,23 +50,11 @@ NPRE 555: Reactor Theory I}
 
 
     \section{Code Design}
-    Three major classes were created:
-    \begin{enumerate}
-        \item \texttt{MCSlab}
-        \begin{enumerate}
-            \item \texttt{}
-        \end{enumerate}
-        \item \texttt{Region}
-        \begin{enumerate}
-            \item
-        \end{enumerate}
-        \item \texttt{Neutron}
-        \begin{enumerate}
-            \item
-        \end{enumerate}
-    \end{enumerate}
-
-
+    A code was written in \texttt{C++} to fascilite the computations of arbitrary 1D regions either connected or separated by a void.
+    It was designed to be as reusable and flexible as possible.
+    Three major classes were created: \texttt{MCSlab}, \texttt{Region}, and \texttt{Neutron}.
+    The first of these holds the major computational methods for $k$-eigenvalue and flux calculations, the second holds material and geometry information for each users-specified region, and the last holds information and methods pertaining to neutrons and their position within the simulation.
+    A non-exhaustive list of code elements from each of these has been included along with a short description in \cref{tab: code classes}.
     \begin{sidewaystable}
         \centering
         \begin{tabular}{llll}
@@ -116,8 +104,18 @@ NPRE 555: Reactor Theory I}
         \label{tab: code classes}
     \end{sidewaystable}
 
+    In addition, a flowchart has been provided in \cref{fig:flowchart} that outlines the steps taken in a single generation of neutrons.
+    Note that after each generation, the Shannon-Entropy, running $\keff$ value, and standard deviation are reported to the user as commandline output.
+
+    \begin{figure}[!htb]
+        \centering
+        \includegraphics[width=0.8\textwidth]{figs/MC-flowchart}
+        \caption{Monte Carlo code flowchart for a single generation}
+        \label{fig:flowchart}
+    \end{figure}
 
     \section{Results}
+    
 
     \begin{figure}[!htb]
         \centering
