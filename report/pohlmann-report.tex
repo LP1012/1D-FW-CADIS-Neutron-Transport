@@ -1,4 +1,6 @@
 \documentclass{hw_report}
+\usepackage{booktabs}
+\usepackage{rotating}
 \newcommand{\keff}{k_{\text{eff}}}
 
 \onehalfspacing
@@ -44,7 +46,7 @@ NPRE 555: Reactor Theory I}
         \label{distance to boundary}
         d_b = \frac{x_n-x_b}{\mu}
     \end{equation}
-    where $mu=\cos\theta$.
+    where $\mu=\cos\theta$.
 
 
     \section{Code Design}
@@ -52,7 +54,7 @@ NPRE 555: Reactor Theory I}
     \begin{enumerate}
         \item \texttt{MCSlab}
         \begin{enumerate}
-            \item
+            \item \texttt{}
         \end{enumerate}
         \item \texttt{Region}
         \begin{enumerate}
@@ -63,6 +65,56 @@ NPRE 555: Reactor Theory I}
             \item
         \end{enumerate}
     \end{enumerate}
+
+
+    \begin{sidewaystable}
+        \centering
+        \begin{tabular}{llll}
+            \toprule
+            \textbf{Class} & \textbf{Item}                   & \textbf{Type} & \textbf{Description}                                                                 \\
+            \midrule
+            MCSlab         & \texttt{k\_eigenvalue}           & Method                      & Holds random walk algorithm, tally calculations                                      \\
+
+            & \texttt{readInput }             & Method                      & Read user-supplied input file and initialize attributes                              \\
+
+            & \texttt{absorption}             & Method                      & If absorption occurs, calculate number of neutrons born and kill particle            \\
+
+            & \texttt{scatter}                & Method                      & If scatter occurs, change the particle’s direction                                   \\
+
+            & \texttt{calculateK}             & Method                      & Calculate $k_{\text{gen}}$, $\keff$, and the standard deviation                      \\
+
+            & \texttt{updatePathLengths}      & Method                      & For every movement, add the flight distance of the neutron to bins                   \\
+
+            & \texttt{updateCollisions}       & Method                      & For every collision, add 1 to bin of collision location                              \\
+
+            & \texttt{exportFlux}             & Method                      & Export flux values to \texttt{.csv} file                                             \\
+            Region         & \texttt{\_Sigma\_s}               & Attribute                   & Scattering macroscopic cross section                                                 \\
+
+            & \texttt{\_Sigma\_a}               & Attribute                   & Absorption macroscopic cross section                                                 \\
+
+            & \texttt{\_nu\_Sigma\_f}            & Attribute                   & Fission macroscopic cross section multiplied by the number neutrons born per fission \\
+
+            & \texttt{\_Sigma\_t}               & Attribute                   & Total macroscopic cross section                                                      \\
+
+            & \texttt{\_n\_per\_fission}         & Attribute                   & Number of neutrons produced per absorption                                           \\
+
+            & \texttt{populateCellLocs}       & Method                      & Populate cell centers and bounds within a single region                              \\
+            Neutron        & \texttt{movePositionAndRegion}         & Method                      & Move neutron position and change its region accordingly                              \\
+
+            & \texttt{setRandomStartPosition} & Method                      & Set a random start position within fissionable material                              \\
+
+            & \texttt{distanceToCollisions}   & Method                      & Calculate the distance to next collision within region                               \\
+
+            & \texttt{distanceToEdge}         & Method                      & Calculate the distance to the nearest edge in the direction of $\mu$                 \\
+
+            & \texttt{\_is\_alive}              & Attribute                   & Boolean value holding whether particle is still alive                                \\
+
+            & \texttt{kill}                   & Method                      & Switches \texttt{\_is\_alive} to \texttt{False}, terminating the walk                  \\
+            \bottomrule
+        \end{tabular}
+        \caption{Major classes within code and their description}
+        \label{tab: code classes}
+    \end{sidewaystable}
 
 
     \section{Results}
@@ -91,9 +143,10 @@ NPRE 555: Reactor Theory I}
     \bibliographystyle{plain}
     \bibliography{CP1}
 
-\clearpage
+    \clearpage
 
     \appendix
+
 
     \section{Additional Example Solutions}
     \begin{figure}[!htb]
