@@ -20,7 +20,6 @@ MCSlab::MCSlab(const std::string input_file_name)
   _n_total_cells = 0;
   _n_fissionable_regions = 0;
   readInput();
-  setMinMax();
   fissionRegions();
 };
 
@@ -66,7 +65,8 @@ void MCSlab::k_eigenvalue() {
   printf("|Generation| Shannon Entropy |    keff    |  std_dev   |\n");
   printf("--------------------------------------------------------\n");
 
-  std::vector<double> flux_bins(_n_total_cells, 0);
+  std::vector<double> flux_pl_bins(_n_total_cells, 0);
+  std::vector<double> flux_col_bins(_n_total_cells, 0);
 
   for (auto i = 0; i < _n_generations; i++) {
     std::vector<unsigned long int> source_bins(_n_total_cells, 0);
@@ -100,7 +100,7 @@ void MCSlab::k_eigenvalue() {
           unsigned int current_index = neutron.region().regionIndex();
           if (neutron.mu() > 0) {
             if (i == _n_generations - 1)
-              updatePathLengths(flux_bins, neutron.pos(),
+              updatePathLengths(flux_pl_bins, neutron.pos(),
                                 _regions[current_index].xMax(), neutron.mu());
             if (current_index == _regions.size() - 1)
               // neutron escapes on right side
@@ -114,14 +114,15 @@ void MCSlab::k_eigenvalue() {
               double new_position = _regions[new_index].xMin();
               if (i == _n_generations - 1) {
                 if (new_position != _regions[current_index].xMax())
-                  updatePathLengths(flux_bins, _regions[current_index].xMax(),
+                  updatePathLengths(flux_pl_bins,
+                                    _regions[current_index].xMax(),
                                     new_position, neutron.mu());
               }
               neutron.movePositionAndRegion(new_position, _regions);
             }
           } else {
             if (i == _n_generations - 1)
-              updatePathLengths(flux_bins, neutron.pos(),
+              updatePathLengths(flux_pl_bins, neutron.pos(),
                                 _regions[current_index].xMin(), neutron.mu());
             if (current_index == 0)
               // neutron escapes on left side
@@ -135,7 +136,8 @@ void MCSlab::k_eigenvalue() {
               double new_position = _regions[new_index].xMax();
               if (i == _n_generations - 1) {
                 if (new_position != _regions[current_index].xMin())
-                  updatePathLengths(flux_bins, _regions[current_index].xMin(),
+                  updatePathLengths(flux_pl_bins,
+                                    _regions[current_index].xMin(),
                                     new_position, neutron.mu());
               }
               neutron.movePositionAndRegion(new_position, _regions);
@@ -146,10 +148,11 @@ void MCSlab::k_eigenvalue() {
           // calculate where collision occurred
           double collision_location =
               neutron.pos() + distanceToCollision * neutron.mu();
+          updateCollisions(flux_col_bins, collision_location);
 
           // update pathlength (regardless of scatter or absorption)
           if (i == _n_generations - 1)
-            updatePathLengths(flux_bins, neutron.pos(), collision_location,
+            updatePathLengths(flux_pl_bins, neutron.pos(), collision_location,
                               neutron.mu());
 
           neutron.movePositionWithinRegion(collision_location);
@@ -196,12 +199,18 @@ void MCSlab::k_eigenvalue() {
 
   printf("--------------------------------------------------------\n");
 
-  // normalize path lengths by the number of particles and the cell width
-  for (auto i = 0; i < flux_bins.size(); i++)
-    flux_bins[i] /= (static_cast<double>(_n_particles) * _cell_widths[i]);
+  // normalize path lengths by the number of source particles and the cell
+  // width. normal number of collisions by tne number of source particles, total
+  // cross section, and cell width.
+  for (auto i = 0; i < flux_pl_bins.size(); i++) {
+    flux_pl_bins[i] /= (static_cast<double>(_n_particles) * _cell_widths[i]);
+    flux_col_bins[i] = static_cast<double>(flux_col_bins[i]) /
+                       static_cast<double>(_n_particles) / _Sigma_t_vals[i] /
+                       _cell_widths[i];
+  }
 
   printf("Exporting flux...");
-  exportFlux(flux_bins);
+  exportFlux(flux_pl_bins, flux_col_bins);
   printf("Done\n\n");
 
   printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
@@ -318,6 +327,9 @@ void MCSlab::readInput() {
     for (auto center : region.cellCenters())
       _all_cell_centers.push_back(center);
 
+    for (auto i = 0; i < region.nCells(); i++)
+      _Sigma_t_vals.push_back(region.SigmaT());
+
     count++;
   }
 
@@ -341,18 +353,6 @@ void MCSlab::fissionRegions() {
       _fissionable_regions.push_back(region);
   }
   _n_fissionable_regions = _fissionable_regions.size();
-}
-
-void MCSlab::setMinMax() {
-  _domainMin = _regions[0].xMin();
-  _domainMax = _regions[0].xMax();
-
-  for (auto region : _regions) {
-    if (region.xMin() < _domainMin)
-      _domainMin = region.xMin();
-    if (region.xMax() > _domainMax)
-      _domainMax = region.xMax();
-  }
 }
 
 unsigned int MCSlab::collisionIndex(const Neutron &neutron) {
@@ -434,7 +434,19 @@ void MCSlab::updatePathLengths(std::vector<double> &path_len_cells,
   }
 }
 
-void MCSlab::exportFlux(const std::vector<double> &flux) {
+void MCSlab::updateCollisions(std::vector<double> &collision_cells,
+                              double position) {
+  for (auto i = 0; i < _n_total_cells; i++) {
+    if (position >= _all_cell_bounds[i] && position < _all_cell_bounds[i + 1]) {
+      collision_cells[i]++;
+      if (position < _all_cell_bounds[i])
+        break;
+    }
+  }
+}
+
+void MCSlab::exportFlux(const std::vector<double> &flux_pl,
+                        const std::vector<double> &flux_col) {
   std::fstream fout;
 
   std::string outfile_name = _input_file_name;
@@ -445,7 +457,11 @@ void MCSlab::exportFlux(const std::vector<double> &flux) {
   fout.open(outfile_name, std::ios::out | std::ios::trunc);
 
   // explort flux values
-  for (auto flux_val : flux)
+  for (auto flux_val : flux_pl)
+    fout << flux_val << ",";
+  fout << "\n";
+
+  for (auto flux_val : flux_col)
     fout << flux_val << ",";
   fout << "\n";
 
