@@ -47,3 +47,8 @@ The user is encouraged to view the bash script included in `examples/` for troub
 ## Report
 The report must be created.
 To use the `Makefile` supplied, navigate to `report`, then run `make`.
+
+### Replicating Results
+The random number generator within `MCSlab` is randomly seeded for each generation, so perfect replication is not possible. 
+However, users are able to run the same input files because all are included within `examples/`.
+Runnning the provided bash script will reproduce the results.
