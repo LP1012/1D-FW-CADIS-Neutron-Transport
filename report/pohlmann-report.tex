@@ -34,6 +34,7 @@ NPRE 555: Reactor Theory I}
 
 
     \section{Theory}
+
     The eigenvalue for each generation of neutrons is calculated with:
     \begin{equation}
         \label{eq:k-sample}
@@ -54,7 +55,7 @@ NPRE 555: Reactor Theory I}
     \end{equation}
     This ensures that for each additional $k_\text{gen}$, the variance will shrink.
 
-    For cell $i$, the flux has been estimated in two ways.
+    For cell $i$, the flux has been estimated in two ways~\cite{lewisComputationalMethodsNeutron1993}.
     First, the collision estimate:
     \begin{equation}
         \label{eq:collision-estimate}
@@ -127,6 +128,7 @@ NPRE 555: Reactor Theory I}
     These tests are simple unit tests that were an integral part of the debugging and implementation process.
 
     In addition, a flowchart has been provided in \cref{fig:flowchart} that outlines the steps taken in a single generation of neutrons.
+    It was heavily inspired through lecture notes given in class~\cite{huffLectureNotes2025}.
     Note that after each generation, the Shannon-Entropy, running $\keff$ value, and standard deviation are reported to the user as commandline output.
 
     \begin{figure}[!htb]
