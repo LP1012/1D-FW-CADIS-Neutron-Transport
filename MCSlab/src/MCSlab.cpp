@@ -99,7 +99,7 @@ void MCSlab::k_eigenvalue() {
           // neutron has reached edge of region
           unsigned int current_index = neutron.region().regionIndex();
           if (neutron.mu() > 0) {
-            if (i == _n_generations - 1)
+            if (i > _n_inactive)
               updatePathLengths(flux_pl_bins, neutron.pos(),
                                 _regions[current_index].xMax(), neutron.mu());
             if (current_index == _regions.size() - 1)
@@ -112,7 +112,7 @@ void MCSlab::k_eigenvalue() {
                 new_index++; // skip over void regions
 
               double new_position = _regions[new_index].xMin();
-              if (i == _n_generations - 1) {
+              if (i >_n_inactive) {
                 if (new_position != _regions[current_index].xMax())
                   updatePathLengths(flux_pl_bins,
                                     _regions[current_index].xMax(),
@@ -121,7 +121,7 @@ void MCSlab::k_eigenvalue() {
               neutron.movePositionAndRegion(new_position, _regions);
             }
           } else {
-            if (i == _n_generations - 1)
+            if (i >_n_inactive)
               updatePathLengths(flux_pl_bins, neutron.pos(),
                                 _regions[current_index].xMin(), neutron.mu());
             if (current_index == 0)
@@ -134,7 +134,7 @@ void MCSlab::k_eigenvalue() {
                 new_index--; // skip over void regions
 
               double new_position = _regions[new_index].xMax();
-              if (i == _n_generations - 1) {
+              if (i >_n_inactive) {
                 if (new_position != _regions[current_index].xMin())
                   updatePathLengths(flux_pl_bins,
                                     _regions[current_index].xMin(),
@@ -151,7 +151,7 @@ void MCSlab::k_eigenvalue() {
           updateCollisions(flux_col_bins, collision_location);
 
           // update pathlength (regardless of scatter or absorption)
-          if (i == _n_generations - 1)
+          if (i >_n_inactive)
             updatePathLengths(flux_pl_bins, neutron.pos(), collision_location,
                               neutron.mu());
 
