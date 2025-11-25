@@ -20,6 +20,7 @@ MCSlab::MCSlab(const std::string input_file_name) : _input_file_name(input_file_
   _n_total_cells = 0;
   _n_fissionable_regions = 0;
   readInput();
+  exportRegionsToCsv();
   fissionRegions();
 };
 
@@ -99,71 +100,49 @@ MCSlab::k_eigenvalue()
             neutron.distanceToCollision(); // store in a variable because this calculation involves
                                            // a random number
 
-        // find distance to nearest edge
-        double distanceToEdge = neutron.distanceToEdge();
+        double distanceToEdge = neutron.distanceToEdge(); // find distance to nearest edge
 
-        if (distanceToCollision > distanceToEdge)
+        int mu_sign = neutron.mu() / std::abs(neutron.mu()); // will be +/-1
+
+        if (distanceToEdge < distanceToCollision) // neutron has reached edge of region
         {
-          // neutron has reached edge of region
           unsigned int current_index = neutron.region().regionIndex();
-          if (neutron.mu() > 0)
+
+          if (current_index == _regions.size() - 1 ||
+              current_index == 0) // neutron escapes on right or left side
           {
-            // update pathlength here
-
-            if (current_index == _regions.size() - 1)
-              neutron.kill(); // neutron escapes on right side
-
-            else
-            {
-              // move neutron to a region on the right
-              unsigned int new_index = current_index + 1;
-              while (_regions[new_index].SigmaA() < 1e-15)
-                new_index++; // skip over void regions
-
-              double new_position = _regions[new_index].xMin();
-              if (new_position != _regions[current_index].xMax())
-              { // update pathlength here
-              }
-              neutron.movePositionAndRegion(new_position, _regions);
-            }
+            double final_position =
+                mu_sign < 0 ? _regions[current_index].xMin() : _regions[current_index].xMax();
+            recordPathLenTally(i, neutron.pos(), final_position, current_index);
+            neutron.kill();
           }
           else
           {
-            // update pathlength here
+            // move neutron to a region on the right
+            unsigned int new_index = current_index + mu_sign;
 
-            if (current_index == 0)
-              neutron.kill(); // neutron escapes on left side
+            while (_regions[new_index].SigmaA() < 1e-15)
+              new_index = new_index + mu_sign; // skip over void regions
 
-            else
-            {
-              // move neutron to a region on the left
-              unsigned int new_index = current_index - 1;
-              while (_regions[new_index].SigmaA() < 1e-15)
-                new_index--; // skip over void regions
-
-              double new_position = _regions[new_index].xMax();
-              if (new_position != _regions[current_index].xMin())
-              { // update pathlength here
-              }
-              neutron.movePositionAndRegion(new_position, _regions);
-            }
+            double new_position =
+                mu_sign > 0 ? _regions[new_index].xMin() : _regions[new_index].xMax();
+            recordPathLenTally(i, neutron.pos(), new_position, neutron.region().regionIndex());
+            neutron.movePositionAndRegion(new_position, _regions);
           }
         }
-        else
+        else // neutron collides
         {
           // calculate where collision occurred
           double collision_location = neutron.pos() + distanceToCollision * neutron.mu();
 
-          // update pathlength (regardless of scatter or absorption)
-          // record collisions and paths here
+          // tally collision position and path traveled
+          recordPathLenTally(i, neutron.pos(), collision_location, neutron.region().regionIndex());
+          recordCollisionTally(i, collision_location, neutron.region().regionIndex());
 
+          // shift neutron position
           neutron.movePositionWithinRegion(collision_location);
 
-          if (testAbsorption(neutron))
-            absorption(neutron);
-
-          else
-            scatter(neutron);
+          testAbsorption(neutron) ? absorption(neutron) : scatter(neutron);
         }
       }
     }
@@ -200,9 +179,7 @@ MCSlab::k_eigenvalue()
   }
 
   printf("--------------------------------------------------------\n");
-
   printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
-
   printf("Simulation complete. :-)\n\n");
 }
 
@@ -425,7 +402,9 @@ MCSlab::calculateK()
 }
 
 void
-MCSlab::recordCollisionTally(const int current_generation)
+MCSlab::recordCollisionTally(const int current_generation,
+                             const double location,
+                             const unsigned int region_num)
 {
   if (current_generation > _n_inactive - 1)
   {
@@ -434,7 +413,10 @@ MCSlab::recordCollisionTally(const int current_generation)
 }
 
 void
-MCSlab::recordPathLenTally(const int current_generation)
+MCSlab::recordPathLenTally(const int current_generation,
+                           const double start_pos,
+                           const double end_pos,
+                           const unsigned int region_num)
 {
   if (current_generation > _n_inactive - 1)
   {

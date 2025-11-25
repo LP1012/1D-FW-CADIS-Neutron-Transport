@@ -84,9 +84,14 @@ protected:
 
   /// @brief record the location and region of a single collision
   /// @param current_generation
-  void recordCollisionTally(const int current_generation);
+  void recordCollisionTally(const int current_generation,
+                            const double location,
+                            const unsigned int region_num);
 
   /// @brief record start and end location of single neutron movement and the region the movement occurred in
   /// @param current_generation
-  void recordPathLenTally(const int current_generation);
+  void recordPathLenTally(const int current_generation,
+                          const double start_pos,
+                          const double end_pos,
+                          const unsigned int region_num);
 };
