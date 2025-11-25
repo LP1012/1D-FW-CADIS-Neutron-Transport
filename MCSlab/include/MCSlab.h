@@ -5,24 +5,27 @@
 #include "Region.h"
 #include "tinyxml2.h"
 #include <vector>
+#include <fstream>
 
-class MCSlab {
+class MCSlab
+{
   friend class MCSlabTest;
 
 public:
   MCSlab(const std::string input_file_name);
+
   /// method to run simulation
   void k_eigenvalue();
 
   /// @brief throws a random number to see if absorption occurred
-  bool testAbsorption(const Neutron &neutron);
+  bool testAbsorption(const Neutron & neutron);
   /// @brief carries out events of an absorption, assuming one occurs
-  void absorption(Neutron &neutron);
+  void absorption(Neutron & neutron);
   /// @brief carries out events of a scattering, assuming one occurs
-  void scatter(Neutron &neutron);
+  void scatter(Neutron & neutron);
 
   /// @brief computes Shannon Entropy for source convergence
-  double shannonEntropy(const std::vector<unsigned long int> &collision_bins);
+  double shannonEntropy(const std::vector<unsigned long int> & collision_bins);
 
   /// define getter functions
   unsigned int nParticles() { return _n_particles; }
@@ -40,20 +43,21 @@ protected:
   /// simulation input file
   const std::string _input_file_name;
 
+  std::fstream _collision_outfile;  // output file for storing collisions
+  std::fstream _pathlength_outfile; // output file for pathlength locations
+
   std::vector<Region> _regions;             // vector of regions
   std::vector<Region> _fissionable_regions; // vector of fissile regions
   unsigned int _n_fissionable_regions;      // number of fissionable regions
   std::vector<double> _all_cell_bounds;     // all cell boundaries
   unsigned int _n_total_cells;              // number of cells in all regions
   std::vector<double> _cell_widths;         // width of each cell
-  std::vector<double> _all_cell_centers; // vector of all cell center locations
+  std::vector<double> _all_cell_centers;    // vector of all cell center locations
   std::vector<double> _Sigma_t_vals;
 
-  // initialize RNG
-  UniformRNG _rng;
+  UniformRNG _rng; // initialize RNG
 
-  unsigned int
-      _n_neutrons_born; // the number of fission neutrons born in generation
+  unsigned int _n_neutrons_born; // the number of fission neutrons born in generation
 
   // banks of source sites
   std::vector<Neutron> _old_fission_bank;
@@ -66,18 +70,23 @@ protected:
   double _k_std;                  // std_dev of k-eff
 
   double _shannon_entropy;
-  std::vector<double> _scalar_flux; // flux at each point in mesh
 
   void readInput();
   void fissionRegions();
 
-  unsigned int collisionIndex(const Neutron &neutron);
+  unsigned int collisionIndex(const Neutron & neutron);
 
-  void updatePathLengths(std::vector<double> &path_len_cells,
-                         const double x_start, const double x_end,
-                         const double mu);
-  void updateCollisions(std::vector<double> &collision_cells, double position);
+  /// @brief method initializes output files for flux tallies (collision and pathlength)
+  void initializeOutput();
 
-  void exportFlux(const std::vector<double> &flux_pl,
-                  const std::vector<double> &flux_col);
+  /// @brief exports regions in order from left to right for future postprocessing
+  void exportRegionsToCsv();
+
+  /// @brief record the location and region of a single collision
+  /// @param current_generation
+  void recordCollisionTally(const int current_generation);
+
+  /// @brief record start and end location of single neutron movement and the region the movement occurred in
+  /// @param current_generation
+  void recordPathLenTally(const int current_generation);
 };
