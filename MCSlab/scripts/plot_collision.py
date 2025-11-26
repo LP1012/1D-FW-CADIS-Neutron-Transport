@@ -22,9 +22,8 @@ if len(sys.argv) != 2:
     raise ValueError("Usage: python plot_collision.py <basename>")
 
 basename = sys.argv[1]  # e.g. "run1"
-xml_file = basename + ".xml"  # e.g. "input.xml"
 
-# input collision file and region file
+xml_file = basename + ".xml"
 collisions_file = basename + "_col.csv"
 regions_file = basename + "_regions.csv"
 
@@ -44,53 +43,52 @@ total_active_particles = n_particles * (n_generations - n_inactive)
 print("Total active particles =", total_active_particles)
 
 # ---------------------------------------------------------------------
-# Bin geometry
+# Region-dependent grid construction
 # ---------------------------------------------------------------------
-num_regions = len(regions)
+n_cells_per_region = 10  # adjustable
+
+bin_edges_list = []
+sigma_t_bins = []
+bin_widths = []
+
+for _, reg in regions.iterrows():
+    xmin_r = reg["xmin"]
+    xmax_r = reg["xmax"]
+    sigma_t = reg["Sigma_t"]
+
+    # region-specific equal spacing
+    edges = np.linspace(xmin_r, xmax_r, n_cells_per_region + 1)
+    width = (xmax_r - xmin_r) / n_cells_per_region
+
+    bin_edges_list.append(edges)
+    bin_widths.extend([width] * n_cells_per_region)
+    sigma_t_bins.extend([sigma_t] * n_cells_per_region)
+
+# concatenate sub-edges while removing duplicates at boundaries
+bin_edges = np.concatenate(
+    [be if i == 0 else be[1:] for i, be in enumerate(bin_edges_list)]
+)
+
+bin_widths = np.array(bin_widths)
+sigma_t_bins = np.array(sigma_t_bins)
+
+n_bins = len(sigma_t_bins)
 positions = df["position"].to_numpy()
 
-n_cells_per_region = 50  # adjustable
-n_bins = n_cells_per_region * num_regions
+# ---------------------------------------------------------------------
+# Digitize collision positions into the region-aware bins
+# ---------------------------------------------------------------------
+bin_indices = np.digitize(positions, bin_edges) - 1
 
-xmin = regions["xmin"].iloc[0]
-xmax = regions["xmax"].iloc[-1]
-bin_edges = np.linspace(xmin, xmax, n_bins + 1)
-
-# digitize positions → bin indices in [1, n_bins]
-bin_indices = np.digitize(positions, bin_edges) - 1  # shift to [0, n_bins-1]
-
-# initialize bins
 flux_bins = np.zeros(n_bins)
-
-# count collisions
 for idx in bin_indices:
     if 0 <= idx < n_bins:
         flux_bins[idx] += 1
 
 # ---------------------------------------------------------------------
-# Normalize: divide by total Σ_t in the region containing the bin
+# Normalize flux: collisions / (Σ_t * total active particles * Δx)
 # ---------------------------------------------------------------------
-
-# Build an array giving Σ_t for each bin
-sigma_t_bins = np.zeros(n_bins)
-
-for i, reg in regions.iterrows():
-    reg_xmin = reg["xmin"]
-    reg_xmax = reg["xmax"]
-    sigma_t = reg["Sigma_t"]
-
-    # compute which bin indices belong to this region
-    left_bin = int((reg_xmin - xmin) / (xmax - xmin) * n_bins)
-    right_bin = int((reg_xmax - xmin) / (xmax - xmin) * n_bins)
-
-    # clip to array limits
-    left_bin = max(left_bin, 0)
-    right_bin = min(right_bin, n_bins)
-
-    sigma_t_bins[left_bin:right_bin] = sigma_t
-
-# normalized flux = collisions / (Σ_t * total active particles)
-normalized_flux = flux_bins / (sigma_t_bins * total_active_particles)
+normalized_flux = flux_bins / (sigma_t_bins * total_active_particles * bin_widths)
 
 # ---------------------------------------------------------------------
 # Plot
@@ -101,6 +99,7 @@ plt.figure(figsize=(8, 6))
 sns.lineplot(x=bin_centers, y=normalized_flux)
 plt.xlabel("x")
 plt.ylabel("Normalized Flux")
-plt.title("Collision Density / Σ_t")
+plt.title("Collision Density / Σₜ")
+plt.ylim(bottom=0)
 plt.tight_layout()
 plt.show()
