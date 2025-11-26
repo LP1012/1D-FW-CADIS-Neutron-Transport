@@ -43,8 +43,8 @@ protected:
   /// simulation input file
   const std::string _input_file_name;
 
-  std::fstream _collision_outfile;  // output file for storing collisions
-  std::fstream _pathlength_outfile; // output file for pathlength locations
+  std::ofstream _collision_outfile;  // output file for storing collisions
+  std::ofstream _pathlength_outfile; // output file for pathlength locations
 
   std::vector<Region> _regions;             // vector of regions
   std::vector<Region> _fissionable_regions; // vector of fissile regions
@@ -86,12 +86,14 @@ protected:
   /// @param current_generation
   void recordCollisionTally(const int current_generation,
                             const double location,
-                            const unsigned int region_num);
+                            const unsigned int region_num,
+                            const bool absorbed);
 
   /// @brief record start and end location of single neutron movement and the region the movement occurred in
   /// @param current_generation
   void recordPathLenTally(const int current_generation,
                           const double start_pos,
                           const double end_pos,
+                          const double mu,
                           const unsigned int region_num);
 };

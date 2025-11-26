@@ -22,17 +22,6 @@ MCSlab::MCSlab(const std::string input_file_name) : _input_file_name(input_file_
   readInput();
   exportRegionsToCsv();
   fissionRegions();
-};
-
-void
-MCSlab::initializeOutput()
-{
-}
-
-void
-MCSlab::k_eigenvalue()
-{
-  // this is where the simulation will be run
 
   // Create code head
   printf("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
@@ -66,12 +55,41 @@ MCSlab::k_eigenvalue()
   printf("        Inactive Cycles:      %d\n", _n_inactive);
   printf("        Active Cycles:        %d\n\n", _n_generations - _n_inactive);
 
+  initializeOutput();
+
   printf("--------------------------------------------------------\n");
   printf("|Generation| Shannon Entropy |    keff    |  std_dev   |\n");
   printf("--------------------------------------------------------\n");
+};
 
-  std::vector<double> flux_pl_bins(_n_total_cells, 0);
-  std::vector<double> flux_col_bins(_n_total_cells, 0);
+void
+MCSlab::initializeOutput()
+{
+  std::string outfile_name = _input_file_name;
+  removeSuffix(outfile_name, ".xml");
+
+  std::string collision_outfile_name = outfile_name + "_col.csv";
+  std::string pl_outfile_name = outfile_name + "_pl.csv";
+
+  printf("Creating output files...\n");
+  printf("  Collision:  %s\n", collision_outfile_name.c_str());
+  printf("  Pathlength: %s\n\n", pl_outfile_name.c_str());
+  _collision_outfile.open(collision_outfile_name);
+  _pathlength_outfile.open(pl_outfile_name);
+
+  if (!_collision_outfile.is_open())
+    throw std::runtime_error("Collision output file not opened successfully!");
+  if (!_pathlength_outfile.is_open())
+    throw std::runtime_error("Pathlength output file not opened successfully!");
+
+  _collision_outfile << "position,region,type" << std::endl;
+  _pathlength_outfile << "start,end,pathlength,region" << std::endl;
+}
+
+void
+MCSlab::k_eigenvalue()
+{
+  // this is where the simulation will be run
 
   for (auto i = 0; i < _n_generations; i++)
   {
@@ -113,12 +131,12 @@ MCSlab::k_eigenvalue()
           {
             double final_position =
                 mu_sign < 0 ? _regions[current_index].xMin() : _regions[current_index].xMax();
-            recordPathLenTally(i, neutron.pos(), final_position, current_index);
+            recordPathLenTally(i, neutron.pos(), final_position, neutron.mu(), current_index);
             neutron.kill();
           }
           else
           {
-            // move neutron to a region on the right
+            // move neutron to the next region (depending on direction)
             unsigned int new_index = current_index + mu_sign;
 
             while (_regions[new_index].SigmaA() < 1e-15)
@@ -126,23 +144,27 @@ MCSlab::k_eigenvalue()
 
             double new_position =
                 mu_sign > 0 ? _regions[new_index].xMin() : _regions[new_index].xMax();
-            recordPathLenTally(i, neutron.pos(), new_position, neutron.region().regionIndex());
+            recordPathLenTally(
+                i, neutron.pos(), new_position, neutron.mu(), neutron.region().regionIndex());
             neutron.movePositionAndRegion(new_position, _regions);
           }
         }
         else // neutron collides
         {
-          // calculate where collision occurred
-          double collision_location = neutron.pos() + distanceToCollision * neutron.mu();
+          double collision_location =
+              neutron.pos() +
+              distanceToCollision * neutron.mu();  // calculate where collision occurred
+          bool absorbed = testAbsorption(neutron); // did an absorption occur?
 
           // tally collision position and path traveled
-          recordPathLenTally(i, neutron.pos(), collision_location, neutron.region().regionIndex());
-          recordCollisionTally(i, collision_location, neutron.region().regionIndex());
+          recordPathLenTally(
+              i, neutron.pos(), collision_location, neutron.mu(), neutron.region().regionIndex());
+          recordCollisionTally(i, collision_location, neutron.region().regionIndex(), absorbed);
 
           // shift neutron position
           neutron.movePositionWithinRegion(collision_location);
 
-          testAbsorption(neutron) ? absorption(neutron) : scatter(neutron);
+          absorbed ? absorption(neutron) : scatter(neutron);
         }
       }
     }
@@ -404,11 +426,16 @@ MCSlab::calculateK()
 void
 MCSlab::recordCollisionTally(const int current_generation,
                              const double location,
-                             const unsigned int region_num)
+                             const unsigned int region_num,
+                             const bool absorbed)
 {
   if (current_generation > _n_inactive - 1)
   {
-    // record
+    _collision_outfile << location << "," << region_num << ",";
+    if (absorbed)
+      _collision_outfile << "absorption" << std::endl;
+    else
+      _collision_outfile << "scatter" << std::endl;
   }
 }
 
@@ -416,11 +443,14 @@ void
 MCSlab::recordPathLenTally(const int current_generation,
                            const double start_pos,
                            const double end_pos,
+                           const double mu,
                            const unsigned int region_num)
 {
   if (current_generation > _n_inactive - 1)
   {
-    // record
+    double pathlength = (end_pos - start_pos) / mu; // check this!
+    _pathlength_outfile << start_pos << "," << end_pos << "," << pathlength << "," << region_num
+                        << std::endl;
   }
 }
 
