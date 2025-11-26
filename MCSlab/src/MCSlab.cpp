@@ -467,7 +467,7 @@ MCSlab::exportRegionsToCsv(const std::string & outfile)
 
   region_outfile << "region_num,xmin,xmax,Sigma_a,Sigma_s,Sigma_t,nuSigma_f" << std::endl;
   for (auto & region : _regions)
-    region_outfile << region.regionIndex() << "," << region.xMin() << "," << region.xMax()
+    region_outfile << region.regionIndex() << "," << region.xMin() << "," << region.xMax() << ","
                    << region.SigmaA() << "," << region.SigmaS() << "," << region.SigmaT() << ","
                    << region.nuSigF() << std::endl;
 
