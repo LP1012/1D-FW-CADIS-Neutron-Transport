@@ -52,4 +52,4 @@ MCSlab/include/Makefile
 .vscode/
 
 MCSlab/examples/*.csv
-
+.idea/
