@@ -361,7 +361,7 @@ MCSlab::fissionRegions()
 {
   for (auto region : _regions)
   {
-    if (region.nuSigF() > 1e-8)
+    if (region.nuSigF() > 1e-15)
       _fissionable_regions.push_back(region);
   }
   _n_fissionable_regions = _fissionable_regions.size();
