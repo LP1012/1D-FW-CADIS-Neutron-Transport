@@ -165,8 +165,13 @@ MCSlab::k_eigenvalue()
           // shift neutron position
           neutron.movePositionWithinRegion(collision_location);
 
-          absorbed ?: source_bins[collisionIndex(neutron)] += 1;
-          absorbed ? absorption(neutron) : scatter(neutron);
+          if (absorbed)
+          {
+            source_bins[collisionIndex(neutron)] += 1;
+            absorption(neutron);
+          }
+          else
+            scatter(neutron);
         }
       }
     }
@@ -380,9 +385,12 @@ MCSlab::shannonEntropy(const std::vector<unsigned long int> & collision_bins)
   double shannon_entropy = 0; // initialize
 
   // calculate total number of collisions
-  unsigned int n_total_collisions;
-  for (auto collisions : collision_bins)
-    n_total_collisions += collisions;
+  uint64_t n_total_collisions = 0ULL;
+  n_total_collisions =
+      std::accumulate(collision_bins.begin(), collision_bins.end(), static_cast<uint64_t>(0));
+
+  if (n_total_collisions == 0ULL)
+    return 0.0; // no collisions
 
   // normalize collision_bins
   std::vector<double> normalized_col_bins(collision_bins.size(), 0);
