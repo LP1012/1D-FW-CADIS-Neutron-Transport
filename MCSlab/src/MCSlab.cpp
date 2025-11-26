@@ -83,7 +83,7 @@ MCSlab::initializeOutput()
     throw std::runtime_error("Pathlength output file not opened successfully!");
 
   _collision_outfile << "position,region,type" << std::endl;
-  _pathlength_outfile << "start,end,pathlength,region" << std::endl;
+  _pathlength_outfile << "start,end,mu,pathlength,region" << std::endl;
 }
 
 void
@@ -450,8 +450,8 @@ MCSlab::recordPathLenTally(const int current_generation,
   if (current_generation > _n_inactive - 1)
   {
     double pathlength = (end_pos - start_pos) / mu; // check this!
-    _pathlength_outfile << start_pos << "," << end_pos << "," << pathlength << "," << region_num
-                        << std::endl;
+    _pathlength_outfile << start_pos << "," << end_pos << "," << mu << "," << pathlength << ","
+                        << region_num << std::endl;
   }
 }
 
