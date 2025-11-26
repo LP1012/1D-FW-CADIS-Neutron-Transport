@@ -2,12 +2,17 @@
 
 #include <vector>
 
-class Region {
+class Region
+{
   friend class RegionTest;
 
 public:
-  Region(const double xmin, const double xmax, const unsigned int n_cells,
-         const double Sigma_a, const double Sigma_s, const double nu_Sigma_f);
+  Region(const double xmin,
+         const double xmax,
+         const unsigned int n_cells,
+         const double Sigma_a,
+         const double Sigma_s,
+         const double nu_Sigma_f);
 
   static Region voidRegion(double xmin, double xmax, unsigned n_cells);
 
@@ -18,6 +23,7 @@ public:
   double xMax() const { return _xmax; }
   double nuSigF() const { return _nu_Sigma_f; }
   double SigmaA() const { return _Sigma_a; }
+  double SigmaS() const { return _Sigma_s; }
   double SigmaT() const { return _Sigma_t; }
   double absorptionRatio() const { return _absorption_ratio; }
   double nPerAbsorption() const { return _n_per_abs; }
@@ -48,7 +54,7 @@ private:
   // store locations of cells in mesh
   std::vector<double> _cell_bounds; // holds vector of all bounds on the cells
   std::vector<std::vector<double>>
-      _cell_locs; // holds vector of cell locations as (xmin,xmax) pairs
+      _cell_locs;                    // holds vector of cell locations as (xmin,xmax) pairs
   std::vector<double> _cell_centers; // holds cell center locations
 
   /// @brief Populates cell edge and center locations

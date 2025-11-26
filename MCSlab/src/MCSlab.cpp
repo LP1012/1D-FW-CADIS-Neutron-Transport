@@ -20,9 +20,38 @@ MCSlab::MCSlab(const std::string input_file_name) : _input_file_name(input_file_
   _n_total_cells = 0;
   _n_fissionable_regions = 0;
   readInput();
-  exportRegionsToCsv();
   fissionRegions();
+};
 
+void
+MCSlab::initializeOutput()
+{
+  std::string outfile_name = _input_file_name;
+  removeSuffix(outfile_name, ".xml");
+
+  std::string collision_outfile_name = outfile_name + "_col.csv";
+  std::string pl_outfile_name = outfile_name + "_pl.csv";
+
+  printf("Creating output files...\n");
+  printf("  Collision:  %s\n", collision_outfile_name.c_str());
+  printf("  Pathlength: %s\n\n", pl_outfile_name.c_str());
+  _collision_outfile.open(collision_outfile_name);
+  _pathlength_outfile.open(pl_outfile_name);
+
+  if (!_collision_outfile.is_open())
+    throw std::runtime_error("Collision output file not opened successfully!");
+  if (!_pathlength_outfile.is_open())
+    throw std::runtime_error("Pathlength output file not opened successfully!");
+
+  _collision_outfile << "position,region,type" << std::endl;
+  _pathlength_outfile << "start,end,mu,pathlength,region" << std::endl;
+
+  exportRegionsToCsv(outfile_name);
+}
+
+void
+MCSlab::k_eigenvalue()
+{
   // Create code head
   printf("* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *"
          "\n");
@@ -60,35 +89,7 @@ MCSlab::MCSlab(const std::string input_file_name) : _input_file_name(input_file_
   printf("--------------------------------------------------------\n");
   printf("|Generation| Shannon Entropy |    keff    |  std_dev   |\n");
   printf("--------------------------------------------------------\n");
-};
 
-void
-MCSlab::initializeOutput()
-{
-  std::string outfile_name = _input_file_name;
-  removeSuffix(outfile_name, ".xml");
-
-  std::string collision_outfile_name = outfile_name + "_col.csv";
-  std::string pl_outfile_name = outfile_name + "_pl.csv";
-
-  printf("Creating output files...\n");
-  printf("  Collision:  %s\n", collision_outfile_name.c_str());
-  printf("  Pathlength: %s\n\n", pl_outfile_name.c_str());
-  _collision_outfile.open(collision_outfile_name);
-  _pathlength_outfile.open(pl_outfile_name);
-
-  if (!_collision_outfile.is_open())
-    throw std::runtime_error("Collision output file not opened successfully!");
-  if (!_pathlength_outfile.is_open())
-    throw std::runtime_error("Pathlength output file not opened successfully!");
-
-  _collision_outfile << "position,region,type" << std::endl;
-  _pathlength_outfile << "start,end,mu,pathlength,region" << std::endl;
-}
-
-void
-MCSlab::k_eigenvalue()
-{
   // this is where the simulation will be run
 
   for (auto i = 0; i < _n_generations; i++)
@@ -456,6 +457,19 @@ MCSlab::recordPathLenTally(const int current_generation,
 }
 
 void
-MCSlab::exportRegionsToCsv()
+MCSlab::exportRegionsToCsv(const std::string & outfile)
 {
+  std::string region_outfile_name = outfile + "_regions.csv";
+  std::ofstream region_outfile;
+  region_outfile.open(region_outfile_name);
+  if (!region_outfile.is_open())
+    throw std::runtime_error("Region output file not opened successfully!");
+
+  region_outfile << "region_num,xmin,xmax,Sigma_a,Sigma_s,Sigma_t,nuSigma_f" << std::endl;
+  for (auto & region : _regions)
+    region_outfile << region.regionIndex() << "," << region.xMin() << "," << region.xMax()
+                   << region.SigmaA() << "," << region.SigmaS() << "," << region.SigmaT() << ","
+                   << region.nuSigF() << std::endl;
+
+  printf("Regions exported to %s\n\n", region_outfile_name.c_str());
 }

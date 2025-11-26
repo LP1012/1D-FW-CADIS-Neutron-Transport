@@ -80,7 +80,7 @@ protected:
   void initializeOutput();
 
   /// @brief exports regions in order from left to right for future postprocessing
-  void exportRegionsToCsv();
+  void exportRegionsToCsv(const std::string & outfile);
 
   /// @brief record the location and region of a single collision
   /// @param current_generation
