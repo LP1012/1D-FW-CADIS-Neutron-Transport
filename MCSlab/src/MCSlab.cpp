@@ -164,6 +164,7 @@ MCSlab::k_eigenvalue()
           // shift neutron position
           neutron.movePositionWithinRegion(collision_location);
 
+          absorbed ?: source_bins[collisionIndex(neutron)] += 1;
           absorbed ? absorption(neutron) : scatter(neutron);
         }
       }
