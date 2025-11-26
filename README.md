@@ -10,9 +10,9 @@ cmake ..
 make
 ```
 To ensure everything is running correctly, also run the tests.
-Within `build/`, run:
+Within `MCSlab/`, run:
 ```
-./run_tests
+bash test_MCSlab.sh
 ```
 
 ## Examples
