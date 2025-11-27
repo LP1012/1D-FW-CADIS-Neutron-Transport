@@ -305,7 +305,7 @@ MCSlab::readInput()
         void_region.setIndex(_regions.size()); // check this
         _regions.push_back(void_region);
       }
-      else if (prev_region.xMax() < region_obj.xMin())
+      else if (prev_region.xMax() > region_obj.xMin())
         throw std::runtime_error("Error! Regions overlap."); // check if overlap
       else if (prev_region.xMin() > region_obj.xMin())
         throw std::runtime_error("Error! Regions are not sorted"); // check regions are sorted
