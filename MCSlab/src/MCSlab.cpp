@@ -118,39 +118,11 @@ MCSlab::k_eigenvalue()
         double distanceToCollision =
             neutron.distanceToCollision(); // store in a variable because this calculation involves
                                            // a random number
-
         double distanceToEdge = neutron.distanceToEdge(); // find distance to nearest edge
 
-        int mu_sign = neutron.mu() / std::abs(neutron.mu()); // will be +/-1
-
         if (distanceToEdge < distanceToCollision) // neutron has reached edge of region
-        {
-          unsigned int current_index = neutron.region().regionIndex();
-
-          if (current_index == _regions.size() - 1 ||
-              current_index == 0) // neutron escapes on right or left side
-          {
-            double final_position =
-                mu_sign < 0 ? _regions[current_index].xMin() : _regions[current_index].xMax();
-            recordPathLenTally(i, neutron.pos(), final_position, neutron.mu(), current_index);
-            neutron.kill();
-          }
-          else
-          {
-            // move neutron to the next region (depending on direction)
-            unsigned int new_index = current_index + mu_sign;
-
-            while (_regions[new_index].SigmaA() < 1e-15)
-              new_index = new_index + mu_sign; // skip over void regions
-
-            double new_position =
-                mu_sign > 0 ? _regions[new_index].xMin() : _regions[new_index].xMax();
-            recordPathLenTally(
-                i, neutron.pos(), new_position, neutron.mu(), neutron.region().regionIndex());
-            neutron.movePositionAndRegion(new_position, _regions);
-          }
-        }
-        else // neutron collides
+          neutronEscapesRegion(neutron, i);
+        else // neutron collides in region
         {
           double collision_location =
               neutron.pos() +
@@ -252,6 +224,44 @@ MCSlab::scatter(Neutron & neutron)
   // however, because the material properties are energy-indendent, we only
   // need the new angle to proceed.
   neutron.randomIsoAngle();
+}
+
+void
+MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
+{
+  unsigned int start_index = neutron.region().regionIndex();
+  unsigned int idx = start_index;
+
+  const double mu = neutron.mu();
+  const int dir = (mu > 0) ? +1 : -1;
+
+  // First: record the starting position
+  const double x0 = neutron.pos();
+
+  // Skip all void regions (defined by SigmaT == 0)
+  while (_regions[idx].SigmaT() < 1e-15)
+  {
+    // If at outer edge, neutron escapes the problem
+    if ((dir > 0 && idx == _regions.size() - 1) || (dir < 0 && idx == 0))
+    {
+      // Escape position is boundary of the current (void) region
+      double x_escape = (dir > 0) ? _regions[idx].xMax() : _regions[idx].xMin();
+
+      recordPathLenTally(generation, x0, x_escape, mu, start_index);
+      neutron.kill();
+      return;
+    }
+    idx += dir;
+  }
+
+  // Now idx is the first non-void region in flight direction
+  double new_x = (dir > 0) ? _regions[idx].xMin()  // entering from left
+                           : _regions[idx].xMax(); // entering from right
+
+  recordPathLenTally(generation, x0, new_x, mu, start_index);
+
+  // Move into the new region
+  neutron.movePositionAndRegion(new_x, _regions);
 }
 
 void

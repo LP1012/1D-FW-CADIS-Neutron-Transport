@@ -96,4 +96,6 @@ protected:
                           const double end_pos,
                           const double mu,
                           const unsigned int region_num);
+
+  void neutronEscapesRegion(Neutron & neutron, const unsigned int generation);
 };
