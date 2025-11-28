@@ -239,52 +239,86 @@ MCSlab::scatter(Neutron & neutron)
 void
 MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
 {
-  unsigned int start_index = neutron.region().regionIndex();
-  unsigned int idx = start_index;
-
+  // record starting position
+  const double start_x = neutron.pos();
   const double mu = neutron.mu();
+  const Region start_region = neutron.region();
+  const unsigned int start_region_index = start_region.regionIndex();
+
   const int dir = (mu > 0) ? +1 : -1;
-
-  // First: record the starting position
-  const double x0 = neutron.pos();
-
-  // If at outer edge, neutron escapes the problem
-  if ((dir > 0 && idx == _regions.size() - 1) || (dir < 0 && idx == 0))
+  //  put on edge
+  double x_edge = (dir > 0) ? start_region.xMax() : start_region.xMin();
+  //  if at end of domain, kill
+  if ((dir < 0 && start_region_index == 0) ||
+      (dir > 0 && start_region_index == _regions.size() - 1))
   {
-    // Escape position is boundary of the current (void) region
-    double x_escape = (dir > 0) ? _regions[idx].xMax() : _regions[idx].xMin();
-
-    recordPathLenTally(generation, x0, x_escape, mu);
+    recordPathLenTally(generation, start_x, x_edge, mu);
     neutron.kill();
     return;
   }
-
-  // Skip all void regions (defined by SigmaT == 0)
-  while (_regions[idx].SigmaT() < 1e-15)
+  //  if next region(s) is/are voids, jump over them
+  unsigned int counting_index = start_region_index + dir;
+  while (_regions[counting_index].SigmaT() < 1e-15)
   {
-    // If at outer edge, neutron escapes the problem
-    if ((dir > 0 && idx == _regions.size() - 1) || (dir < 0 && idx == 0))
+    if ((dir < 0 && start_region_index == 0) ||
+        (dir > 0 && start_region_index == _regions.size() - 1))
     {
-      // Escape position is boundary of the current (void) region
-      double x_escape = (dir > 0) ? _regions[idx].xMax() : _regions[idx].xMin();
-
-      recordPathLenTally(generation, x0, x_escape, mu);
+      double x_jump = (dir > 0) ? _regions[counting_index].xMax() : _regions[counting_index].xMin();
+      recordPathLenTally(generation, start_x, x_jump, mu);
       neutron.kill();
       return;
     }
-    idx += dir;
+    counting_index += dir;
   }
 
-  // Now idx is the first non-void region in flight direction
-  double new_x = (dir > 0) ? _regions[idx].xMax()  // entering from left
-                           : _regions[idx].xMin(); // entering from right
-
-  recordPathLenTally(generation, x0, new_x, mu);
-
-  // Move into the new region
-  // printf("We are somehow moving a region...\n");
-  neutron.movePositionAndRegion(new_x, _regions);
+  double x_jump = (dir > 0) ? _regions[counting_index].xMin() : _regions[counting_index].xMax();
+  recordPathLenTally(generation, start_x, x_jump, mu);
+  neutron.movePositionAndRegion(x_jump, _regions);
 }
+
+// void
+// MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
+// {
+//   unsigned int start_index = neutron.region().regionIndex();
+//   unsigned int idx = start_index;
+
+//   const double mu = neutron.mu();
+//   const int dir = (mu > 0) ? +1 : -1;
+
+//   // First: record the starting position
+//   const double x0 = neutron.pos();
+
+//   double x_edge = (dir > 0) ? _regions[start_index].xMax() : _regions[start_index].xMin();
+
+//   idx += dir;
+
+//   // Skip all void regions (defined by SigmaT == 0)
+//   while (_regions[idx].SigmaT() < 1e-15)
+//   {
+//     idx += dir;
+//   }
+
+//   // If at outer edge, neutron escapes the problem
+//   if ((dir > 0 && idx == _regions.size() - 1) || (dir < 0 && idx == 0))
+//   {
+//     // Escape position is boundary of the current (void) region
+//     double x_escape = (dir > 0) ? _regions[idx].xMax() : _regions[idx].xMin();
+
+//     recordPathLenTally(generation, x0, x_escape, mu);
+//     neutron.kill();
+//     return;
+//   }
+
+//   // Now idx is the first non-void region in flight direction
+//   double new_x = (dir > 0) ? _regions[idx].xMax()  // entering from left
+//                            : _regions[idx].xMin(); // entering from right
+
+//   recordPathLenTally(generation, x0, new_x, mu);
+
+//   // Move into the new region
+//   // printf("We are somehow moving a region...\n");
+//   neutron.movePositionAndRegion(new_x, _regions);
+// }
 
 void
 MCSlab::readInput()
