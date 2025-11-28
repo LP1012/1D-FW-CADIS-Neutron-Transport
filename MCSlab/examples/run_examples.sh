@@ -15,11 +15,9 @@ for xml_file in "$XML_DIR"/*.xml; do
     echo "Running MCSlab on $xml_file ..."
     ../build/MCSlab "$xml_file"
     
-    # Generate corresponding output CSV filename
-    csv_file="${base_name}_out.csv"
-    
-    echo "Plotting results to $csv_file ..."
-    python3 ../scripts/plot_simulation.py "$csv_file"
+    echo "Plotting results ..."
+    python3 ../scripts/plot_collision.py "$base_name"
+    python3 ../scripts/plot_pathlength.py "$base_name"
     
     echo "Done with $xml_file"
     echo "---------------------------"
