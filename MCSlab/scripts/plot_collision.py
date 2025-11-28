@@ -11,7 +11,7 @@ sns.set_theme(
     font="serif",
     font_scale=1.2,
     color_codes=True,
-    rc={"lines.linewidth": 2.5},
+    rc={"lines.linewidth": 3, "figure.figsize": (8, 6), "figure.dpi": 200},
 )
 sns.despine()
 
@@ -45,7 +45,7 @@ print("Total active particles =", total_active_particles)
 # ---------------------------------------------------------------------
 # Region-dependent grid construction
 # ---------------------------------------------------------------------
-n_cells_per_region = 10  # adjustable
+n_cells_per_region = 25  # adjustable
 
 bin_edges_list = []
 sigma_t_bins = []
@@ -86,7 +86,7 @@ for idx in bin_indices:
         flux_bins[idx] += 1
 
 # ---------------------------------------------------------------------
-# Normalize flux: collisions / (Σ_t * total active particles * Δx)
+# Normalize flux: collisions / (total active particles * Δx)
 # ---------------------------------------------------------------------
 normalized_flux = flux_bins / (sigma_t_bins * total_active_particles * bin_widths)
 
@@ -99,7 +99,7 @@ plt.figure(figsize=(8, 6))
 sns.lineplot(x=bin_centers, y=normalized_flux)
 plt.xlabel("x")
 plt.ylabel("Normalized Flux")
-plt.title("Collision Density / Σₜ")
+plt.title("Collision Estimator Flux Tally")
 plt.ylim(bottom=0)
 plt.tight_layout()
-plt.show()
+plt.savefig(f"{basename}_collision_plot.png")

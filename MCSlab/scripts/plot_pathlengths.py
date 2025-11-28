@@ -12,7 +12,7 @@ sns.set_theme(
     font="serif",
     font_scale=1.2,
     color_codes=True,
-    rc={"lines.linewidth": 2.5},
+    rc={"lines.linewidth": 3, "figure.figsize": (8, 6), "figure.dpi": 200},
 )
 sns.despine()
 
@@ -141,7 +141,7 @@ plt.figure(figsize=(8, 6))
 sns.lineplot(x=bin_centers, y=normalized_pathlength)
 plt.xlabel("x")
 plt.ylabel("Normalized Path Length Density")
-plt.title("Path-Length Flux Approximation")
+plt.title("Path-Length Flux Tally")
 plt.ylim(bottom=0)
 plt.tight_layout()
-plt.show()
+plt.savefig(f"{basename}_pathlength_plot.png")
