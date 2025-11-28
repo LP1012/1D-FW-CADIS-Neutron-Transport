@@ -94,8 +94,7 @@ protected:
   void recordPathLenTally(const int current_generation,
                           const double start_pos,
                           const double end_pos,
-                          const double mu,
-                          const unsigned int region_num);
+                          const double mu);
 
   void neutronEscapesRegion(Neutron & neutron, const unsigned int generation);
 };
