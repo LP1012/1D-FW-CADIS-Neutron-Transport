@@ -44,7 +44,7 @@ MCSlab::initializeOutput()
     throw std::runtime_error("Pathlength output file not opened successfully!");
 
   _collision_outfile << "position,region,type" << std::endl;
-  _pathlength_outfile << "start,end,mu,pathlength,region" << std::endl;
+  _pathlength_outfile << "start,end,mu,pathlength" << std::endl;
 
   exportRegionsToCsv(outfile_name);
 }
@@ -108,7 +108,7 @@ MCSlab::k_eigenvalue()
       Neutron neutron(safe_start_pos, _regions); // initialize neutron
 
       // adjust neutron start position based on randomness or fission bank
-      if (fissions_in_old_bank > 0 && j < fissions_in_old_bank - 1)
+      if (fissions_in_old_bank > 0 && j < fissions_in_old_bank)
         neutron.movePositionAndRegion(_old_fission_bank[j].pos(), _regions);
       else
       {
@@ -139,8 +139,7 @@ MCSlab::k_eigenvalue()
           bool absorbed = testAbsorption(neutron); // did an absorption occur?
 
           // tally collision position and path traveled
-          recordPathLenTally(
-              i, neutron.pos(), collision_location, neutron.mu(), neutron.region().regionIndex());
+          recordPathLenTally(i, neutron.pos(), collision_location, neutron.mu());
           recordCollisionTally(i, collision_location, neutron.region().regionIndex(), absorbed);
 
           // shift neutron position
@@ -163,11 +162,13 @@ MCSlab::k_eigenvalue()
       calculateK();
 
     // if too many fission sites are stored, remove the old ones
-    while (_new_fission_bank.size() > _n_particles)
+    if (_new_fission_bank.size() > _n_particles)
     {
-      _new_fission_bank.front() = _new_fission_bank.back();
-      _new_fission_bank.pop_back();
+      _new_fission_bank.erase(_new_fission_bank.begin(),
+                              _new_fission_bank.begin() +
+                                  (_new_fission_bank.size() - _n_particles));
     }
+
     assert(_new_fission_bank.size() <= _n_particles);
 
     _old_fission_bank = _new_fission_bank; // reassign fission bank
@@ -253,7 +254,7 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
     // Escape position is boundary of the current (void) region
     double x_escape = (dir > 0) ? _regions[idx].xMax() : _regions[idx].xMin();
 
-    recordPathLenTally(generation, x0, x_escape, mu, start_index);
+    recordPathLenTally(generation, x0, x_escape, mu);
     neutron.kill();
     return;
   }
@@ -267,7 +268,7 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
       // Escape position is boundary of the current (void) region
       double x_escape = (dir > 0) ? _regions[idx].xMax() : _regions[idx].xMin();
 
-      recordPathLenTally(generation, x0, x_escape, mu, start_index);
+      recordPathLenTally(generation, x0, x_escape, mu);
       neutron.kill();
       return;
     }
@@ -278,7 +279,7 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
   double new_x = (dir > 0) ? _regions[idx].xMax()  // entering from left
                            : _regions[idx].xMin(); // entering from right
 
-  recordPathLenTally(generation, x0, new_x, mu, start_index);
+  recordPathLenTally(generation, x0, new_x, mu);
 
   // Move into the new region
   // printf("We are somehow moving a region...\n");
@@ -484,14 +485,13 @@ void
 MCSlab::recordPathLenTally(const int current_generation,
                            const double start_pos,
                            const double end_pos,
-                           const double mu,
-                           const unsigned int region_num)
+                           const double mu)
 {
   if (current_generation > _n_inactive - 1)
   {
     double pathlength = (end_pos - start_pos) / mu; // check this!
-    _pathlength_outfile << start_pos << "," << end_pos << "," << mu << "," << pathlength << ","
-                        << region_num << std::endl;
+    _pathlength_outfile << start_pos << "," << end_pos << "," << mu << "," << pathlength
+                        << std::endl;
   }
 }
 
