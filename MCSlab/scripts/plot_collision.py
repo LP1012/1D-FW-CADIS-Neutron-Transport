@@ -88,8 +88,11 @@ for idx in bin_indices:
 # ---------------------------------------------------------------------
 # Normalize flux: collisions / (total active particles * Δx)
 # ---------------------------------------------------------------------
-normalized_flux = flux_bins / (sigma_t_bins * total_active_particles * bin_widths)
-
+normalized_flux = np.zeros_like(flux_bins, dtype=float)
+nonzero_mask = sigma_t_bins > 0
+normalized_flux[nonzero_mask] = flux_bins[nonzero_mask] / (
+    sigma_t_bins[nonzero_mask] * total_active_particles * bin_widths[nonzero_mask]
+)
 # ---------------------------------------------------------------------
 # Plot
 # ---------------------------------------------------------------------
