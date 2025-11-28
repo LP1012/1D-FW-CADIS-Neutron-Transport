@@ -103,14 +103,23 @@ MCSlab::k_eigenvalue()
     for (auto j = 0; j < _n_particles; j++)
     {
       // generate neutrons from fission bank positions first
-      Neutron neutron(0, _regions); // initialize neutron
+      double safe_start_pos =
+          (_fissionable_regions.front().xMax() + _fissionable_regions.front().xMin()) / 2.0;
+      Neutron neutron(safe_start_pos, _regions); // initialize neutron
 
       // adjust neutron start position based on randomness or fission bank
       if (fissions_in_old_bank > 0 && j < fissions_in_old_bank - 1)
         neutron.movePositionAndRegion(_old_fission_bank[j].pos(), _regions);
       else
+      {
+
         neutron.setRandomStartPosition(_fissionable_regions,
                                        _regions); // set location in fuel
+      }
+
+      if (!(neutron.pos() <= neutron.region().xMax() && neutron.pos() >= neutron.region().xMin()))
+        throw std::runtime_error(
+            "Neutron region not set correctly! Position not located within bounds!");
 
       // begin random walk
       while (neutron.isAlive())
@@ -238,6 +247,17 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
   // First: record the starting position
   const double x0 = neutron.pos();
 
+  // If at outer edge, neutron escapes the problem
+  if ((dir > 0 && idx == _regions.size() - 1) || (dir < 0 && idx == 0))
+  {
+    // Escape position is boundary of the current (void) region
+    double x_escape = (dir > 0) ? _regions[idx].xMax() : _regions[idx].xMin();
+
+    recordPathLenTally(generation, x0, x_escape, mu, start_index);
+    neutron.kill();
+    return;
+  }
+
   // Skip all void regions (defined by SigmaT == 0)
   while (_regions[idx].SigmaT() < 1e-15)
   {
@@ -255,12 +275,13 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
   }
 
   // Now idx is the first non-void region in flight direction
-  double new_x = (dir > 0) ? _regions[idx].xMin()  // entering from left
-                           : _regions[idx].xMax(); // entering from right
+  double new_x = (dir > 0) ? _regions[idx].xMax()  // entering from left
+                           : _regions[idx].xMin(); // entering from right
 
   recordPathLenTally(generation, x0, new_x, mu, start_index);
 
   // Move into the new region
+  // printf("We are somehow moving a region...\n");
   neutron.movePositionAndRegion(new_x, _regions);
 }
 
