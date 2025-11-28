@@ -52,4 +52,6 @@ MCSlab/include/Makefile
 .vscode/
 
 MCSlab/examples/*.csv
+MCSlab/examples/*.png
 
+.idea/
