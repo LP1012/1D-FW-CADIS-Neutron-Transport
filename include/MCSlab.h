@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Cell.h"
 #include "Neutron.h"
 #include "Point.h"
 #include "Region.h"
@@ -12,7 +13,12 @@ class MCSlab
   friend class MCSlabTest;
 
 public:
-  MCSlab(const std::string input_file_name);
+  MCSlab(const std::string input_file_name,
+         const unsigned int n_particles,
+         const unsigned int n_generations,
+         const unsigned int n_inactive,
+         const std::vector<Region> regions,
+         const std::vector<Cell> cells);
 
   /// method to run simulation
   void k_eigenvalue();
@@ -34,11 +40,13 @@ public:
 
 protected:
   /// number of neutrons per generation
-  unsigned int _n_particles;
+  const unsigned int _n_particles;
   /// number of generations
-  unsigned int _n_generations;
+  const unsigned int _n_generations;
   /// number of inactive cycles
-  unsigned int _n_inactive;
+  const unsigned int _n_inactive;
+  /// all cells in simulation
+  const std::vector<Cell> _cells;
 
   /// simulation input file
   const std::string _input_file_name;
@@ -49,15 +57,12 @@ protected:
   std::vector<Region> _regions;             // vector of regions
   std::vector<Region> _fissionable_regions; // vector of fissile regions
   unsigned int _n_fissionable_regions;      // number of fissionable regions
-  std::vector<double> _all_cell_bounds;     // all cell boundaries
-  unsigned int _n_total_cells;              // number of cells in all regions
-  std::vector<double> _cell_widths;         // width of each cell
-  std::vector<double> _all_cell_centers;    // vector of all cell center locations
-  std::vector<double> _Sigma_t_vals;
+
+  unsigned int _n_total_cells; // number of cells in all regions
 
   UniformRNG _rng; // initialize RNG
 
-  unsigned int _n_neutrons_born; // the number of fission neutrons born in generation
+  unsigned int _n_neutrons_born; // the number of fission neutrons born in a generation
 
   // banks of source sites
   std::vector<Neutron> _old_fission_bank;
@@ -71,7 +76,6 @@ protected:
 
   double _shannon_entropy;
 
-  void readInput();
   void fissionRegions();
 
   unsigned int collisionIndex(const Neutron & neutron);

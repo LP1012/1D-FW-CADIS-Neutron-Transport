@@ -2,9 +2,11 @@
 
 #include <random>
 
-class UniformRNG {
+class UniformRNG
+{
 public:
-  UniformRNG(const double lower = 0, const double upper = 1.0,
+  UniformRNG(const double lower = 0,
+             const double upper = 1.0,
              const unsigned int seed = std::random_device{}());
 
   double generateRN();

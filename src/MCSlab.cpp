@@ -15,13 +15,23 @@
 #include <random>
 #include <vector>
 
-MCSlab::MCSlab(const std::string input_file_name) : _input_file_name(input_file_name), _rng()
+MCSlab::MCSlab(const std::string input_file_name,
+               const unsigned int n_particles,
+               const unsigned int n_generations,
+               const unsigned int n_inactive,
+               const std::vector<Region> regions,
+               const std::vector<Cell> cells)
+  : _n_particles(n_particles),
+    _n_generations(n_generations),
+    _n_inactive(n_inactive),
+    _regions(regions),
+    _cells(cells),
+    _rng()
 {
-  _n_total_cells = 0;
+  _n_total_cells = _cells.size();
   _n_fissionable_regions = 0;
-  readInput();
   fissionRegions();
-};
+}
 
 void
 MCSlab::initializeOutput()
@@ -118,15 +128,15 @@ MCSlab::k_eigenvalue()
       }
 
       if (!(neutron.pos() <= neutron.region().xMax() && neutron.pos() >= neutron.region().xMin()))
-        throw std::runtime_error(
-            "Neutron region not set correctly! Position not located within bounds!");
+        throw std::runtime_error("Neutron region not set correctly! Position "
+                                 "not located within bounds!");
 
       // begin random walk
       while (neutron.isAlive())
       {
         double distanceToCollision =
-            neutron.distanceToCollision(); // store in a variable because this calculation involves
-                                           // a random number
+            neutron.distanceToCollision();                // store in a variable because this
+                                                          // calculation involves a random number
         double distanceToEdge = neutron.distanceToEdge(); // find distance to nearest edge
 
         if (distanceToEdge < distanceToCollision) // neutron has reached edge of region
@@ -277,7 +287,8 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
 }
 
 // void
-// MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
+// MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int
+// generation)
 // {
 //   unsigned int start_index = neutron.region().regionIndex();
 //   unsigned int idx = start_index;
@@ -288,7 +299,8 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
 //   // First: record the starting position
 //   const double x0 = neutron.pos();
 
-//   double x_edge = (dir > 0) ? _regions[start_index].xMax() : _regions[start_index].xMin();
+//   double x_edge = (dir > 0) ? _regions[start_index].xMax() :
+//   _regions[start_index].xMin();
 
 //   idx += dir;
 
@@ -302,7 +314,8 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
 //   if ((dir > 0 && idx == _regions.size() - 1) || (dir < 0 && idx == 0))
 //   {
 //     // Escape position is boundary of the current (void) region
-//     double x_escape = (dir > 0) ? _regions[idx].xMax() : _regions[idx].xMin();
+//     double x_escape = (dir > 0) ? _regions[idx].xMax() :
+//     _regions[idx].xMin();
 
 //     recordPathLenTally(generation, x0, x_escape, mu);
 //     neutron.kill();
@@ -321,108 +334,6 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
 // }
 
 void
-MCSlab::readInput()
-{
-  tinyxml2::XMLDocument input_file;
-
-  // check if the input file exists
-  if (input_file.LoadFile(_input_file_name.c_str()) != tinyxml2::XML_SUCCESS)
-    throw std::runtime_error("Input file not found!");
-
-  auto * root = input_file.FirstChildElement("simulation");
-  if (!root)
-    throw std::runtime_error("No <simulation> root element");
-
-  // loop over regions
-  auto * regionsElement = root->FirstChildElement("regions");
-  auto * region = regionsElement->FirstChildElement("region");
-  while (region)
-  {
-    // auto id = getAttributeOrThrow<unsigned int>(region, "id");
-    auto xmin = getAttributeOrThrow<double>(region, "xmin");
-    auto xmax = getAttributeOrThrow<double>(region, "xmax");
-    auto n_cells = getAttributeOrThrow<unsigned int>(region, "n_cells");
-    auto Sigma_a = getAttributeOrThrow<double>(region, "Sigma_a");
-    auto Sigma_s = getAttributeOrThrow<double>(region, "Sigma_s");
-    auto nuSigma_f = getAttributeOrThrow<double>(region, "nuSigma_f");
-
-    Region region_obj(xmin, xmax, n_cells, Sigma_a, Sigma_s,
-                      nuSigma_f); // create region
-
-    // add checks for overlap and void regions here
-    if (_regions.size() > 0)
-    {
-      auto prev_region = _regions.back();
-
-      if (prev_region.xMax() < region_obj.xMin())
-      {
-        // add a void region between separated regions
-        Region void_region = Region::voidRegion(prev_region.xMax(), region_obj.xMin(), 10);
-        void_region.setIndex(_regions.size()); // check this
-        _regions.push_back(void_region);
-      }
-      else if (prev_region.xMax() > region_obj.xMin())
-        throw std::runtime_error("Error! Regions overlap."); // check if overlap
-      else if (prev_region.xMin() > region_obj.xMin())
-        throw std::runtime_error("Error! Regions are not sorted"); // check regions are sorted
-    }
-
-    region_obj.setIndex(_regions.size());
-    _regions.push_back(region_obj); // add region to list of regions
-
-    region = region->NextSiblingElement("region"); // move to next
-  }
-
-  // add cell bounds and widths
-  unsigned int count = 0;
-  for (auto region : _regions)
-  {
-    _n_total_cells += region.nCells();
-    if (count == 0)
-    {
-      for (auto i = 0; i < region.cellBounds().size(); i++)
-      {
-        // each region holds its own set of bounds, so we need an inner
-        // loop over each region's bounds
-        _all_cell_bounds.push_back(region.cellBounds()[i]);
-      }
-    }
-    else
-    {
-      for (auto i = 1; i < region.cellBounds().size(); i++)
-      {
-        // each region holds its own set of bounds, so we need an inner
-        // loop over each region's bounds
-        _all_cell_bounds.push_back(region.cellBounds()[i]);
-      }
-    }
-    for (auto i = 0; i < region.cellLocs().size(); i++)
-      _cell_widths.push_back(region.cellLocs()[i][1] - region.cellLocs()[i][0]);
-
-    for (auto center : region.cellCenters())
-      _all_cell_centers.push_back(center);
-
-    for (auto i = 0; i < region.nCells(); i++)
-      _Sigma_t_vals.push_back(region.SigmaT());
-
-    count++;
-  }
-
-  // load settings
-  auto * settings = root->FirstChildElement("settings");
-  if (!settings)
-    throw std::runtime_error("<settings> element not set!");
-  // test for existence of data, then set private attributes
-  auto * n_part_attrib = settings->FindAttribute("n_particles");
-  auto * n_gen_attrib = settings->FindAttribute("n_generations");
-  auto * n_inactive_attrib = settings->FindAttribute("n_inactive");
-
-  _n_particles = getAttributeOrThrow<unsigned int>(settings, "n_particles");
-  _n_generations = getAttributeOrThrow<unsigned int>(settings, "n_generations");
-  _n_inactive = getAttributeOrThrow<unsigned int>(settings, "n_inactive");
-}
-
-void
 MCSlab::fissionRegions()
 {
   for (auto region : _regions)
@@ -433,14 +344,26 @@ MCSlab::fissionRegions()
   _n_fissionable_regions = _fissionable_regions.size();
 }
 
+// unsigned int
+// MCSlab::collisionIndex(const Neutron & neutron)
+// {
+//   double collision_location = neutron.pos();
+//   for (auto i = 1; i <= _n_total_cells + 1; i++)
+//   {
+//     if (collision_location < _all_cell_bounds[i])
+//       return i - 1;
+//   }
+//   throw std::runtime_error("Collision location not within domain of problem!");
+// }
+
 unsigned int
 MCSlab::collisionIndex(const Neutron & neutron)
 {
   double collision_location = neutron.pos();
-  for (auto i = 1; i <= _n_total_cells + 1; i++)
+  for (auto i = 0; i < _n_total_cells; i++)
   {
-    if (collision_location < _all_cell_bounds[i])
-      return i - 1;
+    if (collision_location < _cells[i].xMax())
+      return i;
   }
   throw std::runtime_error("Collision location not within domain of problem!");
 }

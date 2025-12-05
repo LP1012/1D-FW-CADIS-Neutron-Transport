@@ -1,8 +1,10 @@
 #pragma once
 
-class Point {
+class Point
+{
 public:
-  Point(double x, double y) {
+  Point(double x, double y)
+  {
     _x = x;
     _y = y;
   };
