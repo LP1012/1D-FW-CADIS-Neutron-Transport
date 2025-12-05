@@ -53,8 +53,8 @@ MCSlab::initializeOutput()
   if (!_pathlength_outfile.is_open())
     throw std::runtime_error("Pathlength output file not opened successfully!");
 
-  _collision_outfile << "position,region,type" << std::endl;
-  _pathlength_outfile << "start,end,mu,pathlength" << std::endl;
+  _collision_outfile << "position,region,weight,type" << std::endl;
+  _pathlength_outfile << "start,end,mu,pathlength,weight" << std::endl;
 
   exportRegionsToCsv(outfile_name);
 }
@@ -149,8 +149,9 @@ MCSlab::k_eigenvalue()
           bool absorbed = testAbsorption(neutron); // did an absorption occur?
 
           // tally collision position and path traveled
-          recordPathLenTally(i, neutron.pos(), collision_location, neutron.mu());
-          recordCollisionTally(i, collision_location, neutron.region().regionIndex(), absorbed);
+          recordPathLenTally(i, neutron.pos(), collision_location, neutron.mu(), neutron.weight());
+          recordCollisionTally(
+              i, collision_location, neutron.region().regionIndex(), neutron.weight(), absorbed);
 
           // shift neutron position
           neutron.movePositionWithinRegion(collision_location);
@@ -262,7 +263,7 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
   if ((dir < 0 && start_region_index == 0) ||
       (dir > 0 && start_region_index == _regions.size() - 1))
   {
-    recordPathLenTally(generation, start_x, x_edge, mu);
+    recordPathLenTally(generation, start_x, x_edge, mu, neutron.weight());
     neutron.kill();
     return;
   }
@@ -274,7 +275,7 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
         (dir > 0 && start_region_index == _regions.size() - 1))
     {
       double x_jump = (dir > 0) ? _regions[counting_index].xMax() : _regions[counting_index].xMin();
-      recordPathLenTally(generation, start_x, x_jump, mu);
+      recordPathLenTally(generation, start_x, x_jump, mu, neutron.weight());
       neutron.kill();
       return;
     }
@@ -282,7 +283,7 @@ MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
   }
 
   double x_jump = (dir > 0) ? _regions[counting_index].xMin() : _regions[counting_index].xMax();
-  recordPathLenTally(generation, start_x, x_jump, mu);
+  recordPathLenTally(generation, start_x, x_jump, mu, neutron.weight());
   neutron.movePositionAndRegion(x_jump, _regions);
 }
 
@@ -426,11 +427,12 @@ void
 MCSlab::recordCollisionTally(const int current_generation,
                              const double location,
                              const unsigned int region_num,
+                             const double weight,
                              const bool absorbed)
 {
   if (current_generation > _n_inactive - 1)
   {
-    _collision_outfile << location << "," << region_num << ",";
+    _collision_outfile << location << "," << weight << "," << region_num << ",";
     if (absorbed)
       _collision_outfile << "absorption" << std::endl;
     else
@@ -442,13 +444,14 @@ void
 MCSlab::recordPathLenTally(const int current_generation,
                            const double start_pos,
                            const double end_pos,
-                           const double mu)
+                           const double mu,
+                           const double weight)
 {
   if (current_generation > _n_inactive - 1)
   {
     double pathlength = (end_pos - start_pos) / mu; // check this!
-    _pathlength_outfile << start_pos << "," << end_pos << "," << mu << "," << pathlength
-                        << std::endl;
+    _pathlength_outfile << start_pos << "," << end_pos << "," << mu << "," << pathlength << ","
+                        << weight << std::endl;
   }
 }
 

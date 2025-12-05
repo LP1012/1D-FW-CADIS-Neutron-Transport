@@ -9,7 +9,7 @@ public:
        const double Sigma_s,
        const double nu_Sigma_f);
 
-  void setWeight(const double weight);
+  void setWeight(const double center_weight, const double upper_weight, const double lower_weight);
   void setForwardFlux(const double forward_flux);
   void setAdjointFlux(const double adjoint_flux);
 
@@ -34,6 +34,12 @@ private:
   double _Sigma_t;
   double _cell_width;
   double _cell_center;
+
+  // set weight window values
+  double _center_weight; // "target weight"
+  double _upper_weight;
+  double _lower_weight;
+
   double _weight;
   double _forward_flux;
   double _adjoint_flux;

@@ -119,6 +119,12 @@ Neutron::setRegion(std::vector<Region> & regions)
 }
 
 void
+Neutron::changeWeight(const double weight)
+{
+  _weight = weight;
+}
+
+void
 Neutron::kill()
 {
   _is_alive = false;
