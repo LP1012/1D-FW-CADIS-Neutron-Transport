@@ -3,7 +3,11 @@
 class Cell
 {
 public:
-  Cell(const double xmin, const double xmax);
+  Cell(const double xmin,
+       const double xmax,
+       const double Sigma_a,
+       const double Sigma_s,
+       const double nu_Sigma_f);
 
   void setWeight(const double weight);
   void setForwardFlux(const double forward_flux);
@@ -19,6 +23,13 @@ public:
 private:
   const double _xmin;
   const double _xmax;
+  const double _Sigma_a;
+  const double _Sigma_s;
+  const double _nu_Sigma_f;
+
+  double _Sigma_t;
+  double _cell_width;
+  double _cell_center;
   double _weight;
   double _forward_flux;
   double _adjoint_flux;
