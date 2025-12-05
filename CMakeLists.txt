@@ -13,14 +13,14 @@ FetchContent_MakeAvailable(googletest)
 
 # Core library
 add_library(
-  MCLib src/MCSlab.cpp src/Neutron.cpp src/Region.cpp src/RNG.cpp
+  FW-CADIS_lib src/MCSlab.cpp src/Neutron.cpp src/Region.cpp src/RNG.cpp
         src/tinyxml2.cpp # add other source files here
 )
-target_include_directories(MCLib PUBLIC ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(FW-CADIS_lib PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
 # Main executable
-add_executable(MCSlab src/main.cpp)
-target_link_libraries(MCSlab PRIVATE MCLib)
+add_executable(1D-FW-CADIS src/main.cpp)
+target_link_libraries(1D-FW-CADIS PRIVATE FW-CADIS_lib)
 
 # Enable testing
 enable_testing()
@@ -28,7 +28,7 @@ enable_testing()
 # Tests
 add_executable(run_tests tests/neutron_test.cpp tests/region_test.cpp
                          tests/simulation_test.cpp)
-target_link_libraries(run_tests PRIVATE MCLib GTest::gtest_main)
+target_link_libraries(run_tests PRIVATE FW-CADIS_lib GTest::gtest_main)
 
 include(GoogleTest)
 gtest_discover_tests(run_tests)
