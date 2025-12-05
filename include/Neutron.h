@@ -47,6 +47,7 @@ public:
   double pos() const { return _pos; }
   double mu() const { return _mu; }
   bool isAlive() const { return _is_alive; }
+  const double weight() const { return _weight; }
   // Region region() const { return *_region; }
 
   const Region & region() const { return *_region; }

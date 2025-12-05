@@ -91,6 +91,7 @@ protected:
   void recordCollisionTally(const int current_generation,
                             const double location,
                             const unsigned int region_num,
+                            const double weight,
                             const bool absorbed);
 
   /// @brief record start and end location of single neutron movement and the region the movement occurred in
@@ -98,7 +99,8 @@ protected:
   void recordPathLenTally(const int current_generation,
                           const double start_pos,
                           const double end_pos,
-                          const double mu);
+                          const double mu,
+                          const double weight);
 
   void neutronEscapesRegion(Neutron & neutron, const unsigned int generation);
 };
