@@ -344,14 +344,26 @@ MCSlab::fissionRegions()
   _n_fissionable_regions = _fissionable_regions.size();
 }
 
+// unsigned int
+// MCSlab::collisionIndex(const Neutron & neutron)
+// {
+//   double collision_location = neutron.pos();
+//   for (auto i = 1; i <= _n_total_cells + 1; i++)
+//   {
+//     if (collision_location < _all_cell_bounds[i])
+//       return i - 1;
+//   }
+//   throw std::runtime_error("Collision location not within domain of problem!");
+// }
+
 unsigned int
 MCSlab::collisionIndex(const Neutron & neutron)
 {
   double collision_location = neutron.pos();
-  for (auto i = 1; i <= _n_total_cells + 1; i++)
+  for (auto i = 0; i < _n_total_cells; i++)
   {
-    if (collision_location < _all_cell_bounds[i])
-      return i - 1;
+    if (collision_location < _cells[i].xMax())
+      return i;
   }
   throw std::runtime_error("Collision location not within domain of problem!");
 }
