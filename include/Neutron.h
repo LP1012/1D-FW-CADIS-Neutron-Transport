@@ -14,6 +14,7 @@ class Neutron
 public:
   Neutron(double position,
           std::vector<Region> & regions,
+          std::optional<double> weight = std::nullopt,
           std::optional<unsigned int> seed = std::nullopt);
 
   // move neutron to new position
@@ -51,6 +52,7 @@ private:
   double _mu;       // cosine of angle
   Region * _region; // region currently located in
   bool _is_alive;   // is neutron still being tracked?
+  double _weight;   // weight of neutron
 
   // initialize RNG
   UniformRNG _rng;

@@ -6,8 +6,12 @@
 #include <optional>
 #include <random>
 
-Neutron::Neutron(double position, std::vector<Region> & regions, std::optional<unsigned int> seed)
-  : _rng(seed.has_value() ? UniformRNG(0, 1.0, seed.value()) : UniformRNG(0, 1.0))
+Neutron::Neutron(double position,
+                 std::vector<Region> & regions,
+                 std::optional<double> weight,
+                 std::optional<unsigned int> seed)
+  : _weight(weight.value_or(1.0)),
+    _rng(seed.has_value() ? UniformRNG(0, 1.0, seed.value()) : UniformRNG(0, 1.0))
 {
   randomIsoAngle();
   movePositionAndRegion(position, regions);
