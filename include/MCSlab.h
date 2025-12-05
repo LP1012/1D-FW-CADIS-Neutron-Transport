@@ -45,6 +45,7 @@ protected:
   const unsigned int _n_generations;
   /// number of inactive cycles
   const unsigned int _n_inactive;
+  /// all cells in simulation
   const std::vector<Cell> _cells;
 
   /// simulation input file
@@ -57,9 +58,7 @@ protected:
   std::vector<Region> _fissionable_regions; // vector of fissile regions
   unsigned int _n_fissionable_regions;      // number of fissionable regions
 
-  std::vector<double> _all_cell_bounds; // all cell boundaries
-  unsigned int _n_total_cells;          // number of cells in all regions
-  std::vector<double> _Sigma_t_vals;
+  unsigned int _n_total_cells; // number of cells in all regions
 
   UniformRNG _rng; // initialize RNG
 
@@ -77,7 +76,6 @@ protected:
 
   double _shannon_entropy;
 
-  void readInput();
   void fissionRegions();
 
   unsigned int collisionIndex(const Neutron & neutron);
