@@ -17,9 +17,11 @@ Cell::Cell(const double xmin,
 }
 
 void
-Cell::setWeight(const double weight)
+Cell::setWeight(const double weight, const double upper_weight, const double lower_weight)
 {
-  _weight = weight;
+  _center_weight = weight;
+  _upper_weight = upper_weight;
+  _lower_weight = lower_weight;
 }
 
 void
