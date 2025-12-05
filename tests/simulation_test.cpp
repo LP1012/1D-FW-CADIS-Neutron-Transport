@@ -8,7 +8,8 @@
 
 #include <iomanip> // delete later
 
-class MCSlabTest : public testing::Test {
+class MCSlabTest : public testing::Test
+{
 protected:
   MCSlab test_sim_1{"../tests/input_files/test_1_region.xml"};
   MCSlab test_sim_2{"../tests/input_files/test_2_region.xml"};
@@ -18,25 +19,19 @@ protected:
   std::vector<MCSlab *> test_sims{&test_sim_1, &test_sim_2, &test_sim_split};
 
   // define test-only getters
-  unsigned int getNTotalCells(const MCSlab &sim) const {
-    return sim._n_total_cells;
-  }
-  std::vector<Region> regions(const MCSlab &sim) const { return sim._regions; }
+  unsigned int getNTotalCells(const MCSlab & sim) const { return sim._n_total_cells; }
+  std::vector<Region> regions(const MCSlab & sim) const { return sim._regions; }
 
-  std::vector<Region> fissionRegions(const MCSlab &sim) const {
-    return sim._fissionable_regions;
-  }
-  unsigned int nFissionableRegions(const MCSlab &sim) const {
-    return sim._n_fissionable_regions;
-  }
+  std::vector<Region> fissionRegions(const MCSlab & sim) const { return sim._fissionable_regions; }
+  unsigned int nFissionableRegions(const MCSlab & sim) const { return sim._n_fissionable_regions; }
 
-  unsigned int lenFissionBank(const MCSlab &sim) {
-    return sim._new_fission_bank.size();
-  }
+  unsigned int lenFissionBank(const MCSlab & sim) { return sim._new_fission_bank.size(); }
 };
 
-TEST_F(MCSlabTest, InitializeSimulation) {
-  for (auto &sim : test_sims) {
+TEST_F(MCSlabTest, InitializeSimulation)
+{
+  for (auto & sim : test_sims)
+  {
     EXPECT_EQ(sim->nParticles(), 100);
     EXPECT_EQ(sim->nGenerations(), 10);
     EXPECT_EQ(sim->nInactive(), 2);
@@ -46,7 +41,8 @@ TEST_F(MCSlabTest, InitializeSimulation) {
   EXPECT_EQ(getNTotalCells(test_sim_2), 16);
   EXPECT_EQ(getNTotalCells(test_sim_split), 26);
 
-  for (auto i = 0; i < test_sims.size(); i++) {
+  for (auto i = 0; i < test_sims.size(); i++)
+  {
     EXPECT_EQ(regions(*test_sims[i]).size(), i + 1);
   }
 
@@ -55,15 +51,16 @@ TEST_F(MCSlabTest, InitializeSimulation) {
   EXPECT_EQ(nFissionableRegions(test_sim_split), 1);
 }
 
-TEST_F(MCSlabTest, ShannonEntropy) {
+TEST_F(MCSlabTest, ShannonEntropy)
+{
   ASSERT_EQ(getNTotalCells(test_sim_1), 10);
   std::vector<unsigned long int> collision_bins(getNTotalCells(test_sim_1), 1);
   EXPECT_TRUE(test_sim_1.shannonEntropy(collision_bins) > 0);
 }
 
-TEST_F(MCSlabTest, Absorption) {
-  Region test_region{-1, 1, 1,
-                     1,  0, 4}; // hard-code because I'm tired of debugging
+TEST_F(MCSlabTest, Absorption)
+{
+  Region test_region{-1, 1, 1, 1, 0, 4}; // hard-code because I'm tired of debugging
   std::vector<Region> test_regions{test_region};
 
   MCSlab test_abs{"../tests/input_files/test_pure_absorb.xml"};
@@ -76,9 +73,9 @@ TEST_F(MCSlabTest, Absorption) {
   EXPECT_EQ(lenFissionBank(test_abs), 4);
 }
 
-TEST_F(MCSlabTest, Scatter) {
-  Region test_region{-1, 1, 1,
-                     0,  1, 0}; // hard-code because I'm tired of debugging
+TEST_F(MCSlabTest, Scatter)
+{
+  Region test_region{-1, 1, 1, 0, 1, 0}; // hard-code because I'm tired of debugging
   std::vector<Region> test_regions{test_region};
   MCSlab test_scatter{"../tests/input_files/test_pure_scatter.xml"};
   Neutron test_neutron{0, test_regions};
