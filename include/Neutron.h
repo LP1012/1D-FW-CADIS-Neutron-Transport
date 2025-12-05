@@ -39,6 +39,10 @@ public:
   /// @brief Set cosine of angle randomly assuming isotropic distribution
   void randomIsoAngle();
 
+  /// @brief Change weight oe neutron
+  /// @param weight
+  void changeWeight(const double weight);
+
   // define getter functions
   double pos() const { return _pos; }
   double mu() const { return _mu; }
