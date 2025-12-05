@@ -6,12 +6,11 @@
 
 class FWCADIS
 {
+public:
   FWCADIS(const std::string input_file_name);
 
-public:
 private:
   const std::string _input_file_name;
-  std::vector<Cell> _cells;
   unsigned int _n_total_cells;
 
   std::vector<Region> _regions;
