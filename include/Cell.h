@@ -19,6 +19,10 @@ public:
   const double cellWeight() const { return _weight; }
   const double forwardFlux() const { return _forward_flux; }
   const double adjointFlux() const { return _adjoint_flux; }
+  const double cellCenter() const { return _cell_center; }
+  const double sigmaT() const { return _Sigma_t; }
+  const double sigmaA() const { return _Sigma_a; }
+  const double sigmaS() const { return _Sigma_s; }
 
 private:
   const double _xmin;
