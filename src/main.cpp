@@ -20,6 +20,6 @@ main(int argc, char * argv[])
 
   std::string input_filename = argv[1];
   FWCADIS simulation{input_filename};
-  simulation.k_eigenvalue();
+  // simulation.k_eigenvalue();
   return 0;
 }
