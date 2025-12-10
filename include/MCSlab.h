@@ -46,8 +46,10 @@ protected:
   const unsigned int _n_generations;
   /// number of inactive cycles
   const unsigned int _n_inactive;
+
   /// all cells in simulation
-  const std::vector<Cell> _cells;
+  std::vector<Cell> _cells;
+  std::vector<Cell> _fissionable_cells;
 
   /// simulation input file
   const std::string _input_file_name;
@@ -91,7 +93,6 @@ protected:
   /// @param current_generation
   void recordCollisionTally(const int current_generation,
                             const double location,
-                            const unsigned int region_num,
                             const double weight,
                             const bool absorbed);
 
@@ -103,5 +104,5 @@ protected:
                           const double mu,
                           const double weight);
 
-  void neutronEscapesRegion(Neutron & neutron, const unsigned int generation);
+  void neutronEscapesCell(Neutron & neutron, const unsigned int generation);
 };

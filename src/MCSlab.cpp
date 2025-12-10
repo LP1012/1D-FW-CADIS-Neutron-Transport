@@ -115,20 +115,23 @@ MCSlab::k_eigenvalue()
       // generate neutrons from fission bank positions first
       double safe_start_pos =
           (_fissionable_regions.front().xMax() + _fissionable_regions.front().xMin()) / 2.0;
-      Neutron neutron(safe_start_pos, _regions); // initialize neutron
+      double starting_mu = Neutron::randomIsoAngle(_rng);
+      unsigned int starting_neutron_cell_indedx =
+          Cell::cellIndex(safe_start_pos, starting_mu, _cells);
+      Neutron neutron(
+          safe_start_pos, starting_mu, _cells[starting_neutron_cell_indedx]); // initialize neutron
 
       // adjust neutron start position based on randomness or fission bank
       if (fissions_in_old_bank > 0 && j < fissions_in_old_bank)
-        neutron.movePositionAndRegion(_old_fission_bank[j].pos(), _regions);
+        neutron.movePositionAndCell(_old_fission_bank[j].pos(), _cells);
       else
       {
-
-        neutron.setRandomStartPosition(_fissionable_regions,
-                                       _regions); // set location in fuel
+        neutron.setRandomStartPosition(_fissionable_cells,
+                                       _cells); // set location in fuel
       }
 
-      if (!(neutron.pos() <= neutron.region().xMax() && neutron.pos() >= neutron.region().xMin()))
-        throw std::runtime_error("Neutron region not set correctly! Position "
+      if (!(neutron.pos() <= neutron.cell().xMax() && neutron.pos() >= neutron.cell().xMin()))
+        throw std::runtime_error("Neutron cell not set correctly! Position "
                                  "not located within bounds!");
 
       // begin random walk
@@ -140,7 +143,7 @@ MCSlab::k_eigenvalue()
         double distanceToEdge = neutron.distanceToEdge(); // find distance to nearest edge
 
         if (distanceToEdge < distanceToCollision) // neutron has reached edge of region
-          neutronEscapesRegion(neutron, i);
+          neutronEscapesCell(neutron, i);
         else // neutron collides in region
         {
           double collision_location =
@@ -150,8 +153,7 @@ MCSlab::k_eigenvalue()
 
           // tally collision position and path traveled
           recordPathLenTally(i, neutron.pos(), collision_location, neutron.mu(), neutron.weight());
-          recordCollisionTally(
-              i, collision_location, neutron.region().regionIndex(), neutron.weight(), absorbed);
+          recordCollisionTally(i, collision_location, neutron.weight(), absorbed);
 
           // shift neutron position
           neutron.movePositionWithinRegion(collision_location);
@@ -213,7 +215,7 @@ bool
 MCSlab::testAbsorption(const Neutron & neutron)
 {
   double rn = _rng.generateRN();
-  return (rn < neutron.region().absorptionRatio());
+  return (rn < neutron.cell().absorptionRatio());
 }
 
 void
@@ -221,21 +223,25 @@ MCSlab::absorption(Neutron & neutron)
 {
   // sample number of fission
   double production_rn = _rng.generateRN(); // generate random number
-  Region neutron_region = neutron.region(); // hold region absorption occurs
+  Cell neutron_cell = neutron.cell();       // hold region absorption occurs
 
   unsigned int n_born; // initialize number of neutrons born
 
-  if (production_rn < neutron_region.nPerAbsorption() - std::floor(neutron_region.nPerAbsorption()))
-    n_born = std::ceil(neutron_region.nPerAbsorption());
+  if (production_rn < neutron_cell.nPerAbsorption() - std::floor(neutron_cell.nPerAbsorption()))
+    n_born = std::ceil(neutron_cell.nPerAbsorption());
   else
-    n_born = std::floor(neutron_region.nPerAbsorption());
+    n_born = std::floor(neutron_cell.nPerAbsorption());
 
   _n_neutrons_born += n_born;
 
   for (auto i = 0; i < n_born; i++)
   {
-    Neutron fission_neutron = Neutron(neutron.pos(),
-                                      _regions);  // create neutron at location with isotropic angle
+    double fission_neutron_mu = Neutron::randomIsoAngle(_rng);
+    Cell fission_cell = _cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
+    Neutron fission_neutron =
+        Neutron(neutron.pos(),
+                fission_neutron_mu,
+                fission_cell);                    // create neutron at location with isotropic angle
     _new_fission_bank.push_back(fission_neutron); // add to fission bank
   }
 
@@ -248,47 +254,46 @@ MCSlab::scatter(Neutron & neutron)
   // this would be where we could calculate the energy lost in scatter.
   // however, because the material properties are energy-indendent, we only
   // need the new angle to proceed.
-  neutron.randomIsoAngle();
+  neutron.randomIsoAngle(_rng);
 }
 
 void
-MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int generation)
+MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
 {
   // record starting position
   const double start_x = neutron.pos();
   const double mu = neutron.mu();
-  const Region start_region = neutron.region();
-  const unsigned int start_region_index = start_region.regionIndex();
+  const Cell start_cell = neutron.cell();
+  const unsigned int start_cell_index = Cell::cellIndex(start_x, mu, _cells);
 
   const int dir = (mu > 0) ? +1 : -1;
-  //  put on edge
-  double x_edge = (dir > 0) ? start_region.xMax() : start_region.xMin();
+  double x_edge = (dir > 0) ? start_cell.xMax() : start_cell.xMin();     //  put on edge
+  recordPathLenTally(generation, start_x, x_edge, mu, neutron.weight()); // tally
+
   //  if at end of domain, kill
-  if ((dir < 0 && start_region_index == 0) ||
-      (dir > 0 && start_region_index == _regions.size() - 1))
+  if ((dir < 0 && start_cell_index == 0) || (dir > 0 && start_cell_index == _cells.size() - 1))
   {
-    recordPathLenTally(generation, start_x, x_edge, mu, neutron.weight());
     neutron.kill();
     return;
   }
-  //  if next region(s) is/are voids, jump over them
-  unsigned int counting_index = start_region_index + dir;
-  while (_regions[counting_index].SigmaT() < 1e-15)
-  {
-    if ((dir < 0 && start_region_index == 0) ||
-        (dir > 0 && start_region_index == _regions.size() - 1))
-    {
-      double x_jump = (dir > 0) ? _regions[counting_index].xMax() : _regions[counting_index].xMin();
-      recordPathLenTally(generation, start_x, x_jump, mu, neutron.weight());
-      neutron.kill();
-      return;
-    }
-    counting_index += dir;
-  }
+  neutron.movePositionAndCell(x_edge, _cells);
+  // //  if next region(s) is/are voids, jump over them
+  // unsigned int counting_index = start_cell_index + dir;
+  // while (_regions[counting_index].SigmaT() < 1e-15)
+  // {
+  //   if ((dir < 0 && start_cell_index == 0) ||
+  //       (dir > 0 && start_cell_index == _regions.size() - 1))
+  //   {
+  //     double x_jump = (dir > 0) ? _regions[counting_index].xMax() :
+  //     _regions[counting_index].xMin(); recordPathLenTally(generation, start_x, x_jump, mu,
+  //     neutron.weight()); neutron.kill(); return;
+  //   }
+  //   counting_index += dir;
+  // }
 
-  double x_jump = (dir > 0) ? _regions[counting_index].xMin() : _regions[counting_index].xMax();
-  recordPathLenTally(generation, start_x, x_jump, mu, neutron.weight());
-  neutron.movePositionAndRegion(x_jump, _regions);
+  // double x_jump = (dir > 0) ? _regions[counting_index].xMin() : _regions[counting_index].xMax();
+  // recordPathLenTally(generation, start_x, x_jump, mu, neutron.weight());
+  // neutron.movePositionAndRegion(x_jump, _regions);
 }
 
 // void
@@ -430,13 +435,12 @@ MCSlab::calculateK()
 void
 MCSlab::recordCollisionTally(const int current_generation,
                              const double location,
-                             const unsigned int region_num,
                              const double weight,
                              const bool absorbed)
 {
   if (current_generation > _n_inactive - 1)
   {
-    _collision_outfile << location << "," << weight << "," << region_num << ",";
+    _collision_outfile << location << "," << weight << ",";
     if (absorbed)
       _collision_outfile << "absorption" << std::endl;
     else
