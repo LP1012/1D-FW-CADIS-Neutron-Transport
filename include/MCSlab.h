@@ -57,9 +57,8 @@ protected:
   std::ofstream _collision_outfile;  // output file for storing collisions
   std::ofstream _pathlength_outfile; // output file for pathlength locations
 
-  std::vector<Region> _regions;             // vector of regions
-  std::vector<Region> _fissionable_regions; // vector of fissile regions
-  unsigned int _n_fissionable_regions;      // number of fissionable regions
+  std::vector<Region> _regions;        // vector of regions
+  unsigned int _n_fissionable_regions; // number of fissionable regions
 
   unsigned int _n_total_cells; // number of cells in all regions
 
@@ -78,8 +77,6 @@ protected:
   double _k_std;                  // std_dev of k-eff
 
   double _shannon_entropy;
-
-  void fissionRegions();
 
   unsigned int collisionIndex(const Neutron & neutron);
 
@@ -105,4 +102,5 @@ protected:
                           const double weight);
 
   void neutronEscapesCell(Neutron & neutron, const unsigned int generation);
+  void createFissionCells();
 };

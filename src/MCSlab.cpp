@@ -30,7 +30,17 @@ MCSlab::MCSlab(const std::string input_file_name,
 {
   _n_total_cells = _cells.size();
   _n_fissionable_regions = 0;
-  fissionRegions();
+  createFissionCells();
+}
+
+void
+MCSlab::createFissionCells()
+{
+  for (auto & cell : _cells)
+  {
+    if (cell.nuSigmaF() > 1e-15)
+      _fissionable_cells.push_back(cell);
+  }
 }
 
 void
@@ -114,7 +124,7 @@ MCSlab::k_eigenvalue()
     {
       // generate neutrons from fission bank positions first
       double safe_start_pos =
-          (_fissionable_regions.front().xMax() + _fissionable_regions.front().xMin()) / 2.0;
+          (_fissionable_cells.front().xMax() + _fissionable_cells.front().xMin()) / 2.0;
       double starting_mu = Neutron::randomIsoAngle(_rng);
       unsigned int starting_neutron_cell_indedx =
           Cell::cellIndex(safe_start_pos, starting_mu, _cells);
@@ -341,29 +351,6 @@ MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
 //   // Move into the new region
 //   // printf("We are somehow moving a region...\n");
 //   neutron.movePositionAndRegion(new_x, _regions);
-// }
-
-void
-MCSlab::fissionRegions()
-{
-  for (auto region : _regions)
-  {
-    if (region.nuSigF() > 1e-15)
-      _fissionable_regions.push_back(region);
-  }
-  _n_fissionable_regions = _fissionable_regions.size();
-}
-
-// unsigned int
-// MCSlab::collisionIndex(const Neutron & neutron)
-// {
-//   double collision_location = neutron.pos();
-//   for (auto i = 1; i <= _n_total_cells + 1; i++)
-//   {
-//     if (collision_location < _all_cell_bounds[i])
-//       return i - 1;
-//   }
-//   throw std::runtime_error("Collision location not within domain of problem!");
 // }
 
 unsigned int

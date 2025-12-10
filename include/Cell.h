@@ -30,6 +30,7 @@ public:
   const double sigmaT() const { return _Sigma_t; }
   const double sigmaA() const { return _Sigma_a; }
   const double sigmaS() const { return _Sigma_s; }
+  const double nuSigmaF() const { return _nu_Sigma_f; }
   const double absorptionRatio() const { return _abs_ratio; }
   const double nPerAbsorption() const { return _n_per_abs; }
 
