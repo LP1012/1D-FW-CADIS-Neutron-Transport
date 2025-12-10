@@ -6,6 +6,7 @@
 #include "Region.h"
 #include "tinyxml2.h"
 #include <vector>
+#include <deque>
 #include <fstream>
 
 class MCSlab
@@ -65,8 +66,8 @@ protected:
   unsigned int _n_neutrons_born; // the number of fission neutrons born in a generation
 
   // banks of source sites
-  std::vector<Neutron> _old_fission_bank;
-  std::vector<Neutron> _new_fission_bank;
+  std::deque<Neutron> _old_fission_bank;
+  std::deque<Neutron> _new_fission_bank;
 
   void calculateK();
   double _k_gen;                  // multiplication constant of the generation

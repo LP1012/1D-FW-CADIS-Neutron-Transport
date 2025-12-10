@@ -173,12 +173,16 @@ MCSlab::k_eigenvalue()
       calculateK();
 
     // if too many fission sites are stored, remove the old ones
-    if (_new_fission_bank.size() > _n_particles)
+    while (_new_fission_bank.size() > _n_particles)
     {
-      _new_fission_bank.erase(_new_fission_bank.begin(),
-                              _new_fission_bank.begin() +
-                                  (_new_fission_bank.size() - _n_particles));
+      _new_fission_bank.pop_front();
     }
+    // if (_new_fission_bank.size() > _n_particles)
+    // {
+    //   _new_fission_bank.erase(_new_fission_bank.begin(),
+    //                           _new_fission_bank.begin() +
+    //                               (_new_fission_bank.size() - _n_particles));
+    // }
 
     assert(_new_fission_bank.size() <= _n_particles);
 
