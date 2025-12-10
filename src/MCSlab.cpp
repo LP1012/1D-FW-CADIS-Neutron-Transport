@@ -129,7 +129,7 @@ MCSlab::k_eigenvalue()
       unsigned int starting_neutron_cell_indedx =
           Cell::cellIndex(safe_start_pos, starting_mu, _cells);
       Neutron neutron(
-          safe_start_pos, starting_mu, _cells[starting_neutron_cell_indedx]); // initialize neutron
+          safe_start_pos, starting_mu, &_cells[starting_neutron_cell_indedx]); // initialize neutron
 
       // adjust neutron start position based on randomness or fission bank
       if (fissions_in_old_bank > 0 && j < fissions_in_old_bank)
@@ -247,7 +247,7 @@ MCSlab::absorption(Neutron & neutron)
   for (auto i = 0; i < n_born; i++)
   {
     double fission_neutron_mu = Neutron::randomIsoAngle(_rng);
-    Cell fission_cell = _cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
+    Cell * fission_cell = &_cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
     Neutron fission_neutron =
         Neutron(neutron.pos(),
                 fission_neutron_mu,

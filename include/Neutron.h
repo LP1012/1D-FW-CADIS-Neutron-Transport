@@ -14,7 +14,7 @@ class Neutron
 public:
   Neutron(double position,
           double mu,
-          Cell & cell,
+          Cell * cell,
           std::optional<double> weight = std::nullopt,
           std::optional<unsigned int> seed = std::nullopt);
 

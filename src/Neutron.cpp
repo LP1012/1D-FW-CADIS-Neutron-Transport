@@ -8,10 +8,13 @@
 
 Neutron::Neutron(double position,
                  double mu,
-                 Cell & cell,
+                 Cell * cell,
                  std::optional<double> weight,
                  std::optional<unsigned int> seed)
-  : _weight(weight.value_or(1.0)),
+  : _pos(position),
+    _mu(mu),
+    _cell(cell),
+    _weight(weight.value_or(1.0)),
     _rng(seed.has_value() ? UniformRNG(0, 1.0, seed.value()) : UniformRNG(0, 1.0))
 {
   _is_alive = true;
