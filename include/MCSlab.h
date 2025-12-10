@@ -103,4 +103,7 @@ protected:
 
   void neutronEscapesCell(Neutron & neutron, const unsigned int generation);
   void createFissionCells();
+  void runHistory(Neutron & neutron,
+                  const unsigned int generation_num,
+                  std::vector<unsigned long int> & source_bins);
 };

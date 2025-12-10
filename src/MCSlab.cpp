@@ -145,38 +145,7 @@ MCSlab::k_eigenvalue()
                                  "not located within bounds!");
 
       // begin random walk
-      while (neutron.isAlive())
-      {
-        double distanceToCollision =
-            neutron.distanceToCollision();                // store in a variable because this
-                                                          // calculation involves a random number
-        double distanceToEdge = neutron.distanceToEdge(); // find distance to nearest edge
-
-        if (distanceToEdge < distanceToCollision) // neutron has reached edge of region
-          neutronEscapesCell(neutron, i);
-        else // neutron collides in region
-        {
-          double collision_location =
-              neutron.pos() +
-              distanceToCollision * neutron.mu();  // calculate where collision occurred
-          bool absorbed = testAbsorption(neutron); // did an absorption occur?
-
-          // tally collision position and path traveled
-          recordPathLenTally(i, neutron.pos(), collision_location, neutron.mu(), neutron.weight());
-          recordCollisionTally(i, collision_location, neutron.weight(), absorbed);
-
-          // shift neutron position
-          neutron.movePositionWithinRegion(collision_location);
-
-          if (absorbed)
-          {
-            source_bins[collisionIndex(neutron)] += 1;
-            absorption(neutron);
-          }
-          else
-            scatter(neutron);
-        }
-      }
+      runHistory(neutron, i, source_bins);
     }
     _shannon_entropy = shannonEntropy(source_bins);
 
@@ -219,6 +188,45 @@ MCSlab::k_eigenvalue()
   printf("--------------------------------------------------------\n");
   printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
   printf("Simulation complete. :-)\n\n");
+}
+
+void
+MCSlab::runHistory(Neutron & neutron,
+                   const unsigned int generation_num,
+                   std::vector<unsigned long int> & source_bins)
+{
+  while (neutron.isAlive())
+  {
+    double distanceToCollision =
+        neutron.distanceToCollision();                // store in a variable because this
+                                                      // calculation involves a random number
+    double distanceToEdge = neutron.distanceToEdge(); // find distance to nearest edge
+
+    if (distanceToEdge < distanceToCollision) // neutron has reached edge of region
+      neutronEscapesCell(neutron, generation_num);
+    else // neutron collides in region
+    {
+      double collision_location =
+          neutron.pos() + distanceToCollision * neutron.mu(); // calculate where collision occurred
+      bool absorbed = testAbsorption(neutron);                // did an absorption occur?
+
+      // tally collision position and path traveled
+      recordPathLenTally(
+          generation_num, neutron.pos(), collision_location, neutron.mu(), neutron.weight());
+      recordCollisionTally(generation_num, collision_location, neutron.weight(), absorbed);
+
+      // shift neutron position
+      neutron.movePositionWithinRegion(collision_location);
+
+      if (absorbed)
+      {
+        source_bins[collisionIndex(neutron)] += 1;
+        absorption(neutron);
+      }
+      else
+        scatter(neutron);
+    }
+  }
 }
 
 bool
