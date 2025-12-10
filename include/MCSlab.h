@@ -70,6 +70,8 @@ protected:
   std::deque<Neutron> _old_fission_bank;
   std::deque<Neutron> _new_fission_bank;
 
+  std::deque<Neutron> _split_bank; // bank of neutrons created via splitting
+
   void calculateK();
   double _k_gen;                  // multiplication constant of the generation
   std::vector<double> _k_gen_vec; // vector containing running k-gen values
@@ -106,4 +108,5 @@ protected:
   void runHistory(Neutron & neutron,
                   const unsigned int generation_num,
                   std::vector<unsigned long int> & source_bins);
+  Cell randomFissionCell();
 };

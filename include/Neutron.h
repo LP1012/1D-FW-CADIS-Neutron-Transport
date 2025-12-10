@@ -21,7 +21,7 @@ public:
   // move neutron to new position
   void movePositionAndCell(const double new_position, std::vector<Cell> & cells);
 
-  void movePositionWithinRegion(const double new_position);
+  void movePositionWithinCell(const double new_position);
 
   /// @brief Set start position of neutron randomly in fissionable regionss
   /// @param fissionable_regions
@@ -64,4 +64,5 @@ private:
   /// @brief Set region based on current location. Will not work on edge.
   /// @param regions
   void setCell(std::vector<Cell> & cells);
+  void checkNeutron();
 };
