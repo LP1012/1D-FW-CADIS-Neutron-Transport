@@ -2,7 +2,7 @@
 
 #include "Point.h"
 #include "RNG.h"
-#include "Region.h"
+#include "Cell.h"
 #include <optional>
 #include <vector>
 #include <iostream>
@@ -13,19 +13,20 @@ class Neutron
 
 public:
   Neutron(double position,
-          std::vector<Region> & regions,
+          double mu,
+          Cell * cell,
           std::optional<double> weight = std::nullopt,
           std::optional<unsigned int> seed = std::nullopt);
 
   // move neutron to new position
-  void movePositionAndRegion(const double new_position, std::vector<Region> & regions);
+  void movePositionAndCell(const double new_position, std::vector<Cell> & cells);
 
   void movePositionWithinRegion(const double new_position);
 
   /// @brief Set start position of neutron randomly in fissionable regionss
   /// @param fissionable_regions
-  void setRandomStartPosition(const std::vector<Region> & fissionable_regions,
-                              std::vector<Region> & regions);
+  void setRandomStartPosition(const std::vector<Cell> & fissionable_cells,
+                              std::vector<Cell> & cells);
 
   /// @brief Calculates distance to collision
   double distanceToCollision();
@@ -37,7 +38,7 @@ public:
   void kill();
 
   /// @brief Set cosine of angle randomly assuming isotropic distribution
-  void randomIsoAngle();
+  static double randomIsoAngle(UniformRNG rng);
 
   /// @brief Change weight oe neutron
   /// @param weight
@@ -48,21 +49,19 @@ public:
   double mu() const { return _mu; }
   bool isAlive() const { return _is_alive; }
   const double weight() const { return _weight; }
-  // Region region() const { return *_region; }
-
-  const Region & region() const { return *_region; }
+  const Cell & cell() const { return *_cell; }
 
 private:
-  double _pos;      // x-position
-  double _mu;       // cosine of angle
-  Region * _region; // region currently located in
-  bool _is_alive;   // is neutron still being tracked?
-  double _weight;   // weight of neutron
+  double _pos;    // x-position
+  double _mu;     // cosine of angle
+  Cell * _cell;   // region currently located in
+  bool _is_alive; // is neutron still being tracked?
+  double _weight; // weight of neutron
 
   // initialize RNG
   UniformRNG _rng;
 
   /// @brief Set region based on current location. Will not work on edge.
   /// @param regions
-  void setRegion(std::vector<Region> & regions);
+  void setCell(std::vector<Cell> & cells);
 };

@@ -46,8 +46,10 @@ protected:
   const unsigned int _n_generations;
   /// number of inactive cycles
   const unsigned int _n_inactive;
+
   /// all cells in simulation
-  const std::vector<Cell> _cells;
+  std::vector<Cell> _cells;
+  std::vector<Cell> _fissionable_cells;
 
   /// simulation input file
   const std::string _input_file_name;
@@ -55,9 +57,8 @@ protected:
   std::ofstream _collision_outfile;  // output file for storing collisions
   std::ofstream _pathlength_outfile; // output file for pathlength locations
 
-  std::vector<Region> _regions;             // vector of regions
-  std::vector<Region> _fissionable_regions; // vector of fissile regions
-  unsigned int _n_fissionable_regions;      // number of fissionable regions
+  std::vector<Region> _regions;        // vector of regions
+  unsigned int _n_fissionable_regions; // number of fissionable regions
 
   unsigned int _n_total_cells; // number of cells in all regions
 
@@ -77,8 +78,6 @@ protected:
 
   double _shannon_entropy;
 
-  void fissionRegions();
-
   unsigned int collisionIndex(const Neutron & neutron);
 
   /// @brief method initializes output files for flux tallies (collision and pathlength)
@@ -91,7 +90,6 @@ protected:
   /// @param current_generation
   void recordCollisionTally(const int current_generation,
                             const double location,
-                            const unsigned int region_num,
                             const double weight,
                             const bool absorbed);
 
@@ -103,5 +101,6 @@ protected:
                           const double mu,
                           const double weight);
 
-  void neutronEscapesRegion(Neutron & neutron, const unsigned int generation);
+  void neutronEscapesCell(Neutron & neutron, const unsigned int generation);
+  void createFissionCells();
 };
