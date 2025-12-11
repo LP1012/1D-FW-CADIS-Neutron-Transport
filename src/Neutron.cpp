@@ -18,6 +18,7 @@ Neutron::Neutron(double position,
     _rng(seed.has_value() ? UniformRNG(0, 1.0, seed.value()) : UniformRNG(0, 1.0))
 {
   _is_alive = true;
+  _weight = cell->cellWeight();
   checkNeutron();
 }
 
@@ -49,6 +50,7 @@ Neutron::movePositionAndCell(const double new_position, std::vector<Cell> & cell
 {
   _pos = new_position;
   setCell(cells);
+  changeWeight();
   checkNeutron();
 }
 
@@ -90,9 +92,11 @@ Neutron::setCell(std::vector<Cell> & cells)
 }
 
 void
-Neutron::changeWeight(const double weight)
+Neutron::changeWeight()
 {
-  _weight = weight;
+  _weight = _cell->cellWeight(); // this is just a placeholder
+  if (_weight == 0)
+    kill();
 }
 
 void
