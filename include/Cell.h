@@ -1,5 +1,6 @@
 #pragma once
 
+#include "RNG.h"
 #include <vector>
 
 class Cell
@@ -17,6 +18,7 @@ public:
 
   static unsigned int
   cellIndex(const double position, const double mu, const std::vector<Cell> cells);
+  static double randomPositionInCell(const Cell cell, UniformRNG rng);
 
   bool static isOnBoundary(const double pos, const double boundary);
 

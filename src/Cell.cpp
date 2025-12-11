@@ -2,6 +2,7 @@
 #include <cmath>
 #include <vector>
 #include <stdexcept>
+#include "RNG.h"
 
 Cell::Cell(const double xmin,
            const double xmax,
@@ -17,6 +18,15 @@ Cell::Cell(const double xmin,
   _Sigma_t = _Sigma_a + _Sigma_s;
   _n_per_abs = _nu_Sigma_f / _Sigma_a;
   _abs_ratio = _Sigma_a / _Sigma_t;
+}
+
+double
+Cell::randomPositionInCell(const Cell cell, UniformRNG rng)
+{
+  double xmax = cell.xMax();
+  double xmin = cell.xMin();
+  double rn = rng.generateRN();
+  return rn * (xmax * xmin) + xmin;
 }
 
 unsigned int

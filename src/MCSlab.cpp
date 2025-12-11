@@ -123,61 +123,29 @@ MCSlab::k_eigenvalue()
     for (auto j = 0; j < _n_particles; j++)
     {
       // generate neutrons from fission bank positions first
-      double safe_start_pos =
-          (_fissionable_cells.front().xMax() + _fissionable_cells.front().xMin()) / 2.0;
-      double starting_mu = Neutron::randomIsoAngle(_rng);
-      unsigned int starting_neutron_cell_indedx =
-          Cell::cellIndex(safe_start_pos, starting_mu, _cells);
-      Neutron neutron(
-          safe_start_pos, starting_mu, &_cells[starting_neutron_cell_indedx]); // initialize neutron
-
-      // adjust neutron start position based on randomness or fission bank
       if (fissions_in_old_bank > 0 && j < fissions_in_old_bank)
-        neutron.movePositionAndCell(_old_fission_bank[j].pos(), _cells);
+      {
+        Neutron neutron = _old_fission_bank[j];
+        runHistory(neutron, i, source_bins);
+      }
+      // if no more neutrons in fission bank, create new ones in fuel
       else
       {
-        neutron.setRandomStartPosition(_fissionable_cells,
-                                       _cells); // set location in fuel
-      }
-
-      if (!(neutron.pos() <= neutron.cell().xMax() && neutron.pos() >= neutron.cell().xMin()))
-        throw std::runtime_error("Neutron cell not set correctly! Position "
-                                 "not located within bounds!");
-
-      // begin random walk
-      while (neutron.isAlive())
-      {
-        double distanceToCollision =
-            neutron.distanceToCollision();                // store in a variable because this
-                                                          // calculation involves a random number
-        double distanceToEdge = neutron.distanceToEdge(); // find distance to nearest edge
-
-        if (distanceToEdge < distanceToCollision) // neutron has reached edge of region
-          neutronEscapesCell(neutron, i);
-        else // neutron collides in region
-        {
-          double collision_location =
-              neutron.pos() +
-              distanceToCollision * neutron.mu();  // calculate where collision occurred
-          bool absorbed = testAbsorption(neutron); // did an absorption occur?
-
-          // tally collision position and path traveled
-          recordPathLenTally(i, neutron.pos(), collision_location, neutron.mu(), neutron.weight());
-          recordCollisionTally(i, collision_location, neutron.weight(), absorbed);
-
-          // shift neutron position
-          neutron.movePositionWithinRegion(collision_location);
-
-          if (absorbed)
-          {
-            source_bins[collisionIndex(neutron)] += 1;
-            absorption(neutron);
-          }
-          else
-            scatter(neutron);
-        }
+        Cell start_cell = randomFissionCell();
+        double random_start_pos = Cell::randomPositionInCell(start_cell, _rng);
+        double start_mu = Neutron::randomIsoAngle(_rng);
+        Neutron neutron(random_start_pos, start_mu, &start_cell);
+        runHistory(neutron, i, source_bins);
       }
     }
+
+    while (_split_bank.size() > 0)
+    {
+      Neutron neutron = _split_bank.front();
+      runHistory(neutron, i, source_bins);
+      _split_bank.pop_front();
+    }
+
     _shannon_entropy = shannonEntropy(source_bins);
 
     // need to calculate both generational k and simulation k
@@ -219,6 +187,58 @@ MCSlab::k_eigenvalue()
   printf("--------------------------------------------------------\n");
   printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
   printf("Simulation complete. :-)\n\n");
+}
+
+Cell
+MCSlab::randomFissionCell()
+{
+  unsigned int n_fissionable_cells = _fissionable_cells.size();
+  const double cell_prob_width = 1.0 / static_cast<double>(n_fissionable_cells);
+
+  auto rn = _rng.generateRN();
+  rn = std::min(rn, 1.0 - 1e-15); // safety factor
+
+  unsigned int cell_id = std::floor(rn * static_cast<double>(n_fissionable_cells));
+  return _fissionable_cells[cell_id];
+}
+
+void
+MCSlab::runHistory(Neutron & neutron,
+                   const unsigned int generation_num,
+                   std::vector<unsigned long int> & source_bins)
+{
+  while (neutron.isAlive())
+  {
+    double distanceToCollision =
+        neutron.distanceToCollision();                // store in a variable because this
+                                                      // calculation involves a random number
+    double distanceToEdge = neutron.distanceToEdge(); // find distance to nearest edge
+
+    if (distanceToEdge < distanceToCollision) // neutron has reached edge of region
+      neutronEscapesCell(neutron, generation_num);
+    else // neutron collides in region
+    {
+      double collision_location =
+          neutron.pos() + distanceToCollision * neutron.mu(); // calculate where collision occurred
+      bool absorbed = testAbsorption(neutron);                // did an absorption occur?
+
+      // tally collision position and path traveled
+      recordPathLenTally(
+          generation_num, neutron.pos(), collision_location, neutron.mu(), neutron.weight());
+      recordCollisionTally(generation_num, collision_location, neutron.weight(), absorbed);
+
+      // shift neutron position
+      neutron.movePositionWithinCell(collision_location);
+
+      if (absorbed)
+      {
+        source_bins[collisionIndex(neutron)] += 1;
+        absorption(neutron);
+      }
+      else
+        scatter(neutron);
+    }
+  }
 }
 
 bool

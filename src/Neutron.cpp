@@ -18,6 +18,8 @@ Neutron::Neutron(double position,
     _rng(seed.has_value() ? UniformRNG(0, 1.0, seed.value()) : UniformRNG(0, 1.0))
 {
   _is_alive = true;
+  _weight = cell->cellWeight();
+  checkNeutron();
 }
 
 double
@@ -37,39 +39,6 @@ Neutron::distanceToEdge()
     return (_pos - _cell->xMin()) / (-_mu);
 }
 
-void
-Neutron::setRandomStartPosition(const std::vector<Cell> & fissionable_cells,
-                                std::vector<Cell> & cells)
-{
-  const double eps = 1e-12;
-  unsigned int n_fissionable_regions = fissionable_cells.size();
-  double region_width = 1.0 / static_cast<double>(n_fissionable_regions);
-  double rn = _rng.generateRN();
-  for (auto i = 0; i < n_fissionable_regions; i++)
-  {
-    if ((static_cast<double>(i) * region_width < rn) &&
-        (static_cast<double>(i + 1) * region_width > rn))
-    {
-      Cell selected_cell = fissionable_cells[i]; // region of particle location
-
-      while (true)
-      {
-        _pos = _rng.generateRN() * (selected_cell.xMax() - selected_cell.xMin()) +
-               selected_cell.xMin();
-
-        bool bad_left = (std::abs(_pos - selected_cell.xMin()) < eps && _mu < 0);
-        bool bad_right = (std::abs(_pos - selected_cell.xMax()) < eps && _mu > 0);
-
-        if (!bad_left && !bad_right)
-          break;
-      }
-
-      setCell(cells);
-      return;
-    }
-  }
-}
-
 double
 Neutron::randomIsoAngle(UniformRNG rng)
 {
@@ -81,10 +50,12 @@ Neutron::movePositionAndCell(const double new_position, std::vector<Cell> & cell
 {
   _pos = new_position;
   setCell(cells);
+  changeWeight();
+  checkNeutron();
 }
 
 void
-Neutron::movePositionWithinRegion(const double new_position)
+Neutron::movePositionWithinCell(const double new_position)
 {
   _pos = new_position;
 }
@@ -121,13 +92,23 @@ Neutron::setCell(std::vector<Cell> & cells)
 }
 
 void
-Neutron::changeWeight(const double weight)
+Neutron::changeWeight()
 {
-  _weight = weight;
+  _weight = _cell->cellWeight(); // this is just a placeholder
+  if (_weight == 0)
+    kill();
 }
 
 void
 Neutron::kill()
 {
   _is_alive = false;
+}
+
+void
+Neutron::checkNeutron()
+{
+  if (!(_pos <= _cell->xMax() && _pos >= _cell->xMin()))
+    throw std::runtime_error("Neutron cell not set correctly! Position "
+                             "not located within bounds!");
 }
