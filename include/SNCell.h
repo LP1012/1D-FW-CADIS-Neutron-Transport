@@ -5,7 +5,12 @@
 class SNCell : public CellBase
 {
 public:
-  using CellBase::CellBase;
+  SNCell(const Cell & cell);
+  SNCell(const double xmin,
+         const double xmax,
+         const double Sigma_a,
+         const double Sigma_s,
+         const double nu_Sigma_f);
 
 protected:
   double _scalar_flux;
