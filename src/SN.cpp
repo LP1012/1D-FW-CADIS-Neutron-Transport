@@ -7,6 +7,8 @@
 #include <stdexcept>
 #include <vector>
 #include <cmath>
+#include <fstream>
+#include <iostream>
 
 template <std::size_t N>
 SN<N>::SN(const std::vector<Cell> & cells) : _num_cells(cells.size())
@@ -41,11 +43,36 @@ SN<N>::run()
       const double new_k = _k;
       std::vector<double> new_scalar_flux = getScalarFlux<N>();
 
+      safety++;
+
+      printf("|   %d    |", safety);
       // check for convergence
       _is_converged = isConverged<N>(old_scalar_flux, new_scalar_flux, old_k, new_k);
     }
   }
-  // export results to csv
+
+  printf("\nFinal k-eff: %.6f\n", _k);
+
+  printf("\nExporting results... ");
+  exportToCsv<N>(); // export results to csv
+  printf("Done.\n")
+}
+
+template <std::size_t N>
+void
+SN<N>::exportToCsv()
+{
+  std::string output = "SN_output";
+  std::ofstream outfile;
+  outfile.open(output);
+  if (!outfile.is_open())
+    throw std::runtime_error("SN output file not opened successfully!");
+
+  outfile << "position,scalar_flux" << std::endl;
+  for (auto cell : _sn_cells)
+    outfile << cell.cellCenter() << "," << cell.scalarFlux() << std::endl;
+
+  outfile.close();
 }
 
 template <std::size_t N>
@@ -61,6 +88,8 @@ SN<N>::isConverged(const std::vector<double> & old_flux,
   double error_vector_norm = L2Norm<N>(error_vector);
   double new_flux_norm = L2Norm<N>(new_flux);
   double relative_flux = error_vector_norm / new_flux_norm;
+
+  printf("    |   %.4e    |   %.4e    |\n", relative_k, relative_flux);
 
   double tol = 1e-6;
   if (relative_k < tol && relative_flux << tol)
