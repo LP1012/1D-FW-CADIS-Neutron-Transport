@@ -104,10 +104,10 @@ SN<N>::normalizeSources()
 
 template <std::size_t N>
 std::vector<double>
-SN<N>::getScalarFlux(const std::vector<SNCell<N>> & sn_cells)
+SN<N>::getScalarFlux()
 {
   std::vector<double> scalar_flux;
-  for (auto & cell : sn_cells)
+  for (auto & cell : _sn_cells)
     scalar_flux.push_back(cell.scalarFlux());
   return scalar_flux;
 }

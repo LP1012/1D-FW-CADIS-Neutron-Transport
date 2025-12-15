@@ -11,7 +11,7 @@ public:
   explicit SN(const std::vector<Cell> & cells);
 
   void run();
-  std::vector<double> getForwardFlux();
+  std::vector<double> getScalarFlux();
 
 protected:
   const unsigned int _num_cells;
@@ -29,7 +29,6 @@ protected:
   double computeAngularFlux(const SNCell<N> & cell, const double cell_flux, const double mu);
   double computeCellFlux(const double cell_centered_flux, const double known_flux);
 
-  std::vector<double> getScalarFlux(const std::vector<SNCell<N>> & sn_cells);
   void updateK();
   double integrateFissionSource(const std::vector<SNCell<N>> & cells);
 };
