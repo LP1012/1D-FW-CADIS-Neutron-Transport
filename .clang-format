@@ -1,5 +1,5 @@
 # This file was taken verbatim from INL's MOOSE framework (https://github.com/idaholab/moose).
-# It is licensed unthe LGPL-2.1 license.
+# It is licensed under the LGPL-2.1 license.
 
 BasedOnStyle: LLVM
 
