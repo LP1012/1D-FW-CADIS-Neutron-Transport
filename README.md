@@ -52,3 +52,9 @@ To use the `Makefile` supplied, navigate to `report`, then run `make`.
 The random number generator within `MCSlab` is randomly seeded for each generation, so perfect replication is not possible. 
 However, users are able to run the same input files because all are included within `examples/`.
 Runnning the provided bash script will reproduce the results.
+
+## References
+### FW-CADIS
+[OpenMC](https://docs.openmc.org/en/stable/methods/variance_reduction.html#equation-fw-cadis)
+[Paper 1](https://www.tandfonline.com/doi/abs/10.13182/NSE12-33)
+
