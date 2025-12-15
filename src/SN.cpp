@@ -16,6 +16,38 @@ SN<N>::SN(const std::vector<Cell> & cells) : _num_cells(cells.size())
   populateSNCells(cells);
   _mus = discreteQuadrature::getAbscissaAsVector<N>();
   _k = 1.0; // assume critical just for initial guess
+  _is_converged = false;
+}
+
+template <std::size_t N>
+bool
+SN<N>::isConverged(const std::vector<double> & old_flux,
+                   const std::vector<double> & new_flux,
+                   const double old_k,
+                   const double new_k)
+{
+  double relative_k = std::abs(new_k - old_k) / new_k;
+
+  std::vector<double> error_vector = new_flux - old_flux;
+  double error_vector_norm = L2Norm<N>(error_vector);
+  double new_flux_norm = L2Norm<N>(new_flux);
+  double relative_flux = error_vector_norm / new_flux_norm;
+
+  double tol = 1e-8;
+  if (relative_k < tol && relative_flux << tol)
+    return true;
+  else
+    return false;
+}
+
+template <std::size_t N>
+double
+SN<N>::L2Norm(const std::vector<double> & vector)
+{
+  double running_sum = 0.0;
+  for (auto val : vector)
+    running_sum += val * val;
+  return std::sqrt(running_sum);
 }
 
 template <std::size_t N>

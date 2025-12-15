@@ -12,9 +12,11 @@ public:
 
   void run();
   std::vector<double> getScalarFlux();
+  double L2Norm(const std::vector<double> & vector);
 
 protected:
   const unsigned int _num_cells;
+  bool _is_converged;
   std::vector<double> _mus;
   std::vector<SNCell<N>> _sn_cells;
   double _k;
@@ -33,4 +35,8 @@ protected:
   double integrateFissionSource(const std::vector<SNCell<N>> & cells);
 
   void updateSource();
+  bool isConverged(const std::vector<double> & old_flux,
+                   const std::vector<double> & new_flux,
+                   const double old_k,
+                   const double new_k);
 };
