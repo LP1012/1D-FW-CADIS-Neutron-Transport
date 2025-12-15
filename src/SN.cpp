@@ -31,25 +31,29 @@ SN::run()
   {
     for (auto i = 0; i < _mus.size(); i++)
     {
-      sweepLeft(i);  // sweep left
-      sweepRight(i); // sweep right
-
-      // save old values for convergence tests
-      std::vector<double> old_scalar_flux = getScalarFlux();
-      const double old_k = _k;
-
-      updateK(); // update k and scalar fluxes
-
-      // set new values to variables for convenience
-      const double new_k = _k;
-      std::vector<double> new_scalar_flux = getScalarFlux();
-
-      safety++;
-
-      printf("|   %d    |", safety);
-      // check for convergence
-      _is_converged = isConverged(old_scalar_flux, new_scalar_flux, old_k, new_k);
+      assert(std::abs(_mus[i]) > 1e-15);
+      if (_mus[i] < 0)
+        sweepLeft(i); // sweep left
+      else
+        sweepRight(i); // sweep right
     }
+    // save old values for convergence tests
+    std::vector<double> old_scalar_flux = getScalarFlux();
+    const double old_k = _k;
+
+    updateK();          // update k and scalar fluxes
+    updateSource();     // update source
+    normalizeSources(); // normalize to single source particle
+
+    // set new values to variables for convenience
+    const double new_k = _k;
+    std::vector<double> new_scalar_flux = getScalarFlux();
+
+    safety++;
+
+    printf("|   %d    |", safety);
+    // check for convergence
+    _is_converged = isConverged(old_scalar_flux, new_scalar_flux, old_k, new_k);
   }
 
   printf("\nFinal k-eff: %.6f\n", _k);
@@ -114,6 +118,10 @@ SN::populateSNCells(const std::vector<Cell> & cells)
   for (auto & cell : cells)
     _sn_cells.push_back(SNCell(cell, _gq_order));
   normalizeSources(); // perform initial normalization
+
+  // set initial flux guess
+  for (auto & cell : _sn_cells)
+    cell.setScalarFlux(1.0);
 }
 
 void
@@ -124,7 +132,7 @@ SN::computeScalarFluxAll()
 }
 
 void
-SN::sweepLeft(const unsigned int mu_index)
+SN::sweepRight(const unsigned int mu_index)
 {
   const double mu = _mus[mu_index];
   assert(mu > 0);
@@ -139,15 +147,15 @@ SN::sweepLeft(const unsigned int mu_index)
 }
 
 void
-SN::sweepRight(const unsigned int mu_index)
+SN::sweepLeft(const unsigned int mu_index)
 {
   const double mu = _mus[mu_index];
   assert(mu < 0);
   double right_flux = 0; // vacuum BC on right side
-  for (auto i = _num_cells - 1; i > -1; i--)
+  for (int i = _num_cells - 1; i > -1; i--)
   {
     double new_angular_flux = computeAngularFlux(_sn_cells[i], right_flux, mu);
-    _sn_cells[i].setAngularFlux(new_angular_flux, right_flux);
+    _sn_cells[i].setAngularFlux(new_angular_flux, mu_index);
     double left_flux = computeCellFlux(new_angular_flux, right_flux);
     right_flux = left_flux;
   }
@@ -181,7 +189,7 @@ SN::normalizeSources()
   for (auto & cell : _sn_cells)
   {
     double old_source = cell.source();
-    cell.setScalarFlux(old_source / total_source);
+    cell.setSource(old_source / total_source);
   }
 }
 
@@ -230,5 +238,13 @@ SN::updateSource()
     double new_source = 0.5 * flux * (scattering_xs + 1.0 / _k * nu_sigma_f);
     cell.setSource(new_source);
   }
-  normalizeSources(); // normalize to single source particle
+}
+
+std::vector<double>
+SN::getSources()
+{
+  std::vector<double> sources;
+  for (auto & cell : _sn_cells)
+    sources.push_back(cell.source());
+  return sources;
 }

@@ -12,6 +12,7 @@ public:
 
   void run();
   std::vector<double> getScalarFlux();
+  std::vector<double> getSources();
   double L2Norm(const std::vector<double> & vector);
 
 protected:

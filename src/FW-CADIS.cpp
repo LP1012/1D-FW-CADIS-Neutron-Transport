@@ -22,6 +22,7 @@ void
 FWCADIS::runForwardFlux()
 {
   SN simulation{_cells, _quadrature_order};
+  simulation.run();
 }
 
 void
