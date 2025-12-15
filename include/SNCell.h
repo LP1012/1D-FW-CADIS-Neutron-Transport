@@ -2,16 +2,16 @@
 
 #include "Cell.h"
 
-template <std::size_t N>
 class SNCell : public CellBase
 {
 public:
-  SNCell(const Cell & cell);
+  SNCell(const Cell & cell, const unsigned int quadrature_order);
   SNCell(const double xmin,
          const double xmax,
          const double Sigma_a,
          const double Sigma_s,
-         const double nu_Sigma_f);
+         const double nu_Sigma_f,
+         const unsigned int quadrature_order);
 
   void computeScalarFlux();
 
@@ -27,6 +27,7 @@ public:
   const std::vector<double> angularFluxes() const { return _angular_fluxes; }
 
 protected:
+  const unsigned int _quad;
   double _scalar_flux;
   std::vector<double> _angular_fluxes;
   double _source;

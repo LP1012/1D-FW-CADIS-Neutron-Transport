@@ -9,58 +9,58 @@
 #include <cmath>
 #include <fstream>
 #include <iostream>
+#include <cassert>
 
-template <std::size_t N>
-SN<N>::SN(const std::vector<Cell> & cells) : _num_cells(cells.size())
+SN::SN(const std::vector<Cell> & cells, const unsigned int GQ_order)
+  : _num_cells(cells.size()), _gq_order(GQ_order)
 {
-  if (GQ_order % 2 == 1.0)
+  if (_gq_order % 2 == 1.0)
     throw std::runtime_error("Gauss quadrature order cannot be odd!");
   populateSNCells(cells);
-  _mus = discreteQuadrature::getAbscissaAsVector<N>();
+  _gauss_legendre_rule = discreteQuadrature::getGaussLegendreRule(_gq_order);
+  _mus = _gauss_legendre_rule.abscissa;
   _k = 1.0; // assume critical just for initial guess
   _is_converged = false;
 }
 
-template <std::size_t N>
 void
-SN<N>::run()
+SN::run()
 {
   unsigned int safety = 0;
   while (!_is_converged && safety <= 100)
   {
     for (auto i = 0; i < _mus.size(); i++)
     {
-      sweepLeft<N>(i);  // sweep left
-      sweepRight<N>(i); // sweep right
+      sweepLeft(i);  // sweep left
+      sweepRight(i); // sweep right
 
       // save old values for convergence tests
-      std::vector<double> old_scalar_flux = getScalarFlux<N>();
+      std::vector<double> old_scalar_flux = getScalarFlux();
       const double old_k = _k;
 
-      updateK<N>(); // update k and scalar fluxes
+      updateK(); // update k and scalar fluxes
 
       // set new values to variables for convenience
       const double new_k = _k;
-      std::vector<double> new_scalar_flux = getScalarFlux<N>();
+      std::vector<double> new_scalar_flux = getScalarFlux();
 
       safety++;
 
       printf("|   %d    |", safety);
       // check for convergence
-      _is_converged = isConverged<N>(old_scalar_flux, new_scalar_flux, old_k, new_k);
+      _is_converged = isConverged(old_scalar_flux, new_scalar_flux, old_k, new_k);
     }
   }
 
   printf("\nFinal k-eff: %.6f\n", _k);
 
   printf("\nExporting results... ");
-  exportToCsv<N>(); // export results to csv
-  printf("Done.\n")
+  exportToCsv(); // export results to csv
+  printf("Done.\n");
 }
 
-template <std::size_t N>
 void
-SN<N>::exportToCsv()
+SN::exportToCsv()
 {
   std::string output = "SN_output";
   std::ofstream outfile;
@@ -75,32 +75,32 @@ SN<N>::exportToCsv()
   outfile.close();
 }
 
-template <std::size_t N>
 bool
-SN<N>::isConverged(const std::vector<double> & old_flux,
-                   const std::vector<double> & new_flux,
-                   const double old_k,
-                   const double new_k)
+SN::isConverged(const std::vector<double> & old_flux,
+                const std::vector<double> & new_flux,
+                const double old_k,
+                const double new_k)
 {
   double relative_k = std::abs(new_k - old_k) / new_k;
 
-  std::vector<double> error_vector = new_flux - old_flux;
-  double error_vector_norm = L2Norm<N>(error_vector);
-  double new_flux_norm = L2Norm<N>(new_flux);
+  std::vector<double> error_vector;
+  for (auto i = 0; i < old_flux.size(); i++)
+    error_vector.push_back(new_flux[i] - old_flux[i]);
+  double error_vector_norm = L2Norm(error_vector);
+  double new_flux_norm = L2Norm(new_flux);
   double relative_flux = error_vector_norm / new_flux_norm;
 
   printf("    |   %.4e    |   %.4e    |\n", relative_k, relative_flux);
 
   double tol = 1e-6;
-  if (relative_k < tol && relative_flux << tol)
+  if (relative_k < tol && relative_flux < tol)
     return true;
   else
     return false;
 }
 
-template <std::size_t N>
 double
-SN<N>::L2Norm(const std::vector<double> & vector)
+SN::L2Norm(const std::vector<double> & vector)
 {
   double running_sum = 0.0;
   for (auto val : vector)
@@ -108,29 +108,26 @@ SN<N>::L2Norm(const std::vector<double> & vector)
   return std::sqrt(running_sum);
 }
 
-template <std::size_t N>
 void
-SN<N>::populateSNCells(const std::vector<Cell> & cells)
+SN::populateSNCells(const std::vector<Cell> & cells)
 {
   for (auto & cell : cells)
-    _sn_cells.push_back(SNCell(cell));
+    _sn_cells.push_back(SNCell(cell, _gq_order));
   normalizeSources(); // perform initial normalization
 }
 
-template <std::size_t N>
 void
-SN<N>::computeScalarFluxAll()
+SN::computeScalarFluxAll()
 {
   for (auto & cell : _sn_cells)
     cell.computeScalarFlux();
 }
 
-template <std::size_t N>
 void
-SN<N>::sweepLeft(const unsigned int mu_index)
+SN::sweepLeft(const unsigned int mu_index)
 {
   const double mu = _mus[mu_index];
-  static_assert(mu > 0);
+  assert(mu > 0);
   double left_flux = 0; // vacuum BC on left side
   for (auto i = 0; i < _num_cells; i++)
   {
@@ -141,12 +138,11 @@ SN<N>::sweepLeft(const unsigned int mu_index)
   }
 }
 
-template <std::size_t N>
 void
-SN<N>::sweepRight(const unsigned int mu_index)
+SN::sweepRight(const unsigned int mu_index)
 {
   const double mu = _mus[mu_index];
-  static_assert(mu < 0);
+  assert(mu < 0);
   double right_flux = 0; // vacuum BC on right side
   for (auto i = _num_cells - 1; i > -1; i--)
   {
@@ -157,9 +153,8 @@ SN<N>::sweepRight(const unsigned int mu_index)
   }
 }
 
-template <std::size_t N>
 double
-SN<N>::computeAngularFlux(const SNCell<N> & cell, const double cell_flux, const double mu)
+SN::computeAngularFlux(const SNCell & cell, const double cell_flux, const double mu)
 {
   double sigma_t = cell.sigmaT();
   double delta = cell.cellWidth();
@@ -169,16 +164,14 @@ SN<N>::computeAngularFlux(const SNCell<N> & cell, const double cell_flux, const 
   return numerator / denom;
 }
 
-template <std::size_t N>
 double
-SN<N>::computeCellFlux(const double cell_centered_flux, const double known_flux)
+SN::computeCellFlux(const double cell_centered_flux, const double known_flux)
 {
   return 2.0 * cell_centered_flux - known_flux;
 }
 
-template <std::size_t N>
 void
-SN<N>::normalizeSources()
+SN::normalizeSources()
 {
   // integrate all sources
   double total_source = 0;
@@ -192,9 +185,8 @@ SN<N>::normalizeSources()
   }
 }
 
-template <std::size_t N>
 std::vector<double>
-SN<N>::getScalarFlux()
+SN::getScalarFlux()
 {
   std::vector<double> scalar_flux;
   for (auto & cell : _sn_cells)
@@ -202,35 +194,33 @@ SN<N>::getScalarFlux()
   return scalar_flux;
 }
 
-template <std::size_t N>
 void
-SN<N>::updateK()
+SN::updateK()
 {
-  double old_fission_contrib = integrateFissionSource<N>(_sn_cells);
+  double old_fission_contrib = integrateFissionSource(_sn_cells);
 
-  computeScalarFluxAll<N>(); // updates to new scalar flux values in _sn_cells
-  double new_fission_contrib = integrateFissionSource<N>(_sn_cells) double old_k = _k;
+  computeScalarFluxAll(); // updates to new scalar flux values in _sn_cells
+  double new_fission_contrib = integrateFissionSource(_sn_cells);
+  double old_k = _k;
   _k = old_k * new_fission_contrib / old_fission_contrib;
 }
 
-template <std::size_t N>
 double
-SN<N>::integrateFissionSource(const std::vector<SNCell<N>> & cells)
+SN::integrateFissionSource(const std::vector<SNCell> & cells)
 {
   double running_sum = 0.0;
   for (auto i = 0; i < cells.size(); i++)
   {
     double dx = cells[i].cellWidth();
     double nu_sigma_f = cells[i].nuSigmaF();
-    double scalar_flux = cell[i].scalarFlux();
+    double scalar_flux = cells[i].scalarFlux();
     running_sum += dx * scalar_flux * nu_sigma_f; // approximate midpoint rule
   }
   return running_sum;
 }
 
-template <std::size_t N>
 void
-SN<N>::updateSource()
+SN::updateSource()
 {
   for (auto & cell : _sn_cells)
   {
