@@ -9,12 +9,12 @@
 #include <cmath>
 
 template <std::size_t N>
-SN<N>::SN(const std::vector<Cell> & cells) : _gq_order(GQ_order), _num_cells(cells.size())
+SN<N>::SN(const std::vector<Cell> & cells) : _num_cells(cells.size())
 {
   if (GQ_order % 2 == 1.0)
     throw std::runtime_error("Gauss quadrature order cannot be odd!");
   populateSNCells(cells);
-  _mus = discreteQuadrature::getAbscissaAsVector<_gq_order>();
+  _mus = discreteQuadrature::getAbscissaAsVector<N>();
   _k = 1.0; // assume critical just for initial guess
 }
 
@@ -23,7 +23,7 @@ void
 SN<N>::populateSNCells(const std::vector<Cell> & cells)
 {
   for (auto & cell : cells)
-    _sn_cells.push_back(SNCell(cell, N));
+    _sn_cells.push_back(SNCell(cell));
   normalizeSources(); // perform initial normalization
 }
 
