@@ -86,8 +86,10 @@ FWCADIS::readInput()
   auto * n_part_attrib = settings->FindAttribute("n_particles");
   auto * n_gen_attrib = settings->FindAttribute("n_generations");
   auto * n_inactive_attrib = settings->FindAttribute("n_inactive");
+  auto * use_vr = settings->FindAttribute("fw-cadis");
 
   _n_particles = getAttributeOrThrow<unsigned int>(settings, "n_particles");
   _n_generations = getAttributeOrThrow<unsigned int>(settings, "n_generations");
   _n_inactive = getAttributeOrThrow<unsigned int>(settings, "n_inactive");
+  _use_vr = use_vr->BoolValue();
 }
