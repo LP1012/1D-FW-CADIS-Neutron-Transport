@@ -6,6 +6,7 @@
 #include "XMLUtils.h"
 #include "tinyxml2.h"
 #include "utils.h"
+#include "SN.h"
 
 #include <vector>
 #include <fstream>
@@ -15,6 +16,12 @@ FWCADIS::FWCADIS(const std::string input_file_name) : _input_file_name(input_fil
 {
   _n_total_cells = 0;
   readInput();
+}
+
+void
+FWCADIS::runForwardFlux()
+{
+  SN simulation{_cells, _quadrature_order};
 }
 
 void
@@ -92,4 +99,5 @@ FWCADIS::readInput()
   _n_generations = getAttributeOrThrow<unsigned int>(settings, "n_generations");
   _n_inactive = getAttributeOrThrow<unsigned int>(settings, "n_inactive");
   _use_vr = use_vr->BoolValue();
+  _quadrature_order = settings->FindAttribute("quadrature-order")->UnsignedValue();
 }
