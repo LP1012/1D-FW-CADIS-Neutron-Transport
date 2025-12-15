@@ -101,3 +101,39 @@ SN<N>::normalizeSources()
     cell.setScalarFlux(old_source / total_source);
   }
 }
+
+template <std::size_t N>
+std::vector<double>
+SN<N>::getScalarFlux(const std::vector<SNCell<N>> & sn_cells)
+{
+  std::vector<double> scalar_flux;
+  for (auto & cell : sn_cells)
+    scalar_flux.push_back(cell.scalarFlux());
+  return scalar_flux;
+}
+
+template <std::size_t N>
+void
+SN<N>::updateK()
+{
+  double old_fission_contrib = integrateFissionSource<N>(_sn_cells);
+
+  computeScalarFluxAll<N>(); // updates to new scalar flux values in _sn_cells
+  double new_fission_contrib = integrateFissionSource<N>(_sn_cells) double old_k = _k;
+  _k = old_k * new_fission_contrib / old_fission_contrib;
+}
+
+template <std::size_t N>
+double
+SN<N>::integrateFissionSource(const std::vector<SNCell<N>> & cells)
+{
+  double running_sum = 0.0;
+  for (auto i = 0; i < cells.size(); i++)
+  {
+    double dx = cells[i].cellWidth();
+    double nu_sigma_f = cells[i].nuSigmaF();
+    double scalar_flux = cell[i].scalarFlux();
+    running_sum += dx * scalar_flux * nu_sigma_f; // approximate midpoint rule
+  }
+  return running_sum;
+}
