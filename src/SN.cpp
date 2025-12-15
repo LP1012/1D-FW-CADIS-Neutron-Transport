@@ -26,6 +26,10 @@ SN::SN(const std::vector<Cell> & cells, const unsigned int GQ_order)
 void
 SN::run()
 {
+  printf("\nBeginning forward sweep...\n");
+  printf("\n--------------------------------------------------\n");
+  printf("|   Iteration   |   k-eff error  |   flux error    |\n");
+  printf("--------------------------------------------------\n");
   unsigned int safety = 0;
   while (!_is_converged && safety <= 100)
   {
@@ -51,10 +55,11 @@ SN::run()
 
     safety++;
 
-    printf("|   %d    |", safety);
+    printf("|      %3d      |", safety);
     // check for convergence
     _is_converged = isConverged(old_scalar_flux, new_scalar_flux, old_k, new_k);
   }
+  printf("---------------------------------------------------\n");
 
   printf("\nFinal k-eff: %.6f\n", _k);
 
@@ -94,7 +99,7 @@ SN::isConverged(const std::vector<double> & old_flux,
   double new_flux_norm = L2Norm(new_flux);
   double relative_flux = error_vector_norm / new_flux_norm;
 
-  printf("    |   %.4e    |   %.4e    |\n", relative_k, relative_flux);
+  printf("   %.4e   |   %.4e    |\n", relative_k, relative_flux);
 
   double tol = 1e-6;
   if (relative_k < tol && relative_flux < tol)
