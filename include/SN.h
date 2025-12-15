@@ -39,4 +39,6 @@ protected:
                    const std::vector<double> & new_flux,
                    const double old_k,
                    const double new_k);
+
+  void exportToCsv();
 };
