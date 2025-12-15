@@ -31,4 +31,6 @@ protected:
 
   void updateK();
   double integrateFissionSource(const std::vector<SNCell<N>> & cells);
+
+  void updateSource();
 };

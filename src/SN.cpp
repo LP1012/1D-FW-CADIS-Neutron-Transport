@@ -137,3 +137,18 @@ SN<N>::integrateFissionSource(const std::vector<SNCell<N>> & cells)
   }
   return running_sum;
 }
+
+template <std::size_t N>
+void
+SN<N>::updateSource()
+{
+  for (auto & cell : _sn_cells)
+  {
+    double flux = cell.scalarFlux();
+    double scattering_xs = cell.sigmaS();
+    double nu_sigma_f = cell.nuSigmaF();
+    double new_source = 0.5 * flux * (scattering_xs + 1.0 / _k * nu_sigma_f);
+    cell.setSource(new_source);
+  }
+  normalizeSources(); // normalize to single source particle
+}
