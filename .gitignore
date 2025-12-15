@@ -55,3 +55,5 @@ MCSlab/examples/*.csv
 MCSlab/examples/*.png
 
 .idea/
+
+scripts/*.txt
