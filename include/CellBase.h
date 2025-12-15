@@ -20,6 +20,7 @@ public:
   const double xMin() const { return _xmin; }
   const double xMax() const { return _xmax; }
   const double cellCenter() const { return _cell_center; }
+  const double cellWidth() const { return _cell_width; }
   const double sigmaT() const { return _Sigma_t; }
   const double sigmaA() const { return _Sigma_a; }
   const double sigmaS() const { return _Sigma_s; }
