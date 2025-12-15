@@ -13,8 +13,18 @@ FetchContent_MakeAvailable(googletest)
 
 # Core library
 add_library(
-  FW-CADIS_lib src/FW-CADIS.cpp src/CellBase.cpp src/SNCell.cpp src/Cell.cpp src/MCSlab.cpp src/Neutron.cpp src/Region.cpp src/RNG.cpp
-        src/tinyxml2.cpp # add other source files here
+  FW-CADIS_lib 
+  src/FW-CADIS.cpp 
+  src/SN.cpp 
+  src/CellBase.cpp 
+  src/SNCell.cpp 
+  src/Cell.cpp 
+  src/MCSlab.cpp 
+  src/Neutron.cpp 
+  src/Region.cpp 
+  src/RNG.cpp
+  src/CellQuadrature.cpp
+  src/tinyxml2.cpp # add other source files here
 )
 target_include_directories(FW-CADIS_lib PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
