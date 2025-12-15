@@ -31,6 +31,7 @@ void
 SN<N>::sweepLeft(const unsigned int mu_index)
 {
   const double mu = _mus[mu_index];
+  static_assert(mu > 0);
   double left_flux = 0; // vacuum BC on left side
   for (auto i = 0; i < _num_cells; i++)
   {
@@ -38,6 +39,22 @@ SN<N>::sweepLeft(const unsigned int mu_index)
     _sn_cells[i].setAngularFlux(new_angular_flux, mu_index);
     double right_flux = computeCellFlux(new_angular_flux, left_flux);
     left_flux = right_flux;
+  }
+}
+
+template <std::size_t N>
+void
+SN<N>::sweepRight(const unsigned int mu_index)
+{
+  const double mu = _mus[mu_index];
+  static_assert(mu < 0);
+  double right_flux = 0; // vacuum BC on right side
+  for (auto i = _num_cells - 1; i > -1; i--)
+  {
+    double new_angular_flux = computeAngularFlux(_sn_cells[i], right_flux, mu);
+    _sn_cells[i].setAngularFlux(new_angular_flux, right_flux);
+    double left_flux = computeCellFlux(new_angular_flux, right_flux);
+    right_flux = left_flux;
   }
 }
 
