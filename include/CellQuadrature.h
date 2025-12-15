@@ -4284,10 +4284,21 @@ integrate(const std::vector<double> & fs, const double a, const double b)
   const double front_coeff = (b - a) / 2.0;
 
   double sum = 0.0;
-  for (std::size_t i = 0; i < N; ++i)
+  for (std::size_t i = 0; i < N; i++)
     sum += GaussLegendre<N>::weights[i] * fs[i];
 
   return front_coeff * sum;
 };
+
+template <std::size_t N>
+std::vector<double>
+getAbscissaAsVector()
+{
+  static_assert(N > 0, "Quadrature order must be positive");
+
+  const auto & a = discreteQuadrature::GaussLegendre<N>::abscissa;
+
+  return std::vector<double>(a.begin(), a.end());
+}
 
 }
