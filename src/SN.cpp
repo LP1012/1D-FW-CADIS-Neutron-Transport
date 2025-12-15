@@ -20,6 +20,35 @@ SN<N>::SN(const std::vector<Cell> & cells) : _num_cells(cells.size())
 }
 
 template <std::size_t N>
+void
+SN<N>::run()
+{
+  unsigned int safety = 0;
+  while (!_is_converged && safety <= 100)
+  {
+    for (auto i = 0; i < _mus.size(); i++)
+    {
+      sweepLeft<N>(i);  // sweep left
+      sweepRight<N>(i); // sweep right
+
+      // save old values for convergence tests
+      std::vector<double> old_scalar_flux = getScalarFlux<N>();
+      const double old_k = _k;
+
+      updateK<N>(); // update k and scalar fluxes
+
+      // set new values to variables for convenience
+      const double new_k = _k;
+      std::vector<double> new_scalar_flux = getScalarFlux<N>();
+
+      // check for convergence
+      _is_converged = isConverged<N>(old_scalar_flux, new_scalar_flux, old_k, new_k);
+    }
+  }
+  // export results to csv
+}
+
+template <std::size_t N>
 bool
 SN<N>::isConverged(const std::vector<double> & old_flux,
                    const std::vector<double> & new_flux,
@@ -33,7 +62,7 @@ SN<N>::isConverged(const std::vector<double> & old_flux,
   double new_flux_norm = L2Norm<N>(new_flux);
   double relative_flux = error_vector_norm / new_flux_norm;
 
-  double tol = 1e-8;
+  double tol = 1e-6;
   if (relative_k < tol && relative_flux << tol)
     return true;
   else
