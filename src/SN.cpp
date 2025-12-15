@@ -15,6 +15,7 @@ SN<N>::SN(const std::vector<Cell> & cells) : _gq_order(GQ_order), _num_cells(cel
     throw std::runtime_error("Gauss quadrature order cannot be odd!");
   populateSNCells(cells);
   _mus = discreteQuadrature::getAbscissaAsVector<_gq_order>();
+  _k = 1.0; // assume critical just for initial guess
 }
 
 template <std::size_t N>
@@ -24,6 +25,14 @@ SN<N>::populateSNCells(const std::vector<Cell> & cells)
   for (auto & cell : cells)
     _sn_cells.push_back(SNCell(cell, N));
   normalizeSources(); // perform initial normalization
+}
+
+template <std::size_t N>
+void
+SN<N>::computeScalarFluxAll()
+{
+  for (auto & cell : _sn_cells)
+    cell.computeScalarFlux();
 }
 
 template <std::size_t N>
@@ -60,7 +69,7 @@ SN<N>::sweepRight(const unsigned int mu_index)
 
 template <std::size_t N>
 double
-SN<N>::computeAngularFlux(const SNCell & cell, const double cell_flux, const double mu)
+SN<N>::computeAngularFlux(const SNCell<N> & cell, const double cell_flux, const double mu)
 {
   double sigma_t = cell.sigmaT();
   double delta = cell.cellWidth();

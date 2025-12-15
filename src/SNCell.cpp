@@ -21,3 +21,10 @@ SNCell<N>::SNCell(const double xmin,
   if (_Sigma_s + _nu_Sigma_f > 1e-15)
     _source = 1.0; // set dummy source value if scattering or fission is present
 }
+
+template <std::size_t N>
+void
+SNCell<N>::computeScalarFlux()
+{
+  _scalar_flux = 2.0 * M_PI * discreteQuadrature::integrate<N>(_angular_fluxes, -1.0, 1.0);
+}

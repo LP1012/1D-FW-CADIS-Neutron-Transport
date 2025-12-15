@@ -13,6 +13,8 @@ public:
          const double Sigma_s,
          const double nu_Sigma_f);
 
+  void computeScalarFlux();
+
   void setScalarFlux(const double new_flux) { _scalar_flux = new_flux; }
   void setSource(const double new_source) { _source = new_source; }
   void setAngularFlux(const double new_angular_flux, const unsigned int index)
