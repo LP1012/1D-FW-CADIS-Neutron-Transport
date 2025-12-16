@@ -307,6 +307,8 @@ MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
     return;
   }
   neutron.movePositionAndCell(x_edge, _cells);
+  if (!neutron.weightIsOkay())
+    splitOrRoulette(neutron);
   // //  if next region(s) is/are voids, jump over them
   // unsigned int counting_index = start_cell_index + dir;
   // while (_regions[counting_index].SigmaT() < 1e-15)
@@ -324,6 +326,15 @@ MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
   // double x_jump = (dir > 0) ? _regions[counting_index].xMin() : _regions[counting_index].xMax();
   // recordPathLenTally(generation, start_x, x_jump, mu, neutron.weight());
   // neutron.movePositionAndRegion(x_jump, _regions);
+}
+
+void
+MCSlab::splitOrRoulette(Neutron & neutron)
+{
+  if (neutron.weight() < neutron.cell().lowerWeight())
+    neutron.roulette();
+  else
+    neutron.split(_split_bank);
 }
 
 // void

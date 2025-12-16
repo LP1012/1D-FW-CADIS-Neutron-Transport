@@ -6,6 +6,7 @@
 #include <optional>
 #include <vector>
 #include <iostream>
+#include <deque>
 
 class Neutron
 {
@@ -36,6 +37,10 @@ public:
 
   /// @brief Terminate particle
   void kill();
+
+  bool weightIsOkay();
+  void roulette();
+  void split(std::deque<Neutron> & split_bank);
 
   /// @brief Set cosine of angle randomly assuming isotropic distribution
   static double randomIsoAngle(UniformRNG rng);
