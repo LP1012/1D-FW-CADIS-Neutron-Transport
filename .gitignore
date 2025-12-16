@@ -47,12 +47,14 @@
 
 build/
 build/*
-MCSlab/include/Makefile
+include/Makefile
 
 .vscode/
 
-MCSlab/examples/*.csv
-MCSlab/examples/*.png
+examples/analog/*.csv
+examples/analog/*.png
+examples/fw-cadis/*.csv
+examples/fw-cadis/*.png
 
 .idea/
 
