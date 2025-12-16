@@ -22,6 +22,7 @@ main(int argc, char * argv[])
   FWCADIS simulation{input_filename};
   simulation.runForwardFlux();
   simulation.runAdjointFlux();
+  simulation.setWeightWindows();
   // simulation.k_eigenvalue();
   return 0;
 }
