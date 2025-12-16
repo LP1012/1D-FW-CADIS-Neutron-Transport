@@ -47,7 +47,7 @@ public:
 
   /// @brief Change weight oe neutron
   /// @param weight
-  void changeWeight();
+  void changeWeight(const double new_weight);
 
   // define getter functions
   double pos() const { return _pos; }

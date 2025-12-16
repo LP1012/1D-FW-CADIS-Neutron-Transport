@@ -20,12 +20,14 @@ MCSlab::MCSlab(const std::string input_file_name,
                const unsigned int n_generations,
                const unsigned int n_inactive,
                const std::vector<Region> regions,
-               const std::vector<Cell> cells)
+               const std::vector<Cell> cells,
+               const bool implicit_capture)
   : _n_particles(n_particles),
     _n_generations(n_generations),
     _n_inactive(n_inactive),
     _regions(regions),
     _cells(cells),
+    _implicit_capture(implicit_capture),
     _rng()
 {
   _n_total_cells = _cells.size();
@@ -63,7 +65,7 @@ MCSlab::initializeOutput()
   if (!_pathlength_outfile.is_open())
     throw std::runtime_error("Pathlength output file not opened successfully!");
 
-  _collision_outfile << "position,region,weight,type" << std::endl;
+  _collision_outfile << "position,region,weight" << std::endl;
   _pathlength_outfile << "start,end,mu,pathlength,weight" << std::endl;
 
   exportRegionsToCsv(outfile_name);
@@ -157,12 +159,6 @@ MCSlab::k_eigenvalue()
     {
       _new_fission_bank.pop_front();
     }
-    // if (_new_fission_bank.size() > _n_particles)
-    // {
-    //   _new_fission_bank.erase(_new_fission_bank.begin(),
-    //                           _new_fission_bank.begin() +
-    //                               (_new_fission_bank.size() - _n_particles));
-    // }
 
     assert(_new_fission_bank.size() <= _n_particles);
 
@@ -225,18 +221,23 @@ MCSlab::runHistory(Neutron & neutron,
       // tally collision position and path traveled
       recordPathLenTally(
           generation_num, neutron.pos(), collision_location, neutron.mu(), neutron.weight());
-      recordCollisionTally(generation_num, collision_location, neutron.weight(), absorbed);
+      recordCollisionTally(generation_num, collision_location, neutron.weight());
 
       // shift neutron position
       neutron.movePositionWithinCell(collision_location);
 
-      if (absorbed)
-      {
-        source_bins[collisionIndex(neutron)] += 1;
-        absorption(neutron);
-      }
+      if (_implicit_capture)
+        implicitCapture(neutron);
       else
-        scatter(neutron);
+      {
+        if (absorbed)
+        {
+          source_bins[collisionIndex(neutron)] += 1;
+          absorption(neutron);
+        }
+        else
+          scatter(neutron);
+      }
     }
   }
 }
@@ -251,20 +252,21 @@ MCSlab::testAbsorption(const Neutron & neutron)
 void
 MCSlab::absorption(Neutron & neutron)
 {
-  // sample number of fission
-  double production_rn = _rng.generateRN(); // generate random number
-  Cell neutron_cell = neutron.cell();       // hold region absorption occurs
 
-  unsigned int n_born; // initialize number of neutrons born
-
-  if (production_rn < neutron_cell.nPerAbsorption() - std::floor(neutron_cell.nPerAbsorption()))
-    n_born = std::ceil(neutron_cell.nPerAbsorption());
-  else
-    n_born = std::floor(neutron_cell.nPerAbsorption());
-
+  unsigned int n_born = nNeutronsBorn(neutron);
+  addFissionsToBank(n_born, neutron);
   _n_neutrons_born += n_born;
 
-  for (auto i = 0; i < n_born; i++)
+  neutron.kill(); // kill current neutron
+}
+
+void
+MCSlab::addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & neutron)
+{
+  if (n_neutrons_born == 0)
+    return;
+
+  for (auto i = 0; i < n_neutrons_born; i++)
   {
     double fission_neutron_mu = Neutron::randomIsoAngle(_rng);
     Cell * fission_cell = &_cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
@@ -274,8 +276,27 @@ MCSlab::absorption(Neutron & neutron)
                 fission_cell);                    // create neutron at location with isotropic angle
     _new_fission_bank.push_back(fission_neutron); // add to fission bank
   }
+}
 
-  neutron.kill(); // kill current neutron
+unsigned int
+MCSlab::nNeutronsBorn(const Neutron & neutron)
+{
+  // skip over unnecessary steps
+  if (neutron.cell().nPerAbsorption() < 1e-15)
+    return static_cast<unsigned int>(0); // not sure if the cast is necessary...
+
+  // sample number of fission
+  double production_rn = _rng.generateRN(); // generate random number
+  unsigned int n_born = 0;                  // initialize number of neutrons born
+  double neutrons_expected =
+      neutron.cell().nPerAbsorption() * neutron.weight(); // expected neutrons from collision
+
+  if (production_rn < neutrons_expected - std::floor(neutrons_expected))
+    n_born = std::ceil(neutrons_expected);
+  else
+    n_born = std::floor(neutrons_expected);
+
+  return n_born;
 }
 
 void
@@ -309,23 +330,6 @@ MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
   neutron.movePositionAndCell(x_edge, _cells);
   if (!neutron.weightIsOkay())
     splitOrRoulette(neutron);
-  // //  if next region(s) is/are voids, jump over them
-  // unsigned int counting_index = start_cell_index + dir;
-  // while (_regions[counting_index].SigmaT() < 1e-15)
-  // {
-  //   if ((dir < 0 && start_cell_index == 0) ||
-  //       (dir > 0 && start_cell_index == _regions.size() - 1))
-  //   {
-  //     double x_jump = (dir > 0) ? _regions[counting_index].xMax() :
-  //     _regions[counting_index].xMin(); recordPathLenTally(generation, start_x, x_jump, mu,
-  //     neutron.weight()); neutron.kill(); return;
-  //   }
-  //   counting_index += dir;
-  // }
-
-  // double x_jump = (dir > 0) ? _regions[counting_index].xMin() : _regions[counting_index].xMax();
-  // recordPathLenTally(generation, start_x, x_jump, mu, neutron.weight());
-  // neutron.movePositionAndRegion(x_jump, _regions);
 }
 
 void
@@ -337,52 +341,17 @@ MCSlab::splitOrRoulette(Neutron & neutron)
     neutron.split(_split_bank);
 }
 
-// void
-// MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int
-// generation)
-// {
-//   unsigned int start_index = neutron.region().regionIndex();
-//   unsigned int idx = start_index;
+void
+MCSlab::implicitCapture(Neutron & neutron)
+{
+  const unsigned int n_born = nNeutronsBorn(neutron);
+  addFissionsToBank(n_born, neutron);
+  _n_neutrons_born += n_born;
 
-//   const double mu = neutron.mu();
-//   const int dir = (mu > 0) ? +1 : -1;
-
-//   // First: record the starting position
-//   const double x0 = neutron.pos();
-
-//   double x_edge = (dir > 0) ? _regions[start_index].xMax() :
-//   _regions[start_index].xMin();
-
-//   idx += dir;
-
-//   // Skip all void regions (defined by SigmaT == 0)
-//   while (_regions[idx].SigmaT() < 1e-15)
-//   {
-//     idx += dir;
-//   }
-
-//   // If at outer edge, neutron escapes the problem
-//   if ((dir > 0 && idx == _regions.size() - 1) || (dir < 0 && idx == 0))
-//   {
-//     // Escape position is boundary of the current (void) region
-//     double x_escape = (dir > 0) ? _regions[idx].xMax() :
-//     _regions[idx].xMin();
-
-//     recordPathLenTally(generation, x0, x_escape, mu);
-//     neutron.kill();
-//     return;
-//   }
-
-//   // Now idx is the first non-void region in flight direction
-//   double new_x = (dir > 0) ? _regions[idx].xMax()  // entering from left
-//                            : _regions[idx].xMin(); // entering from right
-
-//   recordPathLenTally(generation, x0, new_x, mu);
-
-//   // Move into the new region
-//   // printf("We are somehow moving a region...\n");
-//   neutron.movePositionAndRegion(new_x, _regions);
-// }
+  double new_weight = neutron.weight() * (1.0 - neutron.cell().absorptionProbability());
+  neutron.changeWeight(new_weight);
+  scatter(neutron);
+}
 
 unsigned int
 MCSlab::collisionIndex(const Neutron & neutron)
@@ -453,16 +422,11 @@ MCSlab::calculateK()
 void
 MCSlab::recordCollisionTally(const int current_generation,
                              const double location,
-                             const double weight,
-                             const bool absorbed)
+                             const double weight)
 {
   if (current_generation > _n_inactive - 1)
   {
-    _collision_outfile << location << "," << weight << ",";
-    if (absorbed)
-      _collision_outfile << "absorption" << std::endl;
-    else
-      _collision_outfile << "scatter" << std::endl;
+    _collision_outfile << location << "," << weight << std::endl;
   }
 }
 
