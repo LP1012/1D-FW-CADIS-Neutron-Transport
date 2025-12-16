@@ -13,6 +13,8 @@ public:
   void runForwardFlux();
   void runAdjointFlux();
   void updateForwardFlux(const SN & simulation);
+  void updateAdjointFlux(const SN & simulation);
+  void setWeightWindows();
 
 private:
   const std::string _input_file_name;

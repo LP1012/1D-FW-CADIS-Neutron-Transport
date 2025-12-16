@@ -33,6 +33,7 @@ FWCADIS::runAdjointFlux()
 {
   SN simulation{_cells, _quadrature_order, true, _forward_k_eff};
   simulation.run();
+  updateAdjointFlux(simulation);
 }
 
 void
@@ -41,6 +42,14 @@ FWCADIS::updateForwardFlux(const SN & simulation)
   std::vector<double> forward_flux = simulation.getScalarFlux();
   for (auto i = 0; i < _cells.size(); i++)
     _cells[i].setForwardFlux(forward_flux[i]);
+}
+
+void
+FWCADIS::updateAdjointFlux(const SN & simulation)
+{
+  std::vector<double> adjoint_flux = simulation.getScalarFlux();
+  for (auto i = 0; i < _cells.size(); i++)
+    _cells[i].setAdjointFlux(adjoint_flux[i]);
 }
 
 void
