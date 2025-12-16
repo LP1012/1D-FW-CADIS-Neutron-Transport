@@ -23,6 +23,7 @@ FWCADIS::runForwardFlux()
 {
   SN simulation{_cells, _quadrature_order};
   simulation.run();
+  _forward_flux = simulation.getScalarFlux();
 }
 
 void

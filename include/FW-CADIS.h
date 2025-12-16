@@ -28,5 +28,7 @@ private:
   // SN settings
   unsigned int _quadrature_order;
 
+  std::vector<double> _forward_flux;
+
   void readInput();
 };
