@@ -20,11 +20,6 @@ public:
 
   void movePositionWithinCell(const double new_position);
 
-  /// @brief Set start position of neutron randomly in fissionable regionss
-  /// @param fissionable_regions
-  void setRandomStartPosition(const std::vector<Cell> & fissionable_cells,
-                              std::vector<Cell> & cells);
-
   /// @brief Calculates distance to collision
   double distanceToCollision();
 
