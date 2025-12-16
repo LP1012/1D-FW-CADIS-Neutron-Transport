@@ -21,7 +21,9 @@ public:
 
   // getters
 
-  const double cellWeight() const { return _weight; }
+  const double lowerWeight() const { return _lower_weight; }
+  const double upperWeight() const { return _upper_weight; }
+  const double targetWeight() const { return _weight; }
   const double forwardFlux() const { return _forward_flux; }
   const double adjointFlux() const { return _adjoint_flux; }
   const double absorptionRatio() const { return _abs_ratio; }

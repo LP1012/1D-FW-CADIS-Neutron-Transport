@@ -5,6 +5,7 @@
 #include <memory>
 #include <optional>
 #include <random>
+#include <deque>
 
 Neutron::Neutron(double position,
                  double mu,
@@ -18,7 +19,7 @@ Neutron::Neutron(double position,
     _rng(seed.has_value() ? UniformRNG(0, 1.0, seed.value()) : UniformRNG(0, 1.0))
 {
   _is_alive = true;
-  _weight = cell->cellWeight();
+  _weight = cell->targetWeight();
   checkNeutron();
 }
 
@@ -94,7 +95,7 @@ Neutron::setCell(std::vector<Cell> & cells)
 void
 Neutron::changeWeight()
 {
-  _weight = _cell->cellWeight(); // this is just a placeholder
+  _weight = _cell->targetWeight(); // this is just a placeholder
   if (_weight == 0)
     kill();
 }
@@ -111,4 +112,36 @@ Neutron::checkNeutron()
   if (!(_pos <= _cell->xMax() && _pos >= _cell->xMin()))
     throw std::runtime_error("Neutron cell not set correctly! Position "
                              "not located within bounds!");
+}
+
+bool
+Neutron::weightIsOkay()
+{
+  if (_weight < _cell->lowerWeight() || _weight > _cell->upperWeight())
+    return false;
+  else
+    return true;
+}
+
+void
+Neutron::roulette()
+{
+  const double rn = _rng.generateRN();
+  const double survival_probability = _weight / _cell->lowerWeight();
+  if (rn < survival_probability)
+    _weight = _cell->targetWeight();
+  else
+    kill();
+}
+
+void
+Neutron::split(std::deque<Neutron> & split_bank)
+{
+  // adapted from OpenMC, weight_windows.cpp
+  // https://github.com/openmc-dev/openmc/blob/develop/src/weight_windows.cpp
+
+  unsigned int n_split = std::ceil(_weight / _cell->upperWeight());
+  for (auto i = 0; i < n_split - 1; i++)
+    split_bank.push_back(Neutron(_pos, _mu, _cell, _weight / static_cast<double>(n_split)));
+  _weight /= static_cast<double>(n_split);
 }

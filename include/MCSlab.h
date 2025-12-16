@@ -24,16 +24,6 @@ public:
   /// method to run simulation
   void k_eigenvalue();
 
-  /// @brief throws a random number to see if absorption occurred
-  bool testAbsorption(const Neutron & neutron);
-  /// @brief carries out events of an absorption, assuming one occurs
-  void absorption(Neutron & neutron);
-  /// @brief carries out events of a scattering, assuming one occurs
-  void scatter(Neutron & neutron);
-
-  /// @brief computes Shannon Entropy for source convergence
-  double shannonEntropy(const std::vector<unsigned long int> & collision_bins);
-
   /// define getter functions
   unsigned int nParticles() { return _n_particles; }
   unsigned int nGenerations() { return _n_generations; }
@@ -46,6 +36,16 @@ protected:
   const unsigned int _n_generations;
   /// number of inactive cycles
   const unsigned int _n_inactive;
+
+  /// @brief throws a random number to see if absorption occurred
+  bool testAbsorption(const Neutron & neutron);
+  /// @brief carries out events of an absorption, assuming one occurs
+  void absorption(Neutron & neutron);
+  /// @brief carries out events of a scattering, assuming one occurs
+  void scatter(Neutron & neutron);
+
+  /// @brief computes Shannon Entropy for source convergence
+  double shannonEntropy(const std::vector<unsigned long int> & collision_bins);
 
   /// all cells in simulation
   std::vector<Cell> _cells;
@@ -109,4 +109,5 @@ protected:
                   const unsigned int generation_num,
                   std::vector<unsigned long int> & source_bins);
   Cell randomFissionCell();
+  void splitOrRoulette(Neutron & neutron);
 };
