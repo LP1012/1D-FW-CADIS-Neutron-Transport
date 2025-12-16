@@ -32,4 +32,6 @@ protected:
   double _scalar_flux;
   std::vector<double> _angular_fluxes;
   double _source;
+
+  void setStartingFlux();
 };
