@@ -15,6 +15,7 @@ private:
   const std::string _input_file_name;
   unsigned int _n_total_cells;
   bool _use_vr;
+  double _window_width;
 
   std::vector<Region> _regions;
   std::vector<Cell> _cells;

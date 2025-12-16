@@ -99,6 +99,19 @@ FWCADIS::readInput()
   _n_particles = getAttributeOrThrow<unsigned int>(settings, "n_particles");
   _n_generations = getAttributeOrThrow<unsigned int>(settings, "n_generations");
   _n_inactive = getAttributeOrThrow<unsigned int>(settings, "n_inactive");
+
+  if (!use_vr)
+    throw std::runtime_error("fw-cadis parameter not set to true or false in input file!");
   _use_vr = use_vr->BoolValue();
-  _quadrature_order = settings->FindAttribute("quadrature-order")->UnsignedValue();
+  if (use_vr)
+  {
+    auto * quad_order = settings->FindAttribute("quadrature-order");
+    if (!quad_order)
+      throw std::runtime_error("quadrature-order not set!");
+    auto * www = settings->FindAttribute("window-width");
+    if (!www)
+      throw std::runtime_error("window-width not set!");
+    _quadrature_order = quad_order->UnsignedValue();
+    _window_width = www->DoubleValue();
+  }
 }
