@@ -159,12 +159,6 @@ MCSlab::k_eigenvalue()
     {
       _new_fission_bank.pop_front();
     }
-    // if (_new_fission_bank.size() > _n_particles)
-    // {
-    //   _new_fission_bank.erase(_new_fission_bank.begin(),
-    //                           _new_fission_bank.begin() +
-    //                               (_new_fission_bank.size() - _n_particles));
-    // }
 
     assert(_new_fission_bank.size() <= _n_particles);
 
@@ -336,23 +330,6 @@ MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
   neutron.movePositionAndCell(x_edge, _cells);
   if (!neutron.weightIsOkay())
     splitOrRoulette(neutron);
-  // //  if next region(s) is/are voids, jump over them
-  // unsigned int counting_index = start_cell_index + dir;
-  // while (_regions[counting_index].SigmaT() < 1e-15)
-  // {
-  //   if ((dir < 0 && start_cell_index == 0) ||
-  //       (dir > 0 && start_cell_index == _regions.size() - 1))
-  //   {
-  //     double x_jump = (dir > 0) ? _regions[counting_index].xMax() :
-  //     _regions[counting_index].xMin(); recordPathLenTally(generation, start_x, x_jump, mu,
-  //     neutron.weight()); neutron.kill(); return;
-  //   }
-  //   counting_index += dir;
-  // }
-
-  // double x_jump = (dir > 0) ? _regions[counting_index].xMin() : _regions[counting_index].xMax();
-  // recordPathLenTally(generation, start_x, x_jump, mu, neutron.weight());
-  // neutron.movePositionAndRegion(x_jump, _regions);
 }
 
 void
@@ -375,53 +352,6 @@ MCSlab::implicitCapture(Neutron & neutron)
   neutron.changeWeight(new_weight);
   scatter(neutron);
 }
-
-// void
-// MCSlab::neutronEscapesRegion(Neutron & neutron, const unsigned int
-// generation)
-// {
-//   unsigned int start_index = neutron.region().regionIndex();
-//   unsigned int idx = start_index;
-
-//   const double mu = neutron.mu();
-//   const int dir = (mu > 0) ? +1 : -1;
-
-//   // First: record the starting position
-//   const double x0 = neutron.pos();
-
-//   double x_edge = (dir > 0) ? _regions[start_index].xMax() :
-//   _regions[start_index].xMin();
-
-//   idx += dir;
-
-//   // Skip all void regions (defined by SigmaT == 0)
-//   while (_regions[idx].SigmaT() < 1e-15)
-//   {
-//     idx += dir;
-//   }
-
-//   // If at outer edge, neutron escapes the problem
-//   if ((dir > 0 && idx == _regions.size() - 1) || (dir < 0 && idx == 0))
-//   {
-//     // Escape position is boundary of the current (void) region
-//     double x_escape = (dir > 0) ? _regions[idx].xMax() :
-//     _regions[idx].xMin();
-
-//     recordPathLenTally(generation, x0, x_escape, mu);
-//     neutron.kill();
-//     return;
-//   }
-
-//   // Now idx is the first non-void region in flight direction
-//   double new_x = (dir > 0) ? _regions[idx].xMax()  // entering from left
-//                            : _regions[idx].xMin(); // entering from right
-
-//   recordPathLenTally(generation, x0, new_x, mu);
-
-//   // Move into the new region
-//   // printf("We are somehow moving a region...\n");
-//   neutron.movePositionAndRegion(new_x, _regions);
-// }
 
 unsigned int
 MCSlab::collisionIndex(const Neutron & neutron)
