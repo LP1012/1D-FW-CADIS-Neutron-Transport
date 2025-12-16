@@ -3,6 +3,7 @@
 #include <string>
 #include "Region.h"
 #include "Cell.h"
+#include "SN.h"
 
 class FWCADIS
 {
@@ -10,6 +11,8 @@ public:
   FWCADIS(const std::string input_file_name);
 
   void runForwardFlux();
+  void runAdjointFlux();
+  void updateForwardFlux(const SN & simulation);
 
 private:
   const std::string _input_file_name;
@@ -29,6 +32,7 @@ private:
   unsigned int _quadrature_order;
 
   std::vector<double> _forward_flux;
+  double _forward_k_eff;
 
   void readInput();
 };

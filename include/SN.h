@@ -8,16 +8,23 @@
 class SN
 {
 public:
-  SN(const std::vector<Cell> & cells, const unsigned int GQ_order);
+  SN(const std::vector<Cell> & cells,
+     const unsigned int GQ_order,
+     const bool adjoint = false,
+     const double k_start = 1.0);
 
   void run();
-  std::vector<double> getScalarFlux();
+  std::vector<double> getScalarFlux() const;
   std::vector<double> getSources();
   double L2Norm(const std::vector<double> & vector);
 
+  const double k() const { return _k; }
+
 protected:
+  std::vector<Cell> _cells; // these will be modified with the computed flux
   const unsigned int _num_cells;
   const unsigned int _gq_order;
+  const bool _adjoint;
   discreteQuadrature::GaussLegendreRule _gauss_legendre_rule;
 
   bool _is_converged;
@@ -28,8 +35,10 @@ protected:
   void populateSNCells(const std::vector<Cell> & cells);
 
   void normalizeSources();
+
   void sweepRight(const unsigned int mu_index);
   void sweepLeft(const unsigned int mu_index);
+
   void computeScalarFluxAll();
 
   double computeAngularFlux(const SNCell & cell, const double cell_flux, const double mu);

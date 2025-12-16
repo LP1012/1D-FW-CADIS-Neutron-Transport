@@ -24,6 +24,23 @@ FWCADIS::runForwardFlux()
   SN simulation{_cells, _quadrature_order};
   simulation.run();
   _forward_flux = simulation.getScalarFlux();
+  _forward_k_eff = simulation.k();
+  updateForwardFlux(simulation);
+}
+
+void
+FWCADIS::runAdjointFlux()
+{
+  SN simulation{_cells, _quadrature_order, true, _forward_k_eff};
+  simulation.run();
+}
+
+void
+FWCADIS::updateForwardFlux(const SN & simulation)
+{
+  std::vector<double> forward_flux = simulation.getScalarFlux();
+  for (auto i = 0; i < _cells.size(); i++)
+    _cells[i].setForwardFlux(forward_flux[i]);
 }
 
 void
