@@ -24,6 +24,7 @@ add_library(
   src/Region.cpp 
   src/RNG.cpp
   src/CellQuadrature.cpp
+  src/utils.cpp
   src/tinyxml2.cpp # add other source files here
 )
 target_include_directories(FW-CADIS_lib PUBLIC ${CMAKE_SOURCE_DIR}/include)

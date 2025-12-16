@@ -13,6 +13,11 @@ public:
   void runForwardFlux();
   void runAdjointFlux();
   void updateForwardFlux(const SN & simulation);
+  void updateAdjointFlux(const SN & simulation);
+  void setWeightWindows();
+  void kEigenvalueMonteCarlo();
+
+  bool useVR() const { return _use_vr; }
 
 private:
   const std::string _input_file_name;

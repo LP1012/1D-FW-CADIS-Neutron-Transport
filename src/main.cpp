@@ -20,8 +20,13 @@ main(int argc, char * argv[])
 
   std::string input_filename = argv[1];
   FWCADIS simulation{input_filename};
-  simulation.runForwardFlux();
-  simulation.runAdjointFlux();
-  // simulation.k_eigenvalue();
+
+  if (simulation.useVR())
+  {
+    simulation.runForwardFlux();
+    simulation.runAdjointFlux();
+    simulation.setWeightWindows();
+  }
+  simulation.kEigenvalueMonteCarlo();
   return 0;
 }

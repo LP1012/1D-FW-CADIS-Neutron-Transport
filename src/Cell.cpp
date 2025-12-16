@@ -27,9 +27,10 @@ Cell::randomPositionInCell(const Cell cell, UniformRNG rng)
 }
 
 void
-Cell::setWeight(const double weight, const double upper_weight, const double lower_weight)
+Cell::createWeightWindow(const double fwcadis_adjoint_flux, const double window_width)
 {
-  _center_weight = weight;
-  _upper_weight = upper_weight;
-  _lower_weight = lower_weight;
+  double denom = fwcadis_adjoint_flux * (window_width + 1.0) / 2.0;
+  _lower_weight = 1.0 / denom;
+  _upper_weight = window_width * _lower_weight;
+  _center_weight = (_lower_weight + _upper_weight) / 2.0;
 }
