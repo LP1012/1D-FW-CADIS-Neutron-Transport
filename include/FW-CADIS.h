@@ -15,6 +15,7 @@ public:
   void updateForwardFlux(const SN & simulation);
   void updateAdjointFlux(const SN & simulation);
   void setWeightWindows();
+  void kEigenvalueMonteCarlo();
 
 private:
   const std::string _input_file_name;

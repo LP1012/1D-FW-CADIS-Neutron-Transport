@@ -1,4 +1,5 @@
 #include "FW-CADIS.h"
+#include "MCSlab.h"
 #include "Cell.h"
 #include "Neutron.h"
 #include "Point.h"
@@ -57,6 +58,14 @@ FWCADIS::updateAdjointFlux(const SN & simulation)
   std::vector<double> adjoint_flux = simulation.getScalarFlux();
   for (auto i = 0; i < _cells.size(); i++)
     _cells[i].setAdjointFlux(adjoint_flux[i]);
+}
+
+void
+FWCADIS::kEigenvalueMonteCarlo()
+{
+  MCSlab simulation(
+      _input_file_name, _n_particles, _n_generations, _n_inactive, _regions, _cells, _use_vr);
+  simulation.k_eigenvalue();
 }
 
 void

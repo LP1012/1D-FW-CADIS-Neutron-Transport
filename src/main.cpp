@@ -23,6 +23,6 @@ main(int argc, char * argv[])
   simulation.runForwardFlux();
   simulation.runAdjointFlux();
   simulation.setWeightWindows();
-  // simulation.k_eigenvalue();
+  simulation.kEigenvalueMonteCarlo();
   return 0;
 }
