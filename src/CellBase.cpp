@@ -7,8 +7,14 @@ CellBase::CellBase(const double xmin,
                    const double xmax,
                    const double Sigma_a,
                    const double Sigma_s,
-                   const double nu_Sigma_f)
-  : _xmin(xmin), _xmax(xmax), _Sigma_a(Sigma_a), _Sigma_s(Sigma_s), _nu_Sigma_f(nu_Sigma_f)
+                   const double nu_Sigma_f,
+                   const double volumetric_source)
+  : _xmin(xmin),
+    _xmax(xmax),
+    _Sigma_a(Sigma_a),
+    _Sigma_s(Sigma_s),
+    _nu_Sigma_f(nu_Sigma_f),
+    _vol_source(volumetric_source)
 {
   if (_xmax < _xmin)
     throw std::runtime_error("Max cell size is less then minimum cell size!");

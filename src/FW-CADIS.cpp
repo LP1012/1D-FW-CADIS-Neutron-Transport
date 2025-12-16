@@ -51,9 +51,10 @@ FWCADIS::readInput()
     auto Sigma_a = getAttributeOrThrow<double>(region, "Sigma_a");
     auto Sigma_s = getAttributeOrThrow<double>(region, "Sigma_s");
     auto nuSigma_f = getAttributeOrThrow<double>(region, "nuSigma_f");
+    auto vol_source = getAttributeOrThrow<double>(region, "source");
 
-    Region region_obj(xmin, xmax, n_cells, Sigma_a, Sigma_s,
-                      nuSigma_f); // create region
+    Region region_obj(
+        xmin, xmax, n_cells, Sigma_a, Sigma_s, nuSigma_f, vol_source); // create region
 
     // add checks for overlap and void regions here
     if (_regions.size() > 0)

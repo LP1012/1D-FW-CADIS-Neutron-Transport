@@ -59,6 +59,7 @@ SN::run()
     // check for convergence
     _is_converged = isConverged(old_scalar_flux, new_scalar_flux, old_k, new_k);
   }
+  computeScalarFluxAll(); // update scalar fluxes in cells
   printf("---------------------------------------------------\n");
 
   printf("\nFinal k-eff: %.6f\n", _k);
@@ -240,7 +241,8 @@ SN::updateSource()
     double flux = cell.scalarFlux();
     double scattering_xs = cell.sigmaS();
     double nu_sigma_f = cell.nuSigmaF();
-    double new_source = 0.5 * flux * (scattering_xs + 1.0 / _k * nu_sigma_f);
+    double new_source = flux * (scattering_xs + 1.0 / _k * nu_sigma_f) + cell.volumetricSource();
+    new_source /= 4.0 * M_PI;
     cell.setSource(new_source);
   }
 }

@@ -2,7 +2,12 @@
 #include "CellQuadrature.h"
 
 SNCell::SNCell(const Cell & cell, const unsigned int quadrature_order)
-  : CellBase(cell.xMin(), cell.xMax(), cell.sigmaA(), cell.sigmaS(), cell.nuSigmaF()),
+  : CellBase(cell.xMin(),
+             cell.xMax(),
+             cell.sigmaA(),
+             cell.sigmaS(),
+             cell.nuSigmaF(),
+             cell.volumetricSource()),
     _quad(quadrature_order),
     _angular_fluxes(_quad, 0.0),
     _scalar_flux(0)
@@ -16,8 +21,9 @@ SNCell::SNCell(const double xmin,
                const double Sigma_a,
                const double Sigma_s,
                const double nu_Sigma_f,
+               const double volumetric_source,
                const unsigned int quadrature_order)
-  : CellBase(xmin, xmax, Sigma_a, Sigma_s, nu_Sigma_f),
+  : CellBase(xmin, xmax, Sigma_a, Sigma_s, nu_Sigma_f, volumetric_source),
     _quad(quadrature_order),
     _angular_fluxes(_quad, 0.0),
     _scalar_flux(0)

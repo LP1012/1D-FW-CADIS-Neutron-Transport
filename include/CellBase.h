@@ -9,7 +9,8 @@ public:
            const double xmax,
            const double Sigma_a,
            const double Sigma_s,
-           const double nu_Sigma_f);
+           const double nu_Sigma_f,
+           const double volumetric_source);
 
   template <typename T>
   static unsigned int
@@ -25,6 +26,7 @@ public:
   const double sigmaA() const { return _Sigma_a; }
   const double sigmaS() const { return _Sigma_s; }
   const double nuSigmaF() const { return _nu_Sigma_f; }
+  const double volumetricSource() const { return _vol_source; }
 
 protected:
   const double _xmin;
@@ -32,6 +34,7 @@ protected:
   const double _Sigma_a;
   const double _Sigma_s;
   const double _nu_Sigma_f;
+  const double _vol_source;
 
   double _Sigma_t;
   double _cell_width;
