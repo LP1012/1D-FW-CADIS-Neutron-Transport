@@ -70,6 +70,7 @@ n_bins = len(bin_widths)
 x0 = df["start"].to_numpy()
 x1 = df["end"].to_numpy()
 seg_length = df["pathlength"].to_numpy()
+weight = df["weight"].to_numpy()
 
 xmin = np.minimum(x0, x1)
 xmax = np.maximum(x0, x1)
@@ -83,7 +84,11 @@ pathlength_bins = np.zeros(n_bins)
 
 # Handle single-bin segments fully vectorized
 single_mask = bin_i_start == bin_i_end
-np.add.at(pathlength_bins, bin_i_start[single_mask], seg_length[single_mask])
+np.add.at(
+    pathlength_bins,
+    bin_i_start[single_mask],
+    seg_length[single_mask] * weight[single_mask],
+)
 
 # Multi-bin segments handled with Numba
 multi_mask = ~single_mask
@@ -100,6 +105,7 @@ def bin_multi_segments(
     xmax,
     seg_length,
     bin_edges,
+    weights,
 ):
     for i in multi_indices:
         b_start = bin_i_start[i]
@@ -107,13 +113,14 @@ def bin_multi_segments(
         xmin_seg = xmin[i]
         xmax_seg = xmax[i]
         seg_len = seg_length[i]
+        weight = weights[i]
 
         for b in range(b_start, b_end + 1):
             left = bin_edges[b]
             right = bin_edges[b + 1]
             overlap = max(0.0, min(xmax_seg, right) - max(xmin_seg, left))
             if overlap > 0:
-                pathlength_bins[b] += overlap / (xmax_seg - xmin_seg) * seg_len
+                pathlength_bins[b] += overlap / (xmax_seg - xmin_seg) * seg_len * weight
 
 
 bin_multi_segments(
@@ -125,6 +132,7 @@ bin_multi_segments(
     xmax,
     seg_length,
     bin_edges,
+    weight,
 )
 
 # ---------------------------------------------------------------------
