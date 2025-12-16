@@ -88,7 +88,7 @@ Neutron::setCell(std::vector<Cell> & cells)
       }
     }
   }
-  throw std::runtime_error("ERROR: Neutron::setRegion() could not assign region!");
+  throw std::runtime_error("ERROR: Neutron::setCell() could not assign cell!");
 }
 
 void
