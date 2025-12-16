@@ -19,6 +19,13 @@ FWCADIS::FWCADIS(const std::string input_file_name) : _input_file_name(input_fil
 }
 
 void
+FWCADIS::setWeightWindows()
+{
+  for (auto i = 0; i < _cells.size(); i++)
+    _cells[i].createWeightWindow(_cells[i].adjointFlux(), _window_width);
+}
+
+void
 FWCADIS::runForwardFlux()
 {
   SN simulation{_cells, _quadrature_order};
