@@ -28,10 +28,12 @@ public:
   const double adjointFlux() const { return _adjoint_flux; }
   const double absorptionRatio() const { return _abs_ratio; }
   const double nPerAbsorption() const { return _n_per_abs; }
+  const double absorptionProbability() const { return _abs_prob; }
 
 private:
   double _n_per_abs;
   double _abs_ratio;
+  double _abs_prob;
 
   // set weight window values
   double _center_weight; // "target weight"

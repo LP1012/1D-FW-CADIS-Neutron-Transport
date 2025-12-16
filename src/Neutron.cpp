@@ -51,7 +51,6 @@ Neutron::movePositionAndCell(const double new_position, std::vector<Cell> & cell
 {
   _pos = new_position;
   setCell(cells);
-  changeWeight();
   checkNeutron();
 }
 
@@ -93,11 +92,9 @@ Neutron::setCell(std::vector<Cell> & cells)
 }
 
 void
-Neutron::changeWeight()
+Neutron::changeWeight(const double new_weight)
 {
-  _weight = _cell->targetWeight(); // this is just a placeholder
-  if (_weight == 0)
-    kill();
+  _weight = new_weight;
 }
 
 void

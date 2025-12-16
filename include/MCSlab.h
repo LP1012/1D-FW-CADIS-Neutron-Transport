@@ -19,7 +19,8 @@ public:
          const unsigned int n_generations,
          const unsigned int n_inactive,
          const std::vector<Region> regions,
-         const std::vector<Cell> cells);
+         const std::vector<Cell> cells,
+         const bool implicit_capture);
 
   /// method to run simulation
   void k_eigenvalue();
@@ -36,6 +37,8 @@ protected:
   const unsigned int _n_generations;
   /// number of inactive cycles
   const unsigned int _n_inactive;
+
+  const bool _implicit_capture;
 
   /// @brief throws a random number to see if absorption occurred
   bool testAbsorption(const Neutron & neutron);
@@ -90,10 +93,8 @@ protected:
 
   /// @brief record the location and region of a single collision
   /// @param current_generation
-  void recordCollisionTally(const int current_generation,
-                            const double location,
-                            const double weight,
-                            const bool absorbed);
+  void
+  recordCollisionTally(const int current_generation, const double location, const double weight);
 
   /// @brief record start and end location of single neutron movement and the region the movement occurred in
   /// @param current_generation
@@ -110,4 +111,7 @@ protected:
                   std::vector<unsigned long int> & source_bins);
   Cell randomFissionCell();
   void splitOrRoulette(Neutron & neutron);
+  void implicitCapture(Neutron & neutron);
+  unsigned int nNeutronsBorn(const Neutron & neutron);
+  void addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & neutron);
 };
