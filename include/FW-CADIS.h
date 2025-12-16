@@ -17,6 +17,8 @@ public:
   void setWeightWindows();
   void kEigenvalueMonteCarlo();
 
+  bool useVR() const { return _use_vr; }
+
 private:
   const std::string _input_file_name;
   unsigned int _n_total_cells;
