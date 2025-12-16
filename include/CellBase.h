@@ -1,6 +1,7 @@
 #pragma once
 
 #include <vector>
+#include <stdexcept>
 
 class CellBase
 {
@@ -14,7 +15,21 @@ public:
 
   template <typename T>
   static unsigned int
-  cellIndex(const double position, const double mu, const std::vector<T> & cells);
+  cellIndex(const double position, const double mu, const std::vector<T> & cells)
+  {
+    for (auto i = 0; i < cells.size(); i++)
+    {
+      const double cell_max = cells[i].xMax();
+      const double cell_min = cells[i].xMin();
+      if (position < cell_max && position > cell_min)
+        return i;
+      else if (isOnBoundary(position, cell_max) && mu < 0)
+        return i;
+      else if (isOnBoundary(position, cell_min) && mu > 0)
+        return i;
+    }
+    throw std::runtime_error("Position not located within given cells!");
+  };
 
   static bool isOnBoundary(const double pos, const double boundary);
 
