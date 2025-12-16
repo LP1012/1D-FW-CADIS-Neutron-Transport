@@ -81,6 +81,7 @@ bin_i_start = np.clip(bin_i_start, 0, n_bins - 1)
 bin_i_end = np.clip(bin_i_end, 0, n_bins - 1)
 
 pathlength_bins = np.zeros(n_bins)
+squared_sum_bins = np.zeros_like(pathlength_bins)
 
 # Handle single-bin segments fully vectorized
 single_mask = bin_i_start == bin_i_end
@@ -88,6 +89,11 @@ np.add.at(
     pathlength_bins,
     bin_i_start[single_mask],
     seg_length[single_mask] * weight[single_mask],
+)
+np.add.at(
+    squared_sum_bins,
+    bin_i_start[single_mask],
+    (seg_length[single_mask] * weight[single_mask]) ** 2,
 )
 
 # Multi-bin segments handled with Numba
@@ -106,6 +112,7 @@ def bin_multi_segments(
     seg_length,
     bin_edges,
     weights,
+    exp=1,
 ):
     for i in multi_indices:
         b_start = bin_i_start[i]
@@ -120,9 +127,25 @@ def bin_multi_segments(
             right = bin_edges[b + 1]
             overlap = max(0.0, min(xmax_seg, right) - max(xmin_seg, left))
             if overlap > 0:
-                pathlength_bins[b] += overlap / (xmax_seg - xmin_seg) * seg_len * weight
+                pathlength_bins[b] += (
+                    overlap / (xmax_seg - xmin_seg) * (seg_len * weight) ** exp
+                )
 
 
+bin_multi_segments(
+    squared_sum_bins,
+    multi_indices,
+    bin_i_start,
+    bin_i_end,
+    xmin,
+    xmax,
+    seg_length,
+    bin_edges,
+    weight,
+    2,
+)
+
+# change exponent to 2 to get sum of squares
 bin_multi_segments(
     pathlength_bins,
     multi_indices,
@@ -133,6 +156,7 @@ bin_multi_segments(
     seg_length,
     bin_edges,
     weight,
+    1,
 )
 
 # ---------------------------------------------------------------------
@@ -141,15 +165,55 @@ bin_multi_segments(
 normalized_pathlength = pathlength_bins / (total_active_particles * bin_widths)
 
 # ---------------------------------------------------------------------
-# Plot
+# Compute variance
+# ---------------------------------------------------------------------
+normalized_ss = squared_sum_bins / (total_active_particles * bin_widths**2)
+variance = (total_active_particles / (total_active_particles - 1)) * (
+    normalized_ss - normalized_pathlength**2
+)
+integrated_variance = np.dot(variance, bin_widths)  # approximate midpoint rule
+
+# ---------------------------------------------------------------------
+# Compute relative error
+# ---------------------------------------------------------------------
+sigma = np.sqrt(variance)
+relative_error = sigma / normalized_pathlength
+
+# ---------------------------------------------------------------------
+# Plot with uncertainty band
 # ---------------------------------------------------------------------
 bin_centers = 0.5 * (bin_edges[:-1] + bin_edges[1:])
 
+lower = normalized_pathlength - sigma
+upper = normalized_pathlength + sigma
+lower = np.clip(lower, 0.0, None)
+
 plt.figure(figsize=(8, 6))
-sns.lineplot(x=bin_centers, y=normalized_pathlength)
+
+# Mean flux
+plt.plot(
+    bin_centers,
+    normalized_pathlength,
+    label="Flux",
+    linewidth=2.5,
+)
+
+# Uncertainty band (±1σ)
+plt.fill_between(
+    bin_centers,
+    lower,
+    upper,
+    alpha=0.3,
+    label=r"$\pm 1\sigma$",
+)
+
 plt.xlabel("x")
 plt.ylabel("Normalized Flux")
-plt.title("Path-Length Flux Tally")
+plt.title("Path-Length Flux Tally with Statistical Uncertainty")
 plt.ylim(bottom=0)
+plt.legend()
 plt.tight_layout()
 plt.savefig(f"{basename}_pathlength_plot.png")
+plt.close()
+
+print(f"Integrated variance: {integrated_variance}")
