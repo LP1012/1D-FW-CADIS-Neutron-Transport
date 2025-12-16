@@ -6,13 +6,15 @@ Region::Region(const double xmin,
                const unsigned int n_cells,
                const double Sigma_a,
                const double Sigma_s,
-               const double nu_Sigma_f)
+               const double nu_Sigma_f,
+               const double source)
   : _xmin(xmin),
     _xmax(xmax),
     _n_cells(n_cells),
     _Sigma_a(Sigma_a),
     _Sigma_s(Sigma_s),
-    _nu_Sigma_f(nu_Sigma_f)
+    _nu_Sigma_f(nu_Sigma_f),
+    _source(source)
 {
 
   // calculate total cross section and mean-free-path
@@ -31,8 +33,9 @@ Region::voidRegion(double xmin, double xmax, unsigned n_cells)
   constexpr double Sigma_a_void = 0.0;
   constexpr double Sigma_s_void = 0.0;
   constexpr double nuSigma_f_void = 0.0;
+  constexpr double source = 0.0;
 
-  return Region(xmin, xmax, n_cells, Sigma_a_void, Sigma_s_void, nuSigma_f_void);
+  return Region(xmin, xmax, n_cells, Sigma_a_void, Sigma_s_void, nuSigma_f_void, source);
 };
 
 void
@@ -50,6 +53,7 @@ Region::populateCells()
     double lower_bound = static_cast<double>(i) * dx + _xmin;     // determine lower bound
     double upper_bound = static_cast<double>(i + 1) * dx + _xmin; // determine upper bound
 
-    _region_cells.push_back(Cell(lower_bound, upper_bound, _Sigma_a, _Sigma_s, _nu_Sigma_f));
+    _region_cells.push_back(
+        Cell(lower_bound, upper_bound, _Sigma_a, _Sigma_s, _nu_Sigma_f, _source));
   }
 }

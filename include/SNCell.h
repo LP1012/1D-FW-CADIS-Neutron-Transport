@@ -11,6 +11,7 @@ public:
          const double Sigma_a,
          const double Sigma_s,
          const double nu_Sigma_f,
+         const double volumetric_source,
          const unsigned int quadrature_order);
 
   void computeScalarFlux();
@@ -31,4 +32,6 @@ protected:
   double _scalar_flux;
   std::vector<double> _angular_fluxes;
   double _source;
+
+  void setStartingFlux();
 };

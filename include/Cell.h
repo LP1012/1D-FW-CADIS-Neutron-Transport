@@ -11,7 +11,8 @@ public:
        const double xmax,
        const double Sigma_a,
        const double Sigma_s,
-       const double nu_Sigma_f);
+       const double nu_Sigma_f,
+       const double source);
 
   void setWeight(const double center_weight, const double upper_weight, const double lower_weight);
   void setForwardFlux(const double forward_flux) { _forward_flux = forward_flux; };

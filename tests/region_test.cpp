@@ -10,7 +10,7 @@
 class RegionTest : public testing::Test
 {
 protected:
-  Region region{-1.0, 1.0, 4, 3, 2, 4}; // set generic tester region
+  Region region{-1.0, 1.0, 4, 3, 2, 4, 1}; // set generic tester region
 };
 
 TEST_F(RegionTest, RegionIndexing)

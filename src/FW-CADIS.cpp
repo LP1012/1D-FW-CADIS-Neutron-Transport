@@ -24,6 +24,23 @@ FWCADIS::runForwardFlux()
   SN simulation{_cells, _quadrature_order};
   simulation.run();
   _forward_flux = simulation.getScalarFlux();
+  _forward_k_eff = simulation.k();
+  updateForwardFlux(simulation);
+}
+
+void
+FWCADIS::runAdjointFlux()
+{
+  SN simulation{_cells, _quadrature_order, true, _forward_k_eff};
+  simulation.run();
+}
+
+void
+FWCADIS::updateForwardFlux(const SN & simulation)
+{
+  std::vector<double> forward_flux = simulation.getScalarFlux();
+  for (auto i = 0; i < _cells.size(); i++)
+    _cells[i].setForwardFlux(forward_flux[i]);
 }
 
 void
@@ -51,9 +68,10 @@ FWCADIS::readInput()
     auto Sigma_a = getAttributeOrThrow<double>(region, "Sigma_a");
     auto Sigma_s = getAttributeOrThrow<double>(region, "Sigma_s");
     auto nuSigma_f = getAttributeOrThrow<double>(region, "nuSigma_f");
+    auto vol_source = getAttributeOrThrow<double>(region, "source");
 
-    Region region_obj(xmin, xmax, n_cells, Sigma_a, Sigma_s,
-                      nuSigma_f); // create region
+    Region region_obj(
+        xmin, xmax, n_cells, Sigma_a, Sigma_s, nuSigma_f, vol_source); // create region
 
     // add checks for overlap and void regions here
     if (_regions.size() > 0)

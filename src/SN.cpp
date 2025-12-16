@@ -11,15 +11,17 @@
 #include <iostream>
 #include <cassert>
 
-SN::SN(const std::vector<Cell> & cells, const unsigned int GQ_order)
-  : _num_cells(cells.size()), _gq_order(GQ_order)
+SN::SN(const std::vector<Cell> & cells,
+       const unsigned int GQ_order,
+       const bool adjoint,
+       const double k_start)
+  : _cells(cells), _num_cells(cells.size()), _gq_order(GQ_order), _adjoint(adjoint), _k(k_start)
 {
   if (_gq_order % 2 == 1.0)
     throw std::runtime_error("Gauss quadrature order cannot be odd!");
   populateSNCells(cells);
   _gauss_legendre_rule = discreteQuadrature::getGaussLegendreRule(_gq_order);
   _mus = _gauss_legendre_rule.abscissa;
-  _k = 1.0; // assume critical just for initial guess
   _is_converged = false;
 }
 
@@ -36,16 +38,21 @@ SN::run()
     for (auto i = 0; i < _mus.size(); i++)
     {
       assert(std::abs(_mus[i]) > 1e-15);
-      if (_mus[i] < 0)
-        sweepLeft(i); // sweep left
+      double sweep_mu = _adjoint ? -_mus[i] : _mus[i];
+
+      if (sweep_mu > 0)
+        sweepRight(i);
       else
-        sweepRight(i); // sweep right
+        sweepLeft(i);
     }
     // save old values for convergence tests
     std::vector<double> old_scalar_flux = getScalarFlux();
     const double old_k = _k;
 
-    updateK();          // update k and scalar fluxes
+    if (!_adjoint)
+      updateK(); // update k and scalar fluxes
+    else
+      computeScalarFluxAll();
     updateSource();     // update source
     normalizeSources(); // normalize to single source particle
 
@@ -59,19 +66,25 @@ SN::run()
     // check for convergence
     _is_converged = isConverged(old_scalar_flux, new_scalar_flux, old_k, new_k);
   }
+  computeScalarFluxAll(); // update scalar fluxes in cells
   printf("---------------------------------------------------\n");
 
   printf("\nFinal k-eff: %.6f\n", _k);
 
   printf("\nExporting results... ");
   exportToCsv(); // export results to csv
-  printf("Done.\n");
+  printf("Done.\n\n");
 }
 
 void
 SN::exportToCsv()
 {
   std::string output = "SN_output";
+  if (!_adjoint)
+    output += "_forward_flux.csv";
+  else
+    output += "_adjoint_flux.csv";
+
   std::ofstream outfile;
   outfile.open(output);
   if (!outfile.is_open())
@@ -102,8 +115,18 @@ SN::isConverged(const std::vector<double> & old_flux,
   printf("   %.4e   |   %.4e    |\n", relative_k, relative_flux);
 
   double tol = 1e-6;
-  if (relative_k < tol && relative_flux < tol)
-    return true;
+  if (relative_flux < tol)
+  {
+    if (_adjoint)
+      return true;
+    else
+    {
+      if (relative_k < tol)
+        return true;
+      else
+        return false;
+    }
+  }
   else
     return false;
 }
@@ -120,8 +143,25 @@ SN::L2Norm(const std::vector<double> & vector)
 void
 SN::populateSNCells(const std::vector<Cell> & cells)
 {
-  for (auto & cell : cells)
-    _sn_cells.push_back(SNCell(cell, _gq_order));
+  if (!_adjoint)
+  {
+    for (auto & cell : cells)
+      _sn_cells.push_back(SNCell(cell, _gq_order));
+  }
+  else
+  {
+    for (auto & cell : cells)
+    {
+      double fwcadis_source = 1.0 / cell.forwardFlux();
+      _sn_cells.push_back(SNCell(cell.xMin(),
+                                 cell.xMax(),
+                                 cell.sigmaA(),
+                                 cell.sigmaS(),
+                                 cell.nuSigmaF(),
+                                 fwcadis_source,
+                                 _gq_order));
+    }
+  }
   normalizeSources(); // perform initial normalization
 
   // set initial flux guess
@@ -140,7 +180,10 @@ void
 SN::sweepRight(const unsigned int mu_index)
 {
   const double mu = _mus[mu_index];
-  assert(mu > 0);
+  if (!_adjoint)
+    assert(mu > 0);
+  else
+    assert(mu < 0);
   double left_flux = 0; // vacuum BC on left side
   for (auto i = 0; i < _num_cells; i++)
   {
@@ -155,7 +198,10 @@ void
 SN::sweepLeft(const unsigned int mu_index)
 {
   const double mu = _mus[mu_index];
-  assert(mu < 0);
+  if (!_adjoint)
+    assert(mu < 0);
+  else
+    assert(mu > 0);
   double right_flux = 0; // vacuum BC on right side
   for (int i = _num_cells - 1; i > -1; i--)
   {
@@ -199,7 +245,7 @@ SN::normalizeSources()
 }
 
 std::vector<double>
-SN::getScalarFlux()
+SN::getScalarFlux() const
 {
   std::vector<double> scalar_flux;
   for (auto & cell : _sn_cells)
@@ -240,7 +286,8 @@ SN::updateSource()
     double flux = cell.scalarFlux();
     double scattering_xs = cell.sigmaS();
     double nu_sigma_f = cell.nuSigmaF();
-    double new_source = 0.5 * flux * (scattering_xs + 1.0 / _k * nu_sigma_f);
+    double new_source = flux * (scattering_xs + 1.0 / _k * nu_sigma_f) + cell.volumetricSource();
+    new_source /= 4.0 * M_PI;
     cell.setSource(new_source);
   }
 }

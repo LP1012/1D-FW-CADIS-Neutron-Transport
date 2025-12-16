@@ -13,7 +13,8 @@ public:
          const unsigned int n_cells,
          const double Sigma_a,
          const double Sigma_s,
-         const double nu_Sigma_f);
+         const double nu_Sigma_f,
+         const double source);
 
   static Region voidRegion(double xmin, double xmax, unsigned n_cells);
 
@@ -44,8 +45,8 @@ private:
   // material properties
   const double _Sigma_a;    // absorption cross section
   const double _Sigma_s;    // scattering cross section
-  const double _nu_Sigma_f; // fission cross section times number of neutrons
-                            // produced per fission
+  const double _nu_Sigma_f; // fission cross section times number of neutrons produced per fission
+  const double _source;
   double _Sigma_t;          // total cross section
   double _absorption_ratio; // absorptions per collision
   double _n_per_abs;        // neutrons produced per absorptions
