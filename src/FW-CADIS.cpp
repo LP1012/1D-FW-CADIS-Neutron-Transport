@@ -101,4 +101,5 @@ FWCADIS::readInput()
   _n_inactive = getAttributeOrThrow<unsigned int>(settings, "n_inactive");
   _use_vr = use_vr->BoolValue();
   _quadrature_order = settings->FindAttribute("quadrature-order")->UnsignedValue();
+  _window_width = settings->FindAttribute("window-width")->DoubleValue();
 }
