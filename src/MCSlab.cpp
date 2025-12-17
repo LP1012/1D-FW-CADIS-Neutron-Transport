@@ -23,7 +23,8 @@ MCSlab::MCSlab(const std::string input_file_name,
                const std::vector<Cell> cells,
                const bool implicit_capture,
                const bool use_weight_windows)
-  : _n_particles(n_particles),
+  : _input_file_name(input_file_name),
+    _n_particles(n_particles),
     _n_generations(n_generations),
     _n_inactive(n_inactive),
     _regions(regions),
@@ -110,9 +111,9 @@ MCSlab::k_eigenvalue()
 
   initializeOutput();
 
-  printf("--------------------------------------------------------\n");
-  printf("|Generation| Shannon Entropy |    keff    |  std_dev   |\n");
-  printf("--------------------------------------------------------\n");
+  printf("----------------------------------------------------------\n");
+  printf("| Generation | Shannon Entropy |    keff    |  std_dev   |\n");
+  printf("----------------------------------------------------------\n");
 
   // this is where the simulation will be run
 
@@ -172,19 +173,22 @@ MCSlab::k_eigenvalue()
     if (i < _n_inactive)
     {
       // k-eff not calculated for inactive cycles
-      printf("|    %d     |    %.4e   |            |            |\n", i + 1, _shannon_entropy);
+      printf("|    %3d     |    %.4e   |            |            |\n", i + 1, _shannon_entropy);
     }
     else if (i == _n_inactive)
-      printf("|    %d     |    %.4e   |  %.6f  |            |\n", i + 1, _shannon_entropy, _k_eff);
+      printf("|    %3d     |    %.4e   |  %.6f  |            |\n", i + 1, _shannon_entropy, _k_eff);
     else
     {
       // only print std-dev after 3 approximations have been made
-      printf(
-          "|    %d     |    %.4e   |  %.6f  |  %.6f  |\n", i + 1, _shannon_entropy, _k_eff, _k_std);
+      printf("|    %3d     |    %.4e   |  %.6f  |  %.6f  |\n",
+             i + 1,
+             _shannon_entropy,
+             _k_eff,
+             _k_std);
     }
   }
 
-  printf("--------------------------------------------------------\n");
+  printf("----------------------------------------------------------\n");
   printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
   printf("Simulation complete. :-)\n\n");
 }
