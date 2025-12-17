@@ -1,8 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<simulation>
-  <regions>
-    <region xmin="0" xmax="50" n_cells="100" Sigma_a="0.12" Sigma_s="0.05" nuSigma_f="0.15"/>
-    <region xmin="50" xmax="100" n_cells="100" Sigma_a="0.10" Sigma_s="0.05" nuSigma_f="0.12"/>
-  </regions>
-  <settings n_particles="25000" n_generations="100" n_inactive="5"/>
-</simulation>
