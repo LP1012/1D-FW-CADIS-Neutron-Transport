@@ -65,7 +65,7 @@ MCSlab::initializeOutput()
   if (!_pathlength_outfile.is_open())
     throw std::runtime_error("Pathlength output file not opened successfully!");
 
-  _collision_outfile << "position,region,weight" << std::endl;
+  _collision_outfile << "position,weight" << std::endl;
   _pathlength_outfile << "start,end,mu,pathlength,weight" << std::endl;
 
   exportRegionsToCsv(outfile_name);
@@ -136,7 +136,7 @@ MCSlab::k_eigenvalue()
         Cell start_cell = randomFissionCell();
         double random_start_pos = Cell::randomPositionInCell(start_cell, _rng);
         double start_mu = Neutron::randomIsoAngle(_rng);
-        Neutron neutron(random_start_pos, start_mu, &start_cell);
+        Neutron neutron(random_start_pos, start_mu, &start_cell, 1.0);
         runHistory(neutron, i, source_bins);
       }
     }
@@ -205,6 +205,7 @@ MCSlab::runHistory(Neutron & neutron,
                    const unsigned int generation_num,
                    std::vector<unsigned long int> & source_bins)
 {
+  neutron.checkNeutron();
   while (neutron.isAlive())
   {
     double distanceToCollision =
@@ -213,8 +214,11 @@ MCSlab::runHistory(Neutron & neutron,
     double distanceToEdge = neutron.distanceToEdge(); // find distance to nearest edge
 
     if (distanceToEdge < distanceToCollision) // neutron has reached edge of region
+    {
+      neutron.checkNeutron();
       neutronEscapesCell(neutron, generation_num);
-    else // neutron collides in region
+    }
+    else // neutron collides in cell
     {
       double collision_location =
           neutron.pos() + distanceToCollision * neutron.mu(); // calculate where collision occurred
@@ -272,10 +276,9 @@ MCSlab::addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & ne
   {
     double fission_neutron_mu = Neutron::randomIsoAngle(_rng);
     Cell * fission_cell = &_cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
-    Neutron fission_neutron =
-        Neutron(neutron.pos(),
-                fission_neutron_mu,
-                fission_cell);                    // create neutron at location with isotropic angle
+    double new_weight = neutron.weight() / static_cast<double>(n_neutrons_born);
+    Neutron fission_neutron = Neutron(neutron.pos(), fission_neutron_mu, fission_cell, new_weight);
+    // create neutron at location with isotropic angle
     _new_fission_bank.push_back(fission_neutron); // add to fission bank
   }
 }
@@ -307,7 +310,8 @@ MCSlab::scatter(Neutron & neutron)
   // this would be where we could calculate the energy lost in scatter.
   // however, because the material properties are energy-indendent, we only
   // need the new angle to proceed.
-  neutron.randomIsoAngle(_rng);
+  double new_mu = neutron.randomIsoAngle(_rng);
+  neutron.setMu(new_mu);
 }
 
 void
@@ -335,6 +339,7 @@ MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
     if (!neutron.weightIsOkay())
       splitOrRoulette(neutron);
   }
+  neutron.checkNeutron();
 }
 
 void
