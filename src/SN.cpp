@@ -62,17 +62,9 @@ SN::run()
       updateK(); // update k and scalar fluxes
     }
     else
-    {
       computeScalarFluxAll();
-    }
 
     updateSource(); // update source
-    // if (_adjoint)
-    // {
-    //   normalizeFlux();
-    // }
-
-    // normalizeSources(); // normalize to single source particle
 
     // set new values to variables for convenience
     const double new_k = _k;
@@ -85,7 +77,7 @@ SN::run()
     _is_converged = isConverged(old_scalar_flux, new_scalar_flux, old_k, new_k);
   }
   computeScalarFluxAll(); // update scalar fluxes in cells
-  // normalizeFlux();
+  normalizeFlux();
   printf("---------------------------------------------------\n");
 
   printf("\nFinal k-eff: %.6f\n", _k);
@@ -263,6 +255,12 @@ SN::normalizeSources()
     double old_source = cell.source();
     cell.setSource(old_source / total_source);
   }
+
+  double new_total_source = 0;
+  for (auto & cell : _sn_cells)
+    new_total_source += cell.cellWidth() * cell.source(); // approximate with a midpoint rule
+
+  assert(std::abs(1.0 - new_total_source) < 1e-12);
 }
 
 std::vector<double>
@@ -308,10 +306,11 @@ SN::updateSource()
     double scattering_xs = cell.sigmaS();
     double nu_sigma_f = cell.nuSigmaF();
     double new_source =
-        !_adjoint ? (flux * (scattering_xs + 1.0 / _k * nu_sigma_f) + cell.volumetricSource()) /
-                        (4.0 * M_PI)
-                  : flux * scattering_xs +
-                        (flux * 1.0 / _k * nu_sigma_f + cell.volumetricSource()) / (4.0 * M_PI);
+        !_adjoint
+            ? (flux * (scattering_xs + 1.0 / _k * nu_sigma_f) + cell.volumetricSource()) /
+                  (4.0 * M_PI)
+            : (flux * scattering_xs + (flux * 1.0 / _k * nu_sigma_f + cell.volumetricSource())) /
+                  (4.0 * M_PI);
     cell.setSource(new_source);
   }
 }
