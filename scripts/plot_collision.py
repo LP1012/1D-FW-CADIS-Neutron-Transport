@@ -74,6 +74,7 @@ sigma_t_bins = np.array(sigma_t_bins)
 
 n_bins = len(sigma_t_bins)
 positions = df["position"].to_numpy()
+weights = df["weight"].to_numpy()
 
 # ---------------------------------------------------------------------
 # Digitize collision positions into the region-aware bins
