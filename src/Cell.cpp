@@ -23,7 +23,7 @@ Cell::randomPositionInCell(const Cell cell, UniformRNG rng)
   double xmax = cell.xMax();
   double xmin = cell.xMin();
   double rn = rng.generateRN();
-  return rn * (xmax * xmin) + xmin;
+  return rn * (xmax - xmin) + xmin;
 }
 
 void
