@@ -13,7 +13,11 @@ class Neutron
   friend class NeutronTest;
 
 public:
-  Neutron(double position, double mu, Cell * cell, std::optional<unsigned int> seed = std::nullopt);
+  Neutron(double position,
+          double mu,
+          Cell * cell,
+          std::optional<double> weight = std::nullopt,
+          std::optional<unsigned int> seed = std::nullopt);
 
   // move neutron to new position
   void movePositionAndCell(const double new_position, std::vector<Cell> & cells);
