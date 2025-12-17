@@ -21,13 +21,16 @@ MCSlab::MCSlab(const std::string input_file_name,
                const unsigned int n_inactive,
                const std::vector<Region> regions,
                const std::vector<Cell> cells,
-               const bool implicit_capture)
-  : _n_particles(n_particles),
+               const bool implicit_capture,
+               const bool use_weight_windows)
+  : _input_file_name(input_file_name),
+    _n_particles(n_particles),
     _n_generations(n_generations),
     _n_inactive(n_inactive),
     _regions(regions),
     _cells(cells),
     _implicit_capture(implicit_capture),
+    _use_wws(use_weight_windows),
     _rng()
 {
   _n_total_cells = _cells.size();
@@ -65,7 +68,7 @@ MCSlab::initializeOutput()
   if (!_pathlength_outfile.is_open())
     throw std::runtime_error("Pathlength output file not opened successfully!");
 
-  _collision_outfile << "position,region,weight" << std::endl;
+  _collision_outfile << "position,weight" << std::endl;
   _pathlength_outfile << "start,end,mu,pathlength,weight" << std::endl;
 
   exportRegionsToCsv(outfile_name);
@@ -108,9 +111,9 @@ MCSlab::k_eigenvalue()
 
   initializeOutput();
 
-  printf("--------------------------------------------------------\n");
-  printf("|Generation| Shannon Entropy |    keff    |  std_dev   |\n");
-  printf("--------------------------------------------------------\n");
+  printf("----------------------------------------------------------\n");
+  printf("| Generation | Shannon Entropy |    keff    |  std_dev   |\n");
+  printf("----------------------------------------------------------\n");
 
   // this is where the simulation will be run
 
@@ -136,7 +139,7 @@ MCSlab::k_eigenvalue()
         Cell start_cell = randomFissionCell();
         double random_start_pos = Cell::randomPositionInCell(start_cell, _rng);
         double start_mu = Neutron::randomIsoAngle(_rng);
-        Neutron neutron(random_start_pos, start_mu, &start_cell);
+        Neutron neutron(random_start_pos, start_mu, &start_cell, 1.0);
         runHistory(neutron, i, source_bins);
       }
     }
@@ -159,6 +162,8 @@ MCSlab::k_eigenvalue()
     {
       _new_fission_bank.pop_front();
     }
+    std::mt19937 gen;
+    std::shuffle(_new_fission_bank.begin(), _new_fission_bank.end(), gen);
 
     assert(_new_fission_bank.size() <= _n_particles);
 
@@ -168,19 +173,22 @@ MCSlab::k_eigenvalue()
     if (i < _n_inactive)
     {
       // k-eff not calculated for inactive cycles
-      printf("|    %d     |    %.4e   |            |            |\n", i + 1, _shannon_entropy);
+      printf("|    %3d     |    %.4e   |            |            |\n", i + 1, _shannon_entropy);
     }
     else if (i == _n_inactive)
-      printf("|    %d     |    %.4e   |  %.6f  |            |\n", i + 1, _shannon_entropy, _k_eff);
+      printf("|    %3d     |    %.4e   |  %.6f  |            |\n", i + 1, _shannon_entropy, _k_eff);
     else
     {
       // only print std-dev after 3 approximations have been made
-      printf(
-          "|    %d     |    %.4e   |  %.6f  |  %.6f  |\n", i + 1, _shannon_entropy, _k_eff, _k_std);
+      printf("|    %3d     |    %.4e   |  %.6f  |  %.6f  |\n",
+             i + 1,
+             _shannon_entropy,
+             _k_eff,
+             _k_std);
     }
   }
 
-  printf("--------------------------------------------------------\n");
+  printf("----------------------------------------------------------\n");
   printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
   printf("Simulation complete. :-)\n\n");
 }
@@ -203,6 +211,7 @@ MCSlab::runHistory(Neutron & neutron,
                    const unsigned int generation_num,
                    std::vector<unsigned long int> & source_bins)
 {
+  neutron.checkNeutron();
   while (neutron.isAlive())
   {
     double distanceToCollision =
@@ -211,12 +220,14 @@ MCSlab::runHistory(Neutron & neutron,
     double distanceToEdge = neutron.distanceToEdge(); // find distance to nearest edge
 
     if (distanceToEdge < distanceToCollision) // neutron has reached edge of region
+    {
+      neutron.checkNeutron();
       neutronEscapesCell(neutron, generation_num);
-    else // neutron collides in region
+    }
+    else // neutron collides in cell
     {
       double collision_location =
           neutron.pos() + distanceToCollision * neutron.mu(); // calculate where collision occurred
-      bool absorbed = testAbsorption(neutron);                // did an absorption occur?
 
       // tally collision position and path traveled
       recordPathLenTally(
@@ -230,6 +241,7 @@ MCSlab::runHistory(Neutron & neutron,
         implicitCapture(neutron);
       else
       {
+        bool absorbed = testAbsorption(neutron); // did an absorption occur?
         if (absorbed)
         {
           source_bins[collisionIndex(neutron)] += 1;
@@ -266,14 +278,17 @@ MCSlab::addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & ne
   if (n_neutrons_born == 0)
     return;
 
+  const double total_fission_weight = neutron.weight() * neutron.cell().nPerAbsorption();
+
+  const double new_weight =
+      total_fission_weight /
+      static_cast<double>(n_neutrons_born); // divide through to conserve weight
+
   for (auto i = 0; i < n_neutrons_born; i++)
   {
     double fission_neutron_mu = Neutron::randomIsoAngle(_rng);
     Cell * fission_cell = &_cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
-    Neutron fission_neutron =
-        Neutron(neutron.pos(),
-                fission_neutron_mu,
-                fission_cell);                    // create neutron at location with isotropic angle
+    Neutron fission_neutron = Neutron(neutron.pos(), fission_neutron_mu, fission_cell, new_weight);
     _new_fission_bank.push_back(fission_neutron); // add to fission bank
   }
 }
@@ -288,15 +303,16 @@ MCSlab::nNeutronsBorn(const Neutron & neutron)
   // sample number of fission
   double production_rn = _rng.generateRN(); // generate random number
   unsigned int n_born = 0;                  // initialize number of neutrons born
-  double neutrons_expected =
-      neutron.cell().nPerAbsorption() * neutron.weight(); // expected neutrons from collision
+  // double neutrons_expected =
+  //     neutron.cell().nPerAbsorption() * neutron.weight(); // expected neutrons from collision
+  double neutrons_expected = neutron.cell().nPerAbsorption() * neutron.weight();
 
   if (production_rn < neutrons_expected - std::floor(neutrons_expected))
     n_born = std::ceil(neutrons_expected);
   else
     n_born = std::floor(neutrons_expected);
 
-  return n_born;
+  return static_cast<unsigned int>(n_born);
 }
 
 void
@@ -305,7 +321,8 @@ MCSlab::scatter(Neutron & neutron)
   // this would be where we could calculate the energy lost in scatter.
   // however, because the material properties are energy-indendent, we only
   // need the new angle to proceed.
-  neutron.randomIsoAngle(_rng);
+  double new_mu = neutron.randomIsoAngle(_rng);
+  neutron.setMu(new_mu);
 }
 
 void
@@ -328,8 +345,12 @@ MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
     return;
   }
   neutron.movePositionAndCell(x_edge, _cells);
-  if (!neutron.weightIsOkay())
-    splitOrRoulette(neutron);
+  if (_use_wws)
+  {
+    if (!neutron.weightIsOkay())
+      splitOrRoulette(neutron);
+  }
+  neutron.checkNeutron();
 }
 
 void
@@ -344,6 +365,7 @@ MCSlab::splitOrRoulette(Neutron & neutron)
 void
 MCSlab::implicitCapture(Neutron & neutron)
 {
+  assert(_implicit_capture == true);
   const unsigned int n_born = nNeutronsBorn(neutron);
   addFissionsToBank(n_born, neutron);
   _n_neutrons_born += n_born;

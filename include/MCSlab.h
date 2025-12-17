@@ -20,7 +20,8 @@ public:
          const unsigned int n_inactive,
          const std::vector<Region> regions,
          const std::vector<Cell> cells,
-         const bool implicit_capture);
+         const bool implicit_capture,
+         const bool use_weight_windows);
 
   /// method to run simulation
   void k_eigenvalue();
@@ -39,6 +40,7 @@ protected:
   const unsigned int _n_inactive;
 
   const bool _implicit_capture;
+  const bool _use_wws;
 
   /// @brief throws a random number to see if absorption occurred
   bool testAbsorption(const Neutron & neutron);

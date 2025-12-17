@@ -6,12 +6,15 @@
 #include <optional>
 #include <random>
 #include <deque>
+#include <algorithm>
+#include <iostream>
 
-Neutron::Neutron(double position, double mu, Cell * cell, std::optional<unsigned int> seed)
+Neutron::Neutron(
+    double position, double mu, Cell * cell, double weight, std::optional<unsigned int> seed)
   : _pos(position),
     _mu(mu),
     _cell(cell),
-    _weight(1.0),
+    _weight(weight),
     _rng(seed.has_value() ? UniformRNG(0, 1.0, seed.value()) : UniformRNG(0, 1.0))
 {
   _is_alive = true;
@@ -36,7 +39,7 @@ Neutron::distanceToEdge()
 }
 
 double
-Neutron::randomIsoAngle(UniformRNG rng)
+Neutron::randomIsoAngle(UniformRNG & rng)
 {
   return 2 * rng.generateRN() - 1; // sample between -1 and 1
 };
@@ -45,13 +48,14 @@ void
 Neutron::movePositionAndCell(const double new_position, std::vector<Cell> & cells)
 {
   _pos = new_position;
-  setCell(cells);
   checkNeutron();
+  setCell(cells);
 }
 
 void
 Neutron::movePositionWithinCell(const double new_position)
 {
+  checkNeutron();
   _pos = new_position;
 }
 
@@ -104,6 +108,8 @@ Neutron::checkNeutron()
   if (!(_pos <= _cell->xMax() && _pos >= _cell->xMin()))
     throw std::runtime_error("Neutron cell not set correctly! Position "
                              "not located within bounds!");
+  if (_weight < 1e-15)
+    throw std::runtime_error("Neutron weight was not set!");
 }
 
 bool
@@ -132,8 +138,18 @@ Neutron::split(std::deque<Neutron> & split_bank)
   // adapted from OpenMC, weight_windows.cpp
   // https://github.com/openmc-dev/openmc/blob/develop/src/weight_windows.cpp
 
-  unsigned int n_split = std::ceil(_weight / _cell->upperWeight());
+  unsigned int n_split =
+      std::max(static_cast<unsigned int>(std::ceil(_weight / _cell->upperWeight())),
+               static_cast<unsigned int>(1));
+  double split_weight = _weight / static_cast<double>(n_split);
   for (auto i = 0; i < n_split - 1; i++)
-    split_bank.push_back(Neutron(_pos, _mu, _cell, _weight / static_cast<double>(n_split)));
-  _weight /= static_cast<double>(n_split);
+    split_bank.push_back(Neutron(_pos, _mu, _cell, split_weight));
+  _weight = split_weight;
+  checkNeutron();
+}
+
+void
+Neutron::setMu(const double mu)
+{
+  _mu = mu;
 }

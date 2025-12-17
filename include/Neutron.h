@@ -13,7 +13,11 @@ class Neutron
   friend class NeutronTest;
 
 public:
-  Neutron(double position, double mu, Cell * cell, std::optional<unsigned int> seed = std::nullopt);
+  Neutron(double position,
+          double mu,
+          Cell * cell,
+          double weight,
+          std::optional<unsigned int> seed = std::nullopt);
 
   // move neutron to new position
   void movePositionAndCell(const double new_position, std::vector<Cell> & cells);
@@ -33,8 +37,10 @@ public:
   void roulette();
   void split(std::deque<Neutron> & split_bank);
 
+  void checkNeutron();
+
   /// @brief Set cosine of angle randomly assuming isotropic distribution
-  static double randomIsoAngle(UniformRNG rng);
+  static double randomIsoAngle(UniformRNG & rng);
 
   /// @brief Change weight oe neutron
   /// @param weight
@@ -46,6 +52,8 @@ public:
   bool isAlive() const { return _is_alive; }
   const double weight() const { return _weight; }
   const Cell & cell() const { return *_cell; }
+
+  void setMu(const double mu);
 
 private:
   double _pos;    // x-position
@@ -60,5 +68,4 @@ private:
   /// @brief Set region based on current location. Will not work on edge.
   /// @param regions
   void setCell(std::vector<Cell> & cells);
-  void checkNeutron();
 };
