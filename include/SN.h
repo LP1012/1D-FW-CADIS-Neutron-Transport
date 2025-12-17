@@ -8,7 +8,8 @@
 class SN
 {
 public:
-  SN(const std::vector<Cell> & cells,
+  SN(const std::string input_file_name,
+     const std::vector<Cell> & cells,
      const unsigned int GQ_order,
      const bool adjoint = false,
      const double k_start = 1.0);
@@ -21,6 +22,7 @@ public:
   const double k() const { return _k; }
 
 protected:
+  const std::string _input_file_name;
   std::vector<Cell> _cells; // these will be modified with the computed flux
   const unsigned int _num_cells;
   const unsigned int _gq_order;

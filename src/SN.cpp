@@ -3,6 +3,7 @@
 #include "Cell.h"
 #include "SNCell.h"
 #include "CellQuadrature.h"
+#include "utils.h"
 
 #include <stdexcept>
 #include <vector>
@@ -10,12 +11,19 @@
 #include <fstream>
 #include <iostream>
 #include <cassert>
+#include <string>
 
-SN::SN(const std::vector<Cell> & cells,
+SN::SN(const std::string input_file_name,
+       const std::vector<Cell> & cells,
        const unsigned int GQ_order,
        const bool adjoint,
        const double k_start)
-  : _cells(cells), _num_cells(cells.size()), _gq_order(GQ_order), _adjoint(adjoint), _k(k_start)
+  : _input_file_name(input_file_name),
+    _cells(cells),
+    _num_cells(cells.size()),
+    _gq_order(GQ_order),
+    _adjoint(adjoint),
+    _k(k_start)
 {
   if (_gq_order % 2 == 1.0)
     throw std::runtime_error("Gauss quadrature order cannot be odd!");
@@ -79,11 +87,13 @@ SN::run()
 void
 SN::exportToCsv()
 {
+  std::string outfile_name = _input_file_name;
+  removeSuffix(outfile_name, ".xml");
   std::string output = "SN_output";
   if (!_adjoint)
-    output += "_forward_flux.csv";
+    output += "_forward_flux_" + outfile_name + ".csv";
   else
-    output += "_adjoint_flux.csv";
+    output += "_adjoint_flux_" + outfile_name + ".csv";
 
   std::ofstream outfile;
   outfile.open(output);
