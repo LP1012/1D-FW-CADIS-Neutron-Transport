@@ -29,7 +29,7 @@ FWCADIS::setWeightWindows()
 void
 FWCADIS::runForwardFlux()
 {
-  SN simulation{_cells, _quadrature_order};
+  SN simulation{_input_file_name, _cells, _quadrature_order};
   simulation.run();
   _forward_flux = simulation.getScalarFlux();
   _forward_k_eff = simulation.k();
@@ -39,7 +39,7 @@ FWCADIS::runForwardFlux()
 void
 FWCADIS::runAdjointFlux()
 {
-  SN simulation{_cells, _quadrature_order, true, _forward_k_eff};
+  SN simulation{_input_file_name, _cells, _quadrature_order, true, _forward_k_eff};
   simulation.run();
   updateAdjointFlux(simulation);
 }
