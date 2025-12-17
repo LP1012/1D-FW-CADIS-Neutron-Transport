@@ -41,7 +41,7 @@ SN::run()
   printf("|   Iteration   |   k-eff error  |   flux error    |\n");
   printf("--------------------------------------------------\n");
   unsigned int safety = 0;
-  while (!_is_converged && safety <= 100)
+  while (!_is_converged && safety <= 500)
   {
     for (auto i = 0; i < _mus.size(); i++)
     {
@@ -61,8 +61,8 @@ SN::run()
       updateK(); // update k and scalar fluxes
     else
       computeScalarFluxAll();
-    updateSource();     // update source
-    normalizeSources(); // normalize to single source particle
+    updateSource(); // update source
+    // normalizeSources(); // normalize to single source particle
 
     // set new values to variables for convenience
     const double new_k = _k;
