@@ -22,6 +22,19 @@ FWCADIS::FWCADIS(const std::string input_file_name) : _input_file_name(input_fil
 void
 FWCADIS::setWeightWindows()
 {
+  // we first need to normalize the adjoint
+  double min_adjoint = 1.0;
+  for (auto & cell : _cells)
+  {
+    {
+      if (cell.adjointFlux() < min_adjoint)
+        min_adjoint = cell.adjointFlux();
+    }
+  }
+  // normalize
+  for (auto cell : _cells)
+    cell.setAdjointFlux(cell.adjointFlux() / min_adjoint);
+
   for (auto i = 0; i < _cells.size(); i++)
     _cells[i].createWeightWindow(_cells[i].adjointFlux(), _window_width);
 }

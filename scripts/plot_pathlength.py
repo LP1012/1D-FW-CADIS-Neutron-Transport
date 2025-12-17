@@ -201,14 +201,14 @@ plt.plot(
     linewidth=2.5,
 )
 
-# Uncertainty band (±1σ)
-plt.fill_between(
-    bin_centers,
-    lower,
-    upper,
-    alpha=0.3,
-    label=r"$\pm 1\sigma$",
-)
+# # Uncertainty band (±1σ)
+# plt.fill_between(
+#     bin_centers,
+#     lower,
+#     upper,
+#     alpha=0.3,
+#     label=r"$\pm 1\sigma$",
+# )
 
 plt.xlabel("x")
 plt.ylabel("Normalized Flux")
