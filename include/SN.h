@@ -56,4 +56,5 @@ protected:
                    const double new_k);
 
   void exportToCsv();
+  void normalizeFlux();
 };
