@@ -3,5 +3,5 @@
   <regions>
     <region xmin="-1" xmax="1" n_cells="10" Sigma_a="1" Sigma_s="2" nuSigma_f="2.4" source="0"/>
   </regions>
-  <settings n_particles="10000" n_generations="20" n_inactive="5" fw-cadis="true" quadrature-order="8" window-width="2" implicit-capture="false"/>
+  <settings n_particles="10000" n_generations="20" n_inactive="5" fw-cadis="false" quadrature-order="8" window-width="2" implicit-capture="false"/>
 </simulation>
