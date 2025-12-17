@@ -21,7 +21,7 @@ main(int argc, char * argv[])
   std::string input_filename = argv[1];
   FWCADIS simulation{input_filename};
 
-  if (simulation.useVR())
+  if (simulation.useFWCADIS())
   {
     simulation.runForwardFlux();
     simulation.runAdjointFlux();

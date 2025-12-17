@@ -63,8 +63,14 @@ FWCADIS::updateAdjointFlux(const SN & simulation)
 void
 FWCADIS::kEigenvalueMonteCarlo()
 {
-  MCSlab simulation(
-      _input_file_name, _n_particles, _n_generations, _n_inactive, _regions, _cells, _use_vr);
+  MCSlab simulation(_input_file_name,
+                    _n_particles,
+                    _n_generations,
+                    _n_inactive,
+                    _regions,
+                    _cells,
+                    _implicit_capture,
+                    _fw_cadis);
   simulation.k_eigenvalue();
 }
 
@@ -138,16 +144,17 @@ FWCADIS::readInput()
   auto * n_part_attrib = settings->FindAttribute("n_particles");
   auto * n_gen_attrib = settings->FindAttribute("n_generations");
   auto * n_inactive_attrib = settings->FindAttribute("n_inactive");
-  auto * use_vr = settings->FindAttribute("fw-cadis");
+  auto * fw_cadis = settings->FindAttribute("fw-cadis");
+  auto * ic = settings->FindAttribute("implicit-capture");
 
   _n_particles = getAttributeOrThrow<unsigned int>(settings, "n_particles");
   _n_generations = getAttributeOrThrow<unsigned int>(settings, "n_generations");
   _n_inactive = getAttributeOrThrow<unsigned int>(settings, "n_inactive");
 
-  if (!use_vr)
+  if (!fw_cadis)
     throw std::runtime_error("fw-cadis parameter not set to true or false in input file!");
-  _use_vr = use_vr->BoolValue();
-  if (use_vr)
+  _fw_cadis = fw_cadis->BoolValue();
+  if (fw_cadis)
   {
     auto * quad_order = settings->FindAttribute("quadrature-order");
     if (!quad_order)
@@ -158,4 +165,8 @@ FWCADIS::readInput()
     _quadrature_order = quad_order->UnsignedValue();
     _window_width = www->DoubleValue();
   }
+
+  if (!ic)
+    throw std::runtime_error("implicit-capture parameter not set to true or false!");
+  _implicit_capture = ic->BoolValue();
 }

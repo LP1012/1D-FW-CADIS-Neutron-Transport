@@ -21,13 +21,15 @@ MCSlab::MCSlab(const std::string input_file_name,
                const unsigned int n_inactive,
                const std::vector<Region> regions,
                const std::vector<Cell> cells,
-               const bool implicit_capture)
+               const bool implicit_capture,
+               const bool use_weight_windows)
   : _n_particles(n_particles),
     _n_generations(n_generations),
     _n_inactive(n_inactive),
     _regions(regions),
     _cells(cells),
     _implicit_capture(implicit_capture),
+    _use_wws(use_weight_windows),
     _rng()
 {
   _n_total_cells = _cells.size();
@@ -272,15 +274,17 @@ MCSlab::addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & ne
   if (n_neutrons_born == 0)
     return;
 
+  const double total_fission_weight = neutron.weight() * neutron.cell().nPerAbsorption();
+
+  const double new_weight =
+      total_fission_weight /
+      static_cast<double>(n_neutrons_born); // divide through to conserve weight
+
   for (auto i = 0; i < n_neutrons_born; i++)
   {
     double fission_neutron_mu = Neutron::randomIsoAngle(_rng);
     Cell * fission_cell = &_cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
-    // double new_weight = neutron.weight() / static_cast<double>(n_neutrons_born);
-    double new_weight = neutron.weight() * neutron.cell().absorptionProbability() /
-                        static_cast<double>(n_neutrons_born);
     Neutron fission_neutron = Neutron(neutron.pos(), fission_neutron_mu, fission_cell, new_weight);
-    // create neutron at location with isotropic angle
     _new_fission_bank.push_back(fission_neutron); // add to fission bank
   }
 }
@@ -295,8 +299,9 @@ MCSlab::nNeutronsBorn(const Neutron & neutron)
   // sample number of fission
   double production_rn = _rng.generateRN(); // generate random number
   unsigned int n_born = 0;                  // initialize number of neutrons born
-  double neutrons_expected =
-      neutron.cell().nPerAbsorption() * neutron.weight(); // expected neutrons from collision
+  // double neutrons_expected =
+  //     neutron.cell().nPerAbsorption() * neutron.weight(); // expected neutrons from collision
+  double neutrons_expected = neutron.cell().nPerAbsorption() * neutron.weight();
 
   if (production_rn < neutrons_expected - std::floor(neutrons_expected))
     n_born = std::ceil(neutrons_expected);
@@ -336,7 +341,7 @@ MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
     return;
   }
   neutron.movePositionAndCell(x_edge, _cells);
-  if (_implicit_capture)
+  if (_use_wws)
   {
     if (!neutron.weightIsOkay())
       splitOrRoulette(neutron);
@@ -356,6 +361,7 @@ MCSlab::splitOrRoulette(Neutron & neutron)
 void
 MCSlab::implicitCapture(Neutron & neutron)
 {
+  assert(_implicit_capture == true);
   const unsigned int n_born = nNeutronsBorn(neutron);
   addFissionsToBank(n_born, neutron);
   _n_neutrons_born += n_born;

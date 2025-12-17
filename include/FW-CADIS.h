@@ -17,12 +17,14 @@ public:
   void setWeightWindows();
   void kEigenvalueMonteCarlo();
 
-  bool useVR() const { return _use_vr; }
+  bool useIC() const { return _implicit_capture; }
+  bool useFWCADIS() const { return _fw_cadis; }
 
 private:
   const std::string _input_file_name;
   unsigned int _n_total_cells;
-  bool _use_vr;
+  bool _fw_cadis;
+  bool _implicit_capture;
   double _window_width;
 
   std::vector<Region> _regions;
