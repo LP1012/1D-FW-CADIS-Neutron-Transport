@@ -159,6 +159,8 @@ MCSlab::k_eigenvalue()
     {
       _new_fission_bank.pop_front();
     }
+    std::mt19937 gen;
+    std::shuffle(_new_fission_bank.begin(), _new_fission_bank.end(), gen);
 
     assert(_new_fission_bank.size() <= _n_particles);
 
@@ -216,7 +218,6 @@ MCSlab::runHistory(Neutron & neutron,
     {
       double collision_location =
           neutron.pos() + distanceToCollision * neutron.mu(); // calculate where collision occurred
-      bool absorbed = testAbsorption(neutron);                // did an absorption occur?
 
       // tally collision position and path traveled
       recordPathLenTally(
@@ -230,6 +231,7 @@ MCSlab::runHistory(Neutron & neutron,
         implicitCapture(neutron);
       else
       {
+        bool absorbed = testAbsorption(neutron); // did an absorption occur?
         if (absorbed)
         {
           source_bins[collisionIndex(neutron)] += 1;
@@ -328,8 +330,11 @@ MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
     return;
   }
   neutron.movePositionAndCell(x_edge, _cells);
-  if (!neutron.weightIsOkay())
-    splitOrRoulette(neutron);
+  if (_implicit_capture)
+  {
+    if (!neutron.weightIsOkay())
+      splitOrRoulette(neutron);
+  }
 }
 
 void
