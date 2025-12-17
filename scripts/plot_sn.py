@@ -35,6 +35,8 @@ adjoint_pos = dfa["position"].to_numpy()
 
 foward_flux = dff["scalar_flux"].to_numpy()
 adjoint_flux = dfa["scalar_flux"].to_numpy()
+importance_map = 1 / adjoint_flux
+importance_map = importance_map / max(importance_map)
 
 plt.figure(figsize=(8, 6))
 
@@ -48,6 +50,12 @@ plt.plot(
     adjoint_pos,
     adjoint_flux,
     label="Adjoint Flux",
+    linewidth=2.5,
+)
+plt.plot(
+    adjoint_pos,
+    importance_map,
+    label="Normalized Importance Map",
     linewidth=2.5,
 )
 
