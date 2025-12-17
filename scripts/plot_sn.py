@@ -38,7 +38,6 @@ adjoint_flux = dfa["scalar_flux"].to_numpy()
 
 plt.figure(figsize=(8, 6))
 
-# Mean flux
 plt.plot(
     forward_pos,
     foward_flux,
@@ -51,15 +50,6 @@ plt.plot(
     label="Adjoint Flux",
     linewidth=2.5,
 )
-
-# # Uncertainty band (±1σ)
-# plt.fill_between(
-#     bin_centers,
-#     lower,
-#     upper,
-#     alpha=0.3,
-#     label=r"$\pm 1\sigma$",
-# )
 
 plt.xlabel("x")
 plt.ylabel("Normalized Flux")

@@ -34,7 +34,10 @@ regions = pd.read_csv(regions_file)
 # ---------------------------------------------------------------------
 # Read XML settings (n_particles, n_generations, n_inactive)
 # ---------------------------------------------------------------------
-sim_data = pd.read_xml(xml_file, xpath=".//settings")
+# sim_data = pd.read_xml(xml_file, xpath=".//settings")
+with open(xml_file, "rb") as f:
+    sim_data = pd.read_xml(f, xpath=".//settings")
+
 n_particles = int(sim_data["n_particles"].iloc[0])
 n_generations = int(sim_data["n_generations"].iloc[0])
 n_inactive = int(sim_data["n_inactive"].iloc[0])
