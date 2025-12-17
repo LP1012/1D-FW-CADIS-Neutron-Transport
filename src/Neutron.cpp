@@ -19,7 +19,6 @@ Neutron::Neutron(double position,
     _rng(seed.has_value() ? UniformRNG(0, 1.0, seed.value()) : UniformRNG(0, 1.0))
 {
   _is_alive = true;
-  _weight = cell->targetWeight();
   checkNeutron();
 }
 
