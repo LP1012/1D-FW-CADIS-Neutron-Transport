@@ -276,7 +276,8 @@ MCSlab::addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & ne
   {
     double fission_neutron_mu = Neutron::randomIsoAngle(_rng);
     Cell * fission_cell = &_cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
-    double new_weight = neutron.weight() / static_cast<double>(n_neutrons_born);
+    // double new_weight = neutron.weight() / static_cast<double>(n_neutrons_born);
+    double new_weight = 1.0;
     Neutron fission_neutron = Neutron(neutron.pos(), fission_neutron_mu, fission_cell, new_weight);
     // create neutron at location with isotropic angle
     _new_fission_bank.push_back(fission_neutron); // add to fission bank
@@ -301,7 +302,7 @@ MCSlab::nNeutronsBorn(const Neutron & neutron)
   else
     n_born = std::floor(neutrons_expected);
 
-  return n_born;
+  return static_cast<unsigned int>(n_born);
 }
 
 void
