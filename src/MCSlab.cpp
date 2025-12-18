@@ -534,18 +534,4 @@ MCSlab::exportBinnedTallies()
   {
     fout << _cells[i].cellCenter() << "," << flux_col[i] << "," << flux_pl[i] << std::endl;
   }
-
-  // // explort flux values
-  // for (auto flux_val : flux_pl)
-  //   fout << flux_val << ",";
-  // fout << "\n";
-
-  // for (auto flux_val : flux_col)
-  //   fout << flux_val << ",";
-  // fout << "\n";
-
-  // // export cell centers
-  // for (auto & cell : _cells)
-  //   fout << cell.cellCenter() << ",";
-  // fout << "\n";
 }
