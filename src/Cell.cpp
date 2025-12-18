@@ -17,6 +17,7 @@ Cell::Cell(const double xmin,
   _abs_prob = _Sigma_a / _Sigma_t;
   _pathlength_bin = 0;
   _collision_bin = 0;
+  _pathlength_ss = 0;
 }
 
 double

@@ -501,7 +501,9 @@ MCSlab::updatePathLengths(const double x_start,
                           const double weight,
                           const unsigned int cell_index)
 {
-  _cells[cell_index].addToPathlength(std::abs((x_end - x_start) / mu) * weight);
+  const double new_pl = std::abs((x_end - x_start) / mu) * weight;
+  _cells[cell_index].addToPathlength(new_pl);
+  _cells[cell_index].addPathlengthSS(new_pl * new_pl);
 }
 
 void
@@ -523,17 +525,26 @@ MCSlab::exportBinnedTallies()
 
   std::vector<double> flux_pl;
   std::vector<double> flux_col;
+  std::vector<double> ss_pl;
+  std::vector<double> variance;
 
+  unsigned int count = 0;
   for (auto & cell : _cells)
   {
     flux_pl.push_back(cell.pathlength() / cell.cellWidth() / n_active_particles);
     flux_col.push_back(cell.collision() / cell.cellWidth() / n_active_particles / cell.sigmaT());
+    ss_pl.push_back(cell.pathlengthSS() / cell.cellWidth() / cell.cellWidth() / n_active_particles);
+    variance.push_back(n_active_particles / (n_active_particles - 1) *
+                       (ss_pl[count] - std::pow(flux_pl[count], 2)));
+    count++;
   }
 
-  fout << "position,collision_estimate,pathlength" << std::endl;
+  fout << "position,collision_estimate,pathlength,pathlength_variance,pathlength_std,dx"
+       << std::endl;
 
   for (auto i = 0; i < flux_pl.size(); i++)
   {
-    fout << _cells[i].cellCenter() << "," << flux_col[i] << "," << flux_pl[i] << std::endl;
+    fout << _cells[i].cellCenter() << "," << flux_col[i] << "," << flux_pl[i] << "," << variance[i]
+         << "," << std::sqrt(variance[i]) << "," << _cells[i].cellWidth() << std::endl;
   }
 }

@@ -19,6 +19,7 @@ public:
   void setAdjointFlux(const double adjoint_flux) { _adjoint_flux = adjoint_flux; };
   void addToPathlength(const double val) { _pathlength_bin += val; }
   void addToCollisions(const double val) { _collision_bin += val; }
+  void addPathlengthSS(const double val) { _pathlength_ss += val; }
 
   static double randomPositionInCell(const Cell cell, UniformRNG rng);
 
@@ -34,6 +35,7 @@ public:
   const double absorptionProbability() const { return _abs_prob; }
   const double pathlength() const { return _pathlength_bin; }
   const double collision() const { return _collision_bin; }
+  const double pathlengthSS() const { return _pathlength_ss; }
 
 private:
   double _n_per_abs;
@@ -50,4 +52,5 @@ private:
 
   double _pathlength_bin;
   double _collision_bin;
+  double _pathlength_ss; // sum of squares
 };
