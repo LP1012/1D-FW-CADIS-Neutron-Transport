@@ -108,7 +108,8 @@ MCSlab::k_eigenvalue()
   printf("    Particles per Generation: %d\n", _n_particles);
   printf("    Number of Generations:    %d\n", _n_generations);
   printf("        Inactive Cycles:      %d\n", _n_inactive);
-  printf("        Active Cycles:        %d\n\n", _n_generations - _n_inactive);
+  printf("        Active Cycles:        %d\n", _n_generations - _n_inactive);
+  printf("        Using FW-CADIS:       %s\n\n", _use_wws ? "True" : "False");
 
   if (_export_raw_tallies)
   {
@@ -534,8 +535,8 @@ MCSlab::exportBinnedTallies()
     flux_pl.push_back(cell.pathlength() / cell.cellWidth() / n_active_particles);
     flux_col.push_back(cell.collision() / cell.cellWidth() / n_active_particles / cell.sigmaT());
     ss_pl.push_back(cell.pathlengthSS() / cell.cellWidth() / cell.cellWidth() / n_active_particles);
-    variance.push_back(n_active_particles / (n_active_particles - 1) *
-                       (ss_pl[count] - std::pow(flux_pl[count], 2)));
+    variance.push_back((ss_pl[count] - std::pow(flux_pl[count], 2)) /
+                       n_active_particles); // this is the variance of the sample mean
     count++;
   }
 
