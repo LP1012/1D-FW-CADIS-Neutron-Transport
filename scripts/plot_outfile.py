@@ -38,9 +38,9 @@ for std, flux in zip(pl_std, pl):
     relative_error.append(std / flux)
 
 
-integrated_variance = 0
-for var, dx in zip(pl_var, dxs):
-    integrated_variance += var * dx
+integrated_realtive_unc = 0
+for ru, dx in zip(relative_error, dxs):
+    integrated_realtive_unc += ru * dx
 
 upper = pl + pl_std
 lower = pl - pl_std
@@ -62,18 +62,17 @@ plt.plot(pos, col)
 plt.xlabel("x")
 plt.ylabel("Normalized Flux")
 plt.ylim(bottom=0)
-plt.legend()
 plt.title(f"Collision Estimate of Flux for {basename}")
 plt.savefig(f"{basename}_collsion_from_bins.png")
 plt.close()
 
 plt.figure()
 plt.plot(pos, relative_error)
-plt.title(f"Relative Error for {basename}")
+plt.title(f"Relative Uncertainty for {basename}")
 plt.xlabel("x")
-plt.ylabel("Relative Error")
+plt.ylabel("Relative Uncertainty")
 plt.yscale("log")
-plt.savefig(f"{basename}_relative_error.png")
+plt.savefig(f"{basename}_relative_unc.png")
 plt.close()
 
-print(f"Integrated variance: {integrated_variance}")
+print(f"Integrated relative uncertainty: {integrated_realtive_unc}")
