@@ -289,13 +289,15 @@ MCSlab::addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & ne
     return;
 
   const double weight_lost_in_collision =
-      !_implicit_capture ? 1.0 : neutron.weight() * neutron.cell().absorptionProbability();
+      !_implicit_capture ? neutron.weight()
+                         : neutron.weight() * neutron.cell().absorptionProbability();
 
   for (auto i = 0; i < n_neutrons_born; i++)
   {
     double fission_neutron_mu = Neutron::randomIsoAngle(_rng);
     Cell * fission_cell = &_cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
-    Neutron fission_neutron = Neutron(neutron.pos(), fission_neutron_mu, fission_cell, 1.0);
+    Neutron fission_neutron =
+        Neutron(neutron.pos(), fission_neutron_mu, fission_cell, weight_lost_in_collision);
     _new_fission_bank.push_back(fission_neutron); // add to fission bank
   }
 }
