@@ -306,11 +306,9 @@ SN::updateSource()
     double scattering_xs = cell.sigmaS();
     double nu_sigma_f = cell.nuSigmaF();
     double new_source =
-        !_adjoint
-            ? (flux * (scattering_xs + 1.0 / _k * nu_sigma_f) + cell.volumetricSource()) /
-                  (4.0 * M_PI)
-            : (flux * scattering_xs + (flux * 1.0 / _k * nu_sigma_f + cell.volumetricSource())) /
-                  (4.0 * M_PI);
+        !_adjoint ? (flux * (scattering_xs + 1.0 / _k * nu_sigma_f) + cell.volumetricSource()) /
+                        (4.0 * M_PI)
+                  : (flux * scattering_xs + cell.volumetricSource()) / (4.0 * M_PI);
     cell.setSource(new_source);
   }
 }
