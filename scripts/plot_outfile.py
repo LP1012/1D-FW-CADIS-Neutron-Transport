@@ -33,6 +33,11 @@ pl_var = df["pathlength_variance"].to_numpy()
 pl_std = df["pathlength_std"].to_numpy()
 dxs = df["dx"].to_numpy()
 
+relative_error = []
+for std, flux in zip(pl_std, pl):
+    relative_error.append(std / flux)
+
+
 integrated_variance = 0
 for var, dx in zip(pl_var, dxs):
     integrated_variance += var * dx
@@ -51,6 +56,15 @@ plt.ylim(bottom=0)
 plt.legend()
 plt.title(f"Tallied results for {basename}")
 plt.savefig(f"{basename}_tallies.png")
+plt.close()
+
+plt.figure()
+plt.plot(pos, relative_error)
+plt.title(f"Relative Error for {basename}")
+plt.xlabel("x")
+plt.ylabel("Relative Error")
+plt.yscale("log")
+plt.savefig(f"{basename}_relative_error.png")
 plt.close()
 
 print(f"Integrated variance: {integrated_variance}")
