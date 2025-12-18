@@ -15,6 +15,8 @@ Cell::Cell(const double xmin,
   _n_per_abs = _nu_Sigma_f / _Sigma_a;
   _abs_ratio = _Sigma_a / _Sigma_t;
   _abs_prob = _Sigma_a / _Sigma_t;
+  _pathlength_bin = 0;
+  _collision_bin = 0;
 }
 
 double

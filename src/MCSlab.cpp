@@ -36,6 +36,7 @@ MCSlab::MCSlab(const std::string input_file_name,
   _n_total_cells = _cells.size();
   _n_fissionable_regions = 0;
   createFissionCells();
+  _export_raw_tallies = false; // change as needed for debugging
 }
 
 void
@@ -109,7 +110,10 @@ MCSlab::k_eigenvalue()
   printf("        Inactive Cycles:      %d\n", _n_inactive);
   printf("        Active Cycles:        %d\n\n", _n_generations - _n_inactive);
 
-  initializeOutput();
+  if (_export_raw_tallies)
+  {
+    initializeOutput();
+  }
 
   printf("----------------------------------------------------------\n");
   printf("| Generation | Shannon Entropy |    keff    |  std_dev   |\n");
@@ -188,6 +192,7 @@ MCSlab::k_eigenvalue()
     }
   }
 
+  exportBinnedTallies();
   printf("----------------------------------------------------------\n");
   printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
   printf("Simulation complete. :-)\n\n");
@@ -233,6 +238,11 @@ MCSlab::runHistory(Neutron & neutron,
       recordPathLenTally(
           generation_num, neutron.pos(), collision_location, neutron.mu(), neutron.weight());
       recordCollisionTally(generation_num, collision_location, neutron.weight());
+
+      unsigned int cell_index = Cell::cellIndex(neutron.pos(), neutron.mu(), _cells);
+      updatePathLengths(
+          neutron.pos(), collision_location, neutron.mu(), neutron.weight(), cell_index);
+      updateCollisions(neutron.weight(), cell_index);
 
       // shift neutron position
       neutron.movePositionWithinCell(collision_location);
@@ -338,6 +348,7 @@ MCSlab::neutronEscapesCell(Neutron & neutron, const unsigned int generation)
   const int dir = (mu > 0) ? +1 : -1;
   double x_edge = (dir > 0) ? start_cell.xMax() : start_cell.xMin();     //  put on edge
   recordPathLenTally(generation, start_x, x_edge, mu, neutron.weight()); // tally
+  updatePathLengths(start_x, x_edge, neutron.mu(), neutron.weight(), start_cell_index);
 
   //  if at end of domain, kill
   if ((dir < 0 && start_cell_index == 0) || (dir > 0 && start_cell_index == _cells.size() - 1))
@@ -447,7 +458,7 @@ MCSlab::recordCollisionTally(const int current_generation,
                              const double location,
                              const double weight)
 {
-  if (current_generation > _n_inactive - 1)
+  if (current_generation > _n_inactive - 1 && _export_raw_tallies)
   {
     _collision_outfile << location << "," << weight << std::endl;
   }
@@ -460,7 +471,7 @@ MCSlab::recordPathLenTally(const int current_generation,
                            const double mu,
                            const double weight)
 {
-  if (current_generation > _n_inactive - 1)
+  if (current_generation > _n_inactive - 1 && _export_raw_tallies)
   {
     double pathlength = (end_pos - start_pos) / mu; // check this!
     _pathlength_outfile << start_pos << "," << end_pos << "," << mu << "," << pathlength << ","
@@ -484,4 +495,62 @@ MCSlab::exportRegionsToCsv(const std::string & outfile)
                    << region.nuSigF() << std::endl;
 
   printf("Regions exported to %s\n\n", region_outfile_name.c_str());
+}
+
+void
+MCSlab::updatePathLengths(const double x_start,
+                          const double x_end,
+                          const double mu,
+                          const double weight,
+                          const unsigned int cell_index)
+{
+  _cells[cell_index].addToPathlength(std::abs((x_end - x_start) / mu) * weight);
+}
+
+void
+MCSlab::updateCollisions(const double weight, const unsigned int cell_index)
+{
+  _cells[cell_index].addToCollisions(weight);
+}
+
+void
+MCSlab::exportBinnedTallies()
+{
+  const double n_active_particles = _n_particles * (_n_generations - _n_inactive);
+  std::fstream fout;
+  std::string outfile_name = _input_file_name;
+  removeSuffix(outfile_name, ".xml");
+  outfile_name += "_binned_tallies.csv"; // trim output filename
+
+  fout.open(outfile_name, std::ios::out | std::ios::trunc);
+
+  std::vector<double> flux_pl;
+  std::vector<double> flux_col;
+
+  for (auto & cell : _cells)
+  {
+    flux_pl.push_back(cell.pathlength() / cell.cellWidth() / n_active_particles);
+    flux_col.push_back(cell.collision() / cell.cellWidth() / n_active_particles / cell.sigmaT());
+  }
+
+  fout << "position,collision_estimate,pathlength" << std::endl;
+
+  for (auto i = 0; i < flux_pl.size(); i++)
+  {
+    fout << _cells[i].cellCenter() << "," << flux_col[i] << "," << flux_pl[i] << std::endl;
+  }
+
+  // // explort flux values
+  // for (auto flux_val : flux_pl)
+  //   fout << flux_val << ",";
+  // fout << "\n";
+
+  // for (auto flux_val : flux_col)
+  //   fout << flux_val << ",";
+  // fout << "\n";
+
+  // // export cell centers
+  // for (auto & cell : _cells)
+  //   fout << cell.cellCenter() << ",";
+  // fout << "\n";
 }

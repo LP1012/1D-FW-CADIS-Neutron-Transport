@@ -41,7 +41,7 @@ SN::run()
   printf("|   Iteration   |   k-eff error  |   flux error    |\n");
   printf("--------------------------------------------------\n");
   unsigned int safety = 0;
-  while (!_is_converged && safety <= 500)
+  while (!_is_converged && safety < 500)
   {
     for (auto i = 0; i < _mus.size(); i++)
     {

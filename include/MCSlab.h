@@ -41,6 +41,7 @@ protected:
 
   const bool _implicit_capture;
   const bool _use_wws;
+  bool _export_raw_tallies;
 
   /// @brief throws a random number to see if absorption occurred
   bool testAbsorption(const Neutron & neutron);
@@ -116,4 +117,12 @@ protected:
   void implicitCapture(Neutron & neutron);
   unsigned int nNeutronsBorn(const Neutron & neutron);
   void addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & neutron);
+
+  void updatePathLengths(const double x_start,
+                         const double x_end,
+                         const double mu,
+                         const double weight,
+                         const unsigned int cell_index);
+  void updateCollisions(const double weight, const unsigned int cell_index);
+  void exportBinnedTallies();
 };

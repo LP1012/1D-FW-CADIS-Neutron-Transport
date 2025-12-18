@@ -17,6 +17,8 @@ public:
   void createWeightWindow(const double fwcadis_adjoint_flux, const double window_width);
   void setForwardFlux(const double forward_flux) { _forward_flux = forward_flux; };
   void setAdjointFlux(const double adjoint_flux) { _adjoint_flux = adjoint_flux; };
+  void addToPathlength(const double val) { _pathlength_bin += val; }
+  void addToCollisions(const double val) { _collision_bin += val; }
 
   static double randomPositionInCell(const Cell cell, UniformRNG rng);
 
@@ -30,6 +32,8 @@ public:
   const double absorptionRatio() const { return _abs_ratio; }
   const double nPerAbsorption() const { return _n_per_abs; }
   const double absorptionProbability() const { return _abs_prob; }
+  const double pathlength() const { return _pathlength_bin; }
+  const double collision() const { return _collision_bin; }
 
 private:
   double _n_per_abs;
@@ -43,4 +47,7 @@ private:
 
   double _forward_flux;
   double _adjoint_flux;
+
+  double _pathlength_bin;
+  double _collision_bin;
 };
