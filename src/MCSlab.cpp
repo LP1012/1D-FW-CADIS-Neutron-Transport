@@ -285,11 +285,7 @@ MCSlab::addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & ne
   {
     double fission_neutron_mu = Neutron::randomIsoAngle(_rng);
     Cell * fission_cell = &_cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
-    Neutron fission_neutron =
-        Neutron(neutron.pos(),
-                fission_neutron_mu,
-                fission_cell,
-                weight_lost_in_collision / static_cast<double>(n_neutrons_born));
+    Neutron fission_neutron = Neutron(neutron.pos(), fission_neutron_mu, fission_cell, 1.0);
     _new_fission_bank.push_back(fission_neutron); // add to fission bank
   }
 }
@@ -304,9 +300,8 @@ MCSlab::nNeutronsBorn(const Neutron & neutron)
   // sample number of fission
   double production_rn = _rng.generateRN(); // generate random number
   unsigned int n_born = 0;                  // initialize number of neutrons born
-  // double neutrons_expected =
-  //     neutron.cell().nPerAbsorption() * neutron.weight(); // expected neutrons from collision
-  double neutrons_expected = neutron.cell().nPerAbsorption() * neutron.weight();
+  double neutrons_expected =
+      neutron.cell().nPerAbsorption() * neutron.weight(); // expected neutrons from collision
 
   if (production_rn < neutrons_expected - std::floor(neutrons_expected))
     n_born = std::ceil(neutrons_expected);
