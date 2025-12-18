@@ -533,17 +533,24 @@ MCSlab::exportBinnedTallies()
     flux_col.push_back(cell.collision() / cell.cellWidth() / n_active_particles / cell.sigmaT());
   }
 
-  // explort flux values
-  for (auto flux_val : flux_pl)
-    fout << flux_val << ",";
-  fout << "\n";
+  fout << "position,collision_estimate,pathlength" << std::endl;
 
-  for (auto flux_val : flux_col)
-    fout << flux_val << ",";
-  fout << "\n";
+  for (auto i = 0; i < flux_pl.size(); i++)
+  {
+    fout << _cells[i].cellCenter() << "," << flux_col[i] << "," << flux_pl[i] << std::endl;
+  }
 
-  // export cell centers
-  for (auto & cell : _cells)
-    fout << cell.cellCenter() << ",";
-  fout << "\n";
+  // // explort flux values
+  // for (auto flux_val : flux_pl)
+  //   fout << flux_val << ",";
+  // fout << "\n";
+
+  // for (auto flux_val : flux_col)
+  //   fout << flux_val << ",";
+  // fout << "\n";
+
+  // // export cell centers
+  // for (auto & cell : _cells)
+  //   fout << cell.cellCenter() << ",";
+  // fout << "\n";
 }
