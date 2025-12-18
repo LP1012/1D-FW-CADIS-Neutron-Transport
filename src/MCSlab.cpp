@@ -192,6 +192,7 @@ MCSlab::k_eigenvalue()
     }
   }
 
+  exportBinnedTallies();
   printf("----------------------------------------------------------\n");
   printf("Final k-eff = %.6f +/- %.6f\n\n", _k_eff, _k_std);
   printf("Simulation complete. :-)\n\n");
@@ -241,7 +242,7 @@ MCSlab::runHistory(Neutron & neutron,
       unsigned int cell_index = Cell::cellIndex(neutron.pos(), neutron.mu(), _cells);
       updatePathLengths(
           neutron.pos(), collision_location, neutron.mu(), neutron.weight(), cell_index);
-      updateCollisions(neutron.weight(), neutron.cell().sigmaT(), cell_index);
+      updateCollisions(neutron.weight(), cell_index);
 
       // shift neutron position
       neutron.movePositionWithinCell(collision_location);
@@ -507,18 +508,19 @@ MCSlab::updatePathLengths(const double x_start,
 }
 
 void
-MCSlab::updateCollisions(const double weight, const double Sigma_t, const unsigned int cell_index)
+MCSlab::updateCollisions(const double weight, const unsigned int cell_index)
 {
-  _cells[cell_index].addToCollisions(weight / Sigma_t);
+  _cells[cell_index].addToCollisions(weight);
 }
 
 void
 MCSlab::exportBinnedTallies()
 {
+  const double n_active_particles = _n_particles * (_n_generations - _n_inactive);
   std::fstream fout;
   std::string outfile_name = _input_file_name;
   removeSuffix(outfile_name, ".xml");
-  outfile_name += "_out.csv"; // trim output filename
+  outfile_name += "_binned_tallies.csv"; // trim output filename
 
   fout.open(outfile_name, std::ios::out | std::ios::trunc);
 
@@ -527,8 +529,8 @@ MCSlab::exportBinnedTallies()
 
   for (auto & cell : _cells)
   {
-    flux_pl.push_back(cell.pathlength());
-    flux_col.push_back(cell.collision());
+    flux_pl.push_back(cell.pathlength() / cell.cellWidth() / n_active_particles);
+    flux_col.push_back(cell.collision() / cell.cellWidth() / n_active_particles / cell.sigmaT());
   }
 
   // explort flux values

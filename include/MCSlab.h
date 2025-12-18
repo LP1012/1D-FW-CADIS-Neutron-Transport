@@ -123,6 +123,6 @@ protected:
                          const double mu,
                          const double weight,
                          const unsigned int cell_index);
-  void updateCollisions(const double weight, const double Sigma_t, const unsigned int cell_index);
+  void updateCollisions(const double weight, const unsigned int cell_index);
   void exportBinnedTallies();
 };
