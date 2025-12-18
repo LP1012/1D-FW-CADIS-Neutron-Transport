@@ -12,6 +12,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <cassert>
 
 FWCADIS::FWCADIS(const std::string input_file_name) : _input_file_name(input_file_name)
 {
@@ -22,21 +23,22 @@ FWCADIS::FWCADIS(const std::string input_file_name) : _input_file_name(input_fil
 void
 FWCADIS::setWeightWindows()
 {
-  // we first need to normalize the adjoint
-  double min_adjoint = 1.0;
+  // start by normalizing so that the max 1/adjoint is 1.0
+  std::vector<double> adjoints;
+  double max_inverse = 0;
   for (auto & cell : _cells)
   {
-    {
-      if (cell.adjointFlux() < min_adjoint)
-        min_adjoint = cell.adjointFlux();
-    }
+    if (1.0 / cell.adjointFlux() > max_inverse)
+      max_inverse += 1.0 / cell.adjointFlux();
   }
-  // normalize
-  for (auto cell : _cells)
-    cell.setAdjointFlux(cell.adjointFlux() / min_adjoint);
 
   for (auto i = 0; i < _cells.size(); i++)
+  {
+    double current_adjoint = _cells[i].adjointFlux();
+    _cells[i].setAdjointFlux(current_adjoint * max_inverse);
+    assert(1.0 / _cells[i].adjointFlux() <= 1.0);
     _cells[i].createWeightWindow(_cells[i].adjointFlux(), _window_width);
+  }
 }
 
 void
