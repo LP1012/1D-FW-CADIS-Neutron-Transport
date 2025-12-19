@@ -40,7 +40,7 @@ FWCADIS::setWeightWindows()
     double current_adjoint = _cells[i].adjointFlux();
     _cells[i].setAdjointFlux(current_adjoint / min_adjoint);
     _cells[i].createWeightWindow(_cells[i].adjointFlux(), _window_width);
-    std::cout << "target weight = " << _cells[i].targetWeight() << std::endl;
+    // std::cout << "target weight = " << _cells[i].targetWeight() << std::endl;
   }
 }
 
