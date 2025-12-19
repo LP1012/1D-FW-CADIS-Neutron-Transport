@@ -20,7 +20,6 @@ public:
          const unsigned int n_inactive,
          const std::vector<Region> regions,
          const std::vector<Cell> cells,
-         const bool implicit_capture,
          const bool use_weight_windows);
 
   /// method to run simulation
@@ -39,7 +38,6 @@ protected:
   /// number of inactive cycles
   const unsigned int _n_inactive;
 
-  const bool _implicit_capture;
   const bool _use_wws;
   bool _export_raw_tallies;
 

@@ -73,14 +73,8 @@ FWCADIS::updateAdjointFlux(const SN & simulation)
 void
 FWCADIS::kEigenvalueMonteCarlo()
 {
-  MCSlab simulation(_input_file_name,
-                    _n_particles,
-                    _n_generations,
-                    _n_inactive,
-                    _regions,
-                    _cells,
-                    _implicit_capture,
-                    _fw_cadis);
+  MCSlab simulation(
+      _input_file_name, _n_particles, _n_generations, _n_inactive, _regions, _cells, _fw_cadis);
   simulation.k_eigenvalue();
 }
 
@@ -155,7 +149,7 @@ FWCADIS::readInput()
   auto * n_gen_attrib = settings->FindAttribute("n_generations");
   auto * n_inactive_attrib = settings->FindAttribute("n_inactive");
   auto * fw_cadis = settings->FindAttribute("fw-cadis");
-  auto * ic = settings->FindAttribute("implicit-capture");
+  // auto * ic = settings->FindAttribute("implicit-capture");
 
   _n_particles = getAttributeOrThrow<unsigned int>(settings, "n_particles");
   _n_generations = getAttributeOrThrow<unsigned int>(settings, "n_generations");
@@ -176,7 +170,7 @@ FWCADIS::readInput()
     _window_width = www->DoubleValue();
   }
 
-  if (!ic)
-    throw std::runtime_error("implicit-capture parameter not set to true or false!");
-  _implicit_capture = ic->BoolValue();
+  // if (!ic)
+  //   throw std::runtime_error("implicit-capture parameter not set to true or false!");
+  // _implicit_capture = ic->BoolValue();
 }

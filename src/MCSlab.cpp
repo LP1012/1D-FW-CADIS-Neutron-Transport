@@ -21,7 +21,6 @@ MCSlab::MCSlab(const std::string input_file_name,
                const unsigned int n_inactive,
                const std::vector<Region> regions,
                const std::vector<Cell> cells,
-               const bool implicit_capture,
                const bool use_weight_windows)
   : _input_file_name(input_file_name),
     _n_particles(n_particles),
@@ -29,7 +28,6 @@ MCSlab::MCSlab(const std::string input_file_name,
     _n_inactive(n_inactive),
     _regions(regions),
     _cells(cells),
-    _implicit_capture(implicit_capture),
     _use_wws(use_weight_windows),
     _rng()
 {
@@ -248,19 +246,14 @@ MCSlab::runHistory(Neutron & neutron,
       // shift neutron position
       neutron.movePositionWithinCell(collision_location);
 
-      if (_implicit_capture)
-        implicitCapture(neutron);
-      else
+      bool absorbed = testAbsorption(neutron); // did an absorption occur?
+      if (absorbed)
       {
-        bool absorbed = testAbsorption(neutron); // did an absorption occur?
-        if (absorbed)
-        {
-          source_bins[collisionIndex(neutron)] += 1;
-          absorption(neutron);
-        }
-        else
-          scatter(neutron);
+        source_bins[collisionIndex(neutron)] += 1;
+        absorption(neutron);
       }
+      else
+        scatter(neutron);
     }
   }
 }
@@ -289,16 +282,12 @@ MCSlab::addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & ne
   if (n_neutrons_born == 0)
     return;
 
-  const double weight_lost_in_collision =
-      !_implicit_capture ? neutron.weight()
-                         : neutron.weight() * neutron.cell().absorptionProbability();
-
   for (auto i = 0; i < n_neutrons_born; i++)
   {
     double fission_neutron_mu = Neutron::randomIsoAngle(_rng);
     Cell * fission_cell = &_cells[Cell::cellIndex(neutron.pos(), fission_neutron_mu, _cells)];
     Neutron fission_neutron =
-        Neutron(neutron.pos(), fission_neutron_mu, fission_cell, weight_lost_in_collision);
+        Neutron(neutron.pos(), fission_neutron_mu, fission_cell, neutron.weight());
     _new_fission_bank.push_back(fission_neutron); // add to fission bank
   }
 }
@@ -370,19 +359,6 @@ MCSlab::splitOrRoulette(Neutron & neutron)
     neutron.roulette();
   else
     neutron.split(_split_bank);
-}
-
-void
-MCSlab::implicitCapture(Neutron & neutron)
-{
-  assert(_implicit_capture == true);
-  const unsigned int n_born = nNeutronsBorn(neutron);
-  addFissionsToBank(n_born, neutron);
-  _n_neutrons_born += n_born;
-
-  double new_weight = neutron.weight() * (1.0 - neutron.cell().absorptionProbability());
-  neutron.changeWeight(new_weight);
-  scatter(neutron);
 }
 
 unsigned int
