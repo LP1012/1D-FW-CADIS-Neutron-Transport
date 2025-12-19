@@ -12,6 +12,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <cassert>
 
 FWCADIS::FWCADIS(const std::string input_file_name) : _input_file_name(input_file_name)
 {
@@ -20,23 +21,27 @@ FWCADIS::FWCADIS(const std::string input_file_name) : _input_file_name(input_fil
 }
 
 void
+FWCADIS::setSimpleWWs()
+{
+  for (auto & cell : _cells)
+    cell.createSimpleWWs();
+}
+
+void
 FWCADIS::setWeightWindows()
 {
-  // we first need to normalize the adjoint
-  double min_adjoint = 1.0;
+  // start by normalizing so that the max target weight is 1.0
+  double min_adjoint = std::numeric_limits<double>::max();
   for (auto & cell : _cells)
-  {
-    {
-      if (cell.adjointFlux() < min_adjoint)
-        min_adjoint = cell.adjointFlux();
-    }
-  }
-  // normalize
-  for (auto cell : _cells)
-    cell.setAdjointFlux(cell.adjointFlux() / min_adjoint);
+    min_adjoint = std::min(min_adjoint, cell.adjointFlux());
 
   for (auto i = 0; i < _cells.size(); i++)
+  {
+    double current_adjoint = _cells[i].adjointFlux();
+    _cells[i].setAdjointFlux(current_adjoint / min_adjoint);
     _cells[i].createWeightWindow(_cells[i].adjointFlux(), _window_width);
+    // std::cout << "target weight = " << _cells[i].targetWeight() << std::endl;
+  }
 }
 
 void
@@ -50,9 +55,17 @@ FWCADIS::runForwardFlux()
 }
 
 void
-FWCADIS::runAdjointFlux()
+FWCADIS::runCADISAdjointFlux()
 {
-  SN simulation{_input_file_name, _cells, _quadrature_order, true, _forward_k_eff};
+  SN simulation{_input_file_name, _cells, _quadrature_order, true, _fw_cadis, 1.0};
+  simulation.run();
+  updateAdjointFlux(simulation);
+}
+
+void
+FWCADIS::runFWCADISAdjointFlux()
+{
+  SN simulation{_input_file_name, _cells, _quadrature_order, true, _fw_cadis, _forward_k_eff};
   simulation.run();
   updateAdjointFlux(simulation);
 }
@@ -76,14 +89,8 @@ FWCADIS::updateAdjointFlux(const SN & simulation)
 void
 FWCADIS::kEigenvalueMonteCarlo()
 {
-  MCSlab simulation(_input_file_name,
-                    _n_particles,
-                    _n_generations,
-                    _n_inactive,
-                    _regions,
-                    _cells,
-                    _implicit_capture,
-                    _fw_cadis);
+  MCSlab simulation(
+      _input_file_name, _n_particles, _n_generations, _n_inactive, _regions, _cells, _fw_cadis);
   simulation.k_eigenvalue();
 }
 
@@ -157,17 +164,34 @@ FWCADIS::readInput()
   auto * n_part_attrib = settings->FindAttribute("n_particles");
   auto * n_gen_attrib = settings->FindAttribute("n_generations");
   auto * n_inactive_attrib = settings->FindAttribute("n_inactive");
-  auto * fw_cadis = settings->FindAttribute("fw-cadis");
-  auto * ic = settings->FindAttribute("implicit-capture");
+  auto * vr = settings->FindAttribute("variance-reduction");
+  // auto * ic = settings->FindAttribute("implicit-capture");
 
   _n_particles = getAttributeOrThrow<unsigned int>(settings, "n_particles");
   _n_generations = getAttributeOrThrow<unsigned int>(settings, "n_generations");
   _n_inactive = getAttributeOrThrow<unsigned int>(settings, "n_inactive");
 
-  if (!fw_cadis)
-    throw std::runtime_error("fw-cadis parameter not set to true or false in input file!");
-  _fw_cadis = fw_cadis->BoolValue();
-  if (fw_cadis)
+  if (!vr)
+    throw std::runtime_error(
+        "variance-reduction parameter not set to fw-cadis, cadis, or false in input file!");
+
+  std::string vr_val = vr->Value();
+  if (vr_val == "fw-cadis")
+  {
+    _fw_cadis = true;
+    _cadis = false;
+  }
+  else if (vr_val == "cadis")
+  {
+    _fw_cadis = false;
+    _cadis = true;
+  }
+  else
+  {
+    _fw_cadis = false;
+    _cadis = false;
+  }
+  if (_fw_cadis || _cadis)
   {
     auto * quad_order = settings->FindAttribute("quadrature-order");
     if (!quad_order)
@@ -179,7 +203,7 @@ FWCADIS::readInput()
     _window_width = www->DoubleValue();
   }
 
-  if (!ic)
-    throw std::runtime_error("implicit-capture parameter not set to true or false!");
-  _implicit_capture = ic->BoolValue();
+  // if (!ic)
+  //   throw std::runtime_error("implicit-capture parameter not set to true or false!");
+  // _implicit_capture = ic->BoolValue();
 }

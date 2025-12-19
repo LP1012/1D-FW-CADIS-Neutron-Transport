@@ -106,8 +106,12 @@ void
 Neutron::checkNeutron()
 {
   if (!(_pos <= _cell->xMax() && _pos >= _cell->xMin()))
+  {
+    std::cout << "position = " << _pos << std::endl;
+    std::cout << "cell xMax, xMin: " << _cell->xMax() << ", " << _cell->xMin() << std::endl;
     throw std::runtime_error("Neutron cell not set correctly! Position "
                              "not located within bounds!");
+  }
   if (_weight < 1e-15)
     throw std::runtime_error("Neutron weight was not set!");
 }

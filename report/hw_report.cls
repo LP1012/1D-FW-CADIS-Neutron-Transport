@@ -1,11 +1,11 @@
 %% myhomework.cls
 \NeedsTeXFormat{LaTeX2e}
-\ProvidesClass{math_hw}[2024/02/04 Custom Homework Class]
+\ProvidesClass{hw_report}[2024/02/04 Custom Homework Class]
 
 \LoadClass[11pt, letterpaper]{article}
 
 \RequirePackage[T1]{fontenc}
-\RequirePackage{tgpagella}
+\RequirePackage[t,lf]{spectral}
 \RequirePackage{mathtools}
 \RequirePackage{geometry}
 \RequirePackage{microtype}

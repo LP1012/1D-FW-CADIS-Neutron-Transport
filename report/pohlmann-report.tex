@@ -2,11 +2,12 @@
 \usepackage{booktabs}
 \usepackage{rotating}
 \usepackage{wrapfig}
+\usepackage{physics}
 \newcommand{\keff}{k_{\text{eff}}}
 
 \onehalfspacing
 
-\title{\textbf{Computer Project 1}\\ \vspace{1em}
+\title{\textbf{Computer Project 3}\\ \vspace{1em}
 NPRE 555: Reactor Theory I}
 \author{Liam Pohlmann\\Nuclear, Plasma, \& Radiological Engineering, University of Illinois Urbana-Champaign\\\url{liamp2@illinois.edu}}
 
@@ -19,217 +20,211 @@ NPRE 555: Reactor Theory I}
 
 
     \section{Premise}
-    The purpose of this paper is to outline the methods used to determine a $k$-eigenvalue solution along with a flux profile for a simple slab of two fissile material in 1-D cartesian with monoenergetic neutrons.
-    A simple schematic of this can be seen in \cref{fig:problem-schematic}.
-    \begin{wrapfigure}{r}{0.6\textwidth} % 'r' for right side, 'l' for left side
-        \centering
-        \vspace{-10pt} % optional: adjust vertical spacing
-        \includegraphics[width=0.58\textwidth]{figs/problem-schematic.jpg}
-        \caption{Problem schematic}
-        \label{fig:problem-schematic}
-        \vspace{-10pt} % optional: tighten space below the figure
-    \end{wrapfigure}
-    Though this problem is simple enough that a straightforward \texttt{Python} script could be created and generate good results, I proposed an additional constraint: the code must be able to calculate the $\keff$ and flux profile for arbitrary 1D cells (assuming no overlap).
-    This additional goal dramatically changed the coding practices from script- to modular-oriented, where the focus has been on flexibility, clarity, and reusability.
+    Though Monte Carlo methods are considered the gold-standard for neutron transport, analog Monte Carlo struggles greatly to give accurate (low-variance) solutions in regions where neutron count is low.
+    Such applications include radiation shields and regions far from the core of the reactor.
+    Local variance reduction techniques are easily employed for source-detector problems using adjoint-informed importance maps.
+    However, these methods restrict their increased accuracy to only a small region of interest.
+    For global problems, reducing the variance becomes a bigger issue.
+
+    The Forward-Weighted Consistent Adjoint Driven Importance Sampling method (FW-CADIS) is a technique that first emerged in the late 1990's by John Wagner~\cite{wagnerAutomatedVarianceReduction1998} for fixed-source problems.
+    As will be discussed in the next section, the method looks to create an importance map for Monte Carlo methods by first approximating the global neutron flux with a computationally-cheap deterministic solve, then using this forward solution as the source for an adjoint problem, and finally using this solution to create target weights for weight windows.
+    This method was attempted to be applied to 1D geometry on both a simple and challenge problem.
 
 
     \section{Theory}
+    In analog Monte Carlo as introduced in Lewis and Miller's textbook~\cite{lewisComputationalMethodsNeutron1993}, each neutron is treated as a single particle.
+    When looking to variance reduction (VR) techniques, the notion of particle ``weight'' is introduced, wherein a single computational particle may in reality represent more (or less) than a single physical particle.
+    This idea allows us to hold on to more physical particles we deem important.
 
-    The eigenvalue for each generation of neutrons is calculated with:
+    Weight windows are a population control VR technique that allows us to specify the weight of computer particles that enter a region.
+    If a particle is below the window, we play a game of Russian roulette, where we throw a random number between 0 and 1 and compare this to the probability of survival, defined as:
     \begin{equation}
-        \label{eq:k-sample}
-        k_\text{gen}=\frac{\text{Number of Neutrons Produced}}{\text{Number of Source Neutrons}}
+        \label{p survive}
+        p_{survival}=\frac{w_{neutron}}{w_{l}}
     \end{equation}
-    Then, for each additional generation, the next system $\keff$ value is estimated with:
+    where $w_l$ is the lower bound of the weight window.
+    If the particle survives, its weight is bumped up to the center weight of the window.
+    This permits more particles of higher weight to continue deeper into the domain.
+    If a particle's weight is \textit{greater} than that of the upper window bounds, then the particle splits, creating more computational particles with a fraction of the weight of the original.~\cite{TechReport_2024_LANL_LA-UR-24-24602Rev.1_KuleszaAdamsEtAl}
+    This allows for more unique histories to be run rather than a single history with a high weight, giving more information to global tallies such as the flux.
+
+    For simplicity, constant-value nuclear data is chosen.
+    This greatly simplifies the transport equation to:
     \begin{equation}
-        \label{eq:keff}
-        \keff \approx \sum_{i=1}^{N} k_{\text{gen},i}
+        \label{forward bte}
+        \mu \pdv[]{\psi}{x}+\Sigma_t \psi = \frac{\Sigma_s}{2}\int_{-1}^{1} \psi(x,\mu)\dd\mu +\frac{1}{k}\frac{\nu\Sigma_f}{2}\int_{-1}^{1} \psi(x,\mu)\dd\mu+Q(x,\mu)
     \end{equation}
-    where $N$ is the number of $k_\text{gen}$'s that have been calculated.
-    To get an estimate of the error of $\keff$, the variance is estimated.
-    However, variance of $\keff$ must be calculated differently because it is the variance of \textit{mean}.
-    To handle this special case, it can be shown~\cite{ 244MeanVariance} that the variance scales with an additional factor of $1/N$:
+    A keen observer will notice that $\int_{-1}^{1} \psi(x,\mu)\dd\mu$ is just the scalar flux.
+
+    In the FW-CADIS method, we first solve \cref{forward bte} using a cheap deterministic solution\footnote{In practice, any method is fine as long as it is cheap and quick.} to get a good-enough estimate of the forward flux.
+    Then, we solve the fixed-source adjoint problem, defined by:
     \begin{equation}
-        \label{eq:variance-of-the-mean-of-k}
-        \sigma^2_k=\frac{1}{N(N-1)}\sum_{i=1}^{N} \left( k_i-\keff \right)^2
+        \label{adjoint}
+-\mu \pdv[]{\psi^{\dagger}}{x}+\Sigma_t \psi^{\dagger} = \frac{\Sigma_s}{2}\int_{-1}^{1} \psi^{\dagger}(x,\mu)\dd\mu +q^{\dagger}(x)
     \end{equation}
-    This ensures that for each additional $k_\text{gen}$, the variance will shrink.
-
-    For cell $i$, the flux has been estimated in two ways~\cite{lewisComputationalMethodsNeutron1993}.
-    First, the collision estimate:
+    where:
     \begin{equation}
-        \label{eq:collision-estimate}
-        \phi_i \approx \frac{C_i}{NV_i\Sigma^i_t}
+        \label{fwcadis source}
+        q^{\dagger}(x)=\frac{1}{\phi(x)}
     \end{equation}
-    where $C_i$ is the number of collisions that occurred in cell $i$, $N$ is the total number of source particles, $V_i$ is the cell volume\footnote{For 1D, the cell volume is just the cell length.}, and $\Sigma^i_t$ is the total macroscopic cross section in cell $i$.
-    Next, the path-length estimate:
-    \begin{equation}
-        \label{eq:path-length}
-        \phi_i \approx \frac{l_i}{NV_i}
-    \end{equation}
-    where $N$ and $V_i$ are as before, and $l_i$ is the total length traversed through the cell be all neutrons in the simulation.
-
-
-    \section{Code Design}
-    A code was written in \texttt{C++} to facilitate the computations of arbitrary 1D regions either connected or separated by a void.
-    It was designed to be as reusable and flexible as possible.
-    Three major classes were created: \texttt{MCSlab}, \texttt{Region}, and \texttt{Neutron}.
-    The first of these holds the major computational methods for $k$-eigenvalue and flux calculations, the second holds material and geometry information for each users-specified region, and the last holds information and methods pertaining to neutrons and their position within the simulation.
-    A non-exhaustive list of code elements from each of these has been included along with a short description in \cref{tab: code classes}.
-    \begin{sidewaystable}
-        \centering
-        \begin{tabular}{llll}
-            \toprule
-            \textbf{Class} & \textbf{Item}                   & \textbf{Type} & \textbf{Description}                                                                 \\
-            \midrule
-            MCSlab         & \texttt{k\_eigenvalue}          & Method        & Holds random walk algorithm, tally calculations                                      \\
-
-            & \texttt{readInput }             & Method        & Read user-supplied input file and initialize attributes                              \\
-
-            & \texttt{absorption}             & Method        & If absorption occurs, calculate number of neutrons born and kill particle            \\
-
-            & \texttt{scatter}                & Method        & If scatter occurs, change the particle’s direction                                   \\
-
-            & \texttt{calculateK}             & Method        & Calculate $k_{\text{gen}}$, $\keff$, and the standard deviation                      \\
-
-            & \texttt{updatePathLengths}      & Method        & For every movement, add the flight distance of the neutron to bins                   \\
-
-            & \texttt{updateCollisions}       & Method        & For every collision, add 1 to bin of collision location                              \\
-
-            & \texttt{exportFlux}             & Method        & Export flux values to \texttt{.csv} file                                             \\
-            Region         & \texttt{\_Sigma\_s}             & Attribute     & Scattering macroscopic cross section                                                 \\
-
-            & \texttt{\_Sigma\_a}             & Attribute     & Absorption macroscopic cross section                                                 \\
-
-            & \texttt{\_nu\_Sigma\_f}         & Attribute     & Fission macroscopic cross section multiplied by the number neutrons born per fission \\
-
-            & \texttt{\_Sigma\_t}             & Attribute     & Total macroscopic cross section                                                      \\
-
-            & \texttt{\_n\_per\_fission}      & Attribute     & Number of neutrons produced per absorption                                           \\
-
-            & \texttt{populateCellLocs}       & Method        & Populate cell centers and bounds within a single region                              \\
-            Neutron        & \texttt{movePositionAndRegion}  & Method        & Move neutron position and change its region accordingly                              \\
-
-            & \texttt{setRandomStartPosition} & Method        & Set a random start position within fissionable material                              \\
-
-            & \texttt{distanceToCollisions}   & Method        & Calculate the distance to next collision within region                               \\
-
-            & \texttt{distanceToEdge}         & Method        & Calculate the distance to the nearest edge in the direction of $\mu$                 \\
-
-            & \texttt{\_is\_alive}            & Attribute     & Boolean value holding whether particle is still alive                                \\
-
-            & \texttt{kill}                   & Method        & Switches \texttt{\_is\_alive} to \texttt{False}, terminating the walk                \\
-            \bottomrule
-        \end{tabular}
-        \caption{Major classes within code and their description}
-        \label{tab: code classes}
-    \end{sidewaystable}
-    As recommended by the instructor, each class also has an associated test created using the \texttt{gtest} framework.
-    These tests are simple unit tests that were an integral part of the debugging and implementation process.
-
-    In addition, a flowchart has been provided in \cref{fig:flowchart} that outlines the steps taken in a single generation of neutrons.
-    It was heavily inspired through lecture notes given in class~\cite{huffLectureNotes2025}.
-    Note that after each generation, the Shannon-Entropy, running $\keff$ value, and standard deviation are reported to the user as commandline output.
-
-    \begin{figure}[!htb]
-        \centering
-        \includegraphics[width=0.8\textwidth]{figs/MC-flowchart}
-        \caption{Monte Carlo code flowchart for a single generation}
-        \label{fig:flowchart}
-    \end{figure}
+    Using the definition from Wagner~\cite{wagnerAutomatedVarianceReduction1998}, we can set our weight window parameters:
+    \begin{subequations}
+        \label{ww vals}
+        \begin{equation}
+            \label{lower ww}
+            w_l=\left[ \phi^\dagger \left( \frac{c+1}{2} \right) \right]^{-1}
+        \end{equation}
+        \begin{equation}
+            \label{target}
+            w_t=\frac{w_u+w_l}{2}
+        \end{equation}
+        \begin{equation}
+            \label{width}
+            c=\frac{w_u}{w_l}
+        \end{equation}
+    \end{subequations}
+    where $c$ is a user-set parameter known as the ``window width,'' $w_t$ is the target (or center) weight, and $w_u$ is the upper weight.
+    Then the Monte Carlo game is played using weight windowing for population control
 
 
     \section{Results}
-    For the requested problem shown in \cref{fig:problem-schematic}, \cref{fig:submission_combined} has been included.
-    It reports the flux profiles using both \cref{eq:collision-estimate} and \cref{eq:path-length} along with the estimate of $\keff$ and its standard-deviation.
+    To start, the simple problem introduced in Computer Project 1 was implemented using the FW-CADIS algorithm.
+    The specifications for this simulation are as follows:
+    \begin{itemize}
+        \item \textbf{Regions:}
+        \begin{itemize}
+            \item Region 1: $x \in [0, 50]$, $n_\text{cells}=50$, $\Sigma_a=0.12$, $\Sigma_s=0.05$, $\nu\Sigma_f=0.15$, source=0
+            \item Region 2: $x \in [50, 100]$, $n_\text{cells}=50$, $\Sigma_a=0.10$, $\Sigma_s=0.05$, $\nu\Sigma_f=0.12$, source=0
+        \end{itemize}
+        \item \textbf{Simulation Settings:}
+        \begin{itemize}
+            \item Number of particles: 20,000
+            \item Number of generations: 25
+            \item Number of inactive generations: 10
+            \item Variance reduction method: FW-CADIS
+            \item Quadrature order: 8
+            \item Weight window width: 4
+        \end{itemize}
+    \end{itemize}
+    This produced a $k_{eff}$ of $1.202194 \pm 0.001480$.
+    The full output is given in \cref{sec:cp1-out}.
+
     \begin{figure}[!htb]
         \centering
         \begin{subfigure}[b]{0.48\textwidth}
             \centering
-            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_submission_simulation_pl}
-            \caption{Path length estimate}
-            \label{submission_path_length}
+            \includegraphics[width=\textwidth]{figs/cp1/submission_simulation_collsion_from_bins}
+            \caption{CP1 problem flux using collision estimate.}
         \end{subfigure}
         \hfill
         \begin{subfigure}[b]{0.48\textwidth}
             \centering
-            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_submission_simulation_col}
-            \caption{Collision estimate}
-            \label{submission_collision}
+            \includegraphics[width=\textwidth]{figs/cp1/submission_simulation_pathlength_from_bins}
+            \caption{CP1 problem flux using pathlength estimate.}
         \end{subfigure}
-        \caption{Comparison of simulation estimates. $k_{\text{eff}}=1.183377 \pm 0.000328$}
-        \label{fig:submission_combined}
+        \hfill
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{figs/cp1/submission_simulation_SN_plot}
+            \caption{CP1 problem flux estimated with discrete ordinates (8-point quadrature). Also plotted is the adjoint solution with the inverse of the forward flux and the applied importance map.}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{figs/cp1/submission_simulation_relative_unc}
+            \caption{Relative uncertainty of Monte Carlo calculations.}
+        \end{subfigure}
+        \caption{Results of FW-CADIS method on CP1 computer problem.}
+        \label{fig:cp1-results}
     \end{figure}
-    As seen, both methods produce extremely similar results, differing only in the magnitude (which can be solved with a normalization).
-    \texttt{README} files have been included in the GitHub repository that will allow the user to replicate these results.
+
+    In addition to this problem, a challenge problem was constructed to attempt to test the variance reduction from the method.
+    A schematic of this is given in \cref{fig:challenge-prob-schematic}.
+
+    \begin{figure}[!htb]
+        \centering
+        \includegraphics[width=0.8\textwidth]{figs/test_prob_figure}
+        \caption{Challenge problem schematic.}
+        \label{fig:challenge-prob-schematic}
+    \end{figure}
+
+    The run parameters are specified as:
+    \begin{itemize}
+        \item \textbf{Regions:}
+        \begin{itemize}
+            \item Region 1: $x \in [-10.0, -7.5]$, $n_\text{cells}=20$, $\Sigma_a=0$, $\Sigma_s=1$, $\nu\Sigma_f=0$, source=0
+            \item Region 2: $x \in [-7.5, -5.0]$, $n_\text{cells}=20$, $\Sigma_a=0.5$, $\Sigma_s=0$, $\nu\Sigma_f=0.1$, source=0
+            \item Region 3: $x \in [-5.0, 5.0]$, $n_\text{cells}=20$, $\Sigma_a=0.05$, $\Sigma_s=0$, $\nu\Sigma_f=0.12$, source=0
+            \item Region 4: $x \in [5.0, 7.5]$, $n_\text{cells}=20$, $\Sigma_a=0.5$, $\Sigma_s=0$, $\nu\Sigma_f=0.1$, source=0
+            \item Region 5: $x \in [7.5, 10.0]$, $n_\text{cells}=20$, $\Sigma_a=0$, $\Sigma_s=1$, $\nu\Sigma_f=0$, source=0
+        \end{itemize}
+        \item \textbf{Simulation Settings:}
+        \begin{itemize}
+            \item Number of particles: 15,000
+            \item Number of generations: 20
+            \item Number of inactive generations: 5
+            \item Variance reduction method: FW-CADIS
+            \item Quadrature order: 12
+            \item Weight window width: 2
+        \end{itemize}
+    \end{itemize}
+
+    Results of the runs are seen in \cref{fig:challenge-results} and \cref{sec:challenge-out}.
+    \begin{figure}[!htb]
+        \centering
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{figs/challenge/challenge_prob_SN_plot}
+            \caption{Challenge problem flux using collision estimate.}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{figs/challenge/challenge_prob_collsion_from_bins}
+            \caption{Challenge problem flux using pathlength estimate.}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{figs/challenge/challenge_prob_pathlength_from_bins}
+            \caption{Challenge problem flux estimated with discrete ordinates (12-point quadrature). Also plotted is the adjoint solution with the inverse of the forward flux and the applied importance map.}
+        \end{subfigure}
+        \hfill
+        \begin{subfigure}[b]{0.48\textwidth}
+            \centering
+            \includegraphics[width=\textwidth]{figs/challenge/challenge_prob_relative_error}
+            \caption{Relative uncertainty of Monte Carlo calculations.}
+        \end{subfigure}
+        \caption{Results of FW-CADIS method on formulated challenge problem.}
+        \label{fig:challenge-results}
+    \end{figure}
 
 
-    \section{Future Work}
-    Though tests were provided and successful, additional tests would be worthwhile to ensure complete functionality.
-    Additionally, a regression test of sorts could be implemented for a simple analytically-known problem to verify the code works as intended on each machine.
-    Lastly, due to time constraints, there is still some work to be done to ensure proper documentation in the header files.
+    \section{Discussion}
+    What was discovered far too late into this project is that FW-CADIS was not originally intended to be used for fission problems.
+    Indeed, as can be seen in the discrete-ordinates results above, the importance maps are effectively flipped from what they should be.
+    This is what caused the flux profiles of the CP1 problem (as seen in \cref{fig:cp1-results}) to be mirrored.
+    I attempted to remedy this by using the inverse of the raw adjoint solve (no forward solve, just a pure fission-driven adjoint), but the results were subpar.
+    Results for this are seen in \cref{adjoint only}.
+    \begin{figure}[!htb]
+        \centering
+        \includegraphics[width=0.8\textwidth]{figs/adjoint/submission_simulation_pathlength_from_bins}
+        \caption{CP1 with adjoint-only weight windows.}
+        \label{adjoint only}
+    \end{figure}
+    Note that in this attempt, the Monte Carlo simulation converged to the correct value of $1.219136 \pm 0.000867$, but the flux shape is problematic.
 
-    \bibliographystyle{plain}
-    \bibliography{CP1}
+    Additionally, code was written to compute the integrated variance\footnote{This is done in post-processing.}, and the intention of this was to do a figure-of-merit study as done by Wagner.
+    However, because the results are incorrect, this study would be meaningless.
+    Had I been able to redo this problem, I would have chosen to instead attempt the MAGIC method or multiple VR techniques such as implicit capture\footnote{This was attempted to implement with FW-CADIS but unsuccessful.}.
+
+    \bibliographystyle{ieeetr}
+    \bibliography{CP3}
 
     \clearpage
-
     \appendix
-
-
-    \section{Additional Example Solutions}
-    To prove the success of the code, three additional simulations were run as example cases.
-    They demonstrate the ability of the code to handle single and multi-region calculations and transport neutrons across voids between regions where necessary.
-    \begin{enumerate}
-        \item Single region: \cref{fig:single_combined}
-        \item Connected double region: \cref{fig:double-connected-combined}
-        \item Separated double region: \cref{fig:split-path-length}
-    \end{enumerate}
-
-    \begin{figure}[!htb]
-        \centering
-        \begin{subfigure}[b]{0.48\textwidth}
-            \centering
-            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_1_region_pl}
-            \caption{Single region path length estimate}
-            \label{single_path_length}
-        \end{subfigure}
-        \hfill
-        \begin{subfigure}[b]{0.48\textwidth}
-            \centering
-            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_1_region_col}
-            \caption{Single region collision estimate}
-            \label{single_collision}
-        \end{subfigure}
-        \caption{Comparison of simulation estimates.}
-        \label{fig:single_combined}
-    \end{figure}
-
-    \begin{figure}[!htb]
-        \centering
-        \begin{subfigure}[b]{0.48\textwidth}
-            \centering
-            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_2_region_connected_pl}
-            \caption{Double region connected path length estimate}
-            \label{double_connected_path_length}
-        \end{subfigure}
-        \hfill
-        \begin{subfigure}[b]{0.48\textwidth}
-            \centering
-            \includegraphics[width=\textwidth]{../MCSlab/examples/plot_2_region_connected_col}
-            \caption{Double region connected collision estimate}
-            \label{double_connected_collision}
-        \end{subfigure}
-        \caption{Comparison of simulation estimates.}
-        \label{fig:double-connected-combined}
-    \end{figure}
-
-
-    \begin{figure}[!htb]
-        \centering
-        \includegraphics[width=\textwidth]{../MCSlab/examples/plot_2_region_split_pl}
-        \caption{Double region split path length estimate}
-        \label{fig:split-path-length}
-    \end{figure}
-
+    \section{CP1 Problem Output}\label{sec:cp1-out}
+    \inputminted[linenos, bgcolor=LightGray, fontsize=\footnotesize]{text}{output/sub_out.txt}
+    \section{Challenge Problem Output}\label{sec:challenge-out}
+    \inputminted[linenos, bgcolor=LightGray, fontsize=\footnotesize]{text}{output/challenge_out.txt}
 \end{document}

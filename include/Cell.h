@@ -15,12 +15,14 @@ public:
        const double source);
 
   void createWeightWindow(const double fwcadis_adjoint_flux, const double window_width);
+  void createSimpleWWs();
   void setForwardFlux(const double forward_flux) { _forward_flux = forward_flux; };
   void setAdjointFlux(const double adjoint_flux) { _adjoint_flux = adjoint_flux; };
   void addToPathlength(const double val) { _pathlength_bin += val; }
   void addToCollisions(const double val) { _collision_bin += val; }
+  void addPathlengthSS(const double val) { _pathlength_ss += val; }
 
-  static double randomPositionInCell(const Cell cell, UniformRNG rng);
+  static double randomPositionInCell(const Cell * cell, UniformRNG rng);
 
   // getters
 
@@ -34,6 +36,7 @@ public:
   const double absorptionProbability() const { return _abs_prob; }
   const double pathlength() const { return _pathlength_bin; }
   const double collision() const { return _collision_bin; }
+  const double pathlengthSS() const { return _pathlength_ss; }
 
 private:
   double _n_per_abs;
@@ -50,4 +53,5 @@ private:
 
   double _pathlength_bin;
   double _collision_bin;
+  double _pathlength_ss; // sum of squares
 };
