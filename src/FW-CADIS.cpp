@@ -23,21 +23,17 @@ FWCADIS::FWCADIS(const std::string input_file_name) : _input_file_name(input_fil
 void
 FWCADIS::setWeightWindows()
 {
-  // start by normalizing so that the max 1/adjoint is 1.0
-  std::vector<double> adjoints;
-  double max_inverse = 0;
+  // start by normalizing so that the max target weight is 1.0
+  double min_adjoint = std::numeric_limits<double>::max();
   for (auto & cell : _cells)
-  {
-    if (1.0 / cell.adjointFlux() > max_inverse)
-      max_inverse += 1.0 / cell.adjointFlux();
-  }
+    min_adjoint = std::min(min_adjoint, cell.adjointFlux());
 
   for (auto i = 0; i < _cells.size(); i++)
   {
     double current_adjoint = _cells[i].adjointFlux();
-    _cells[i].setAdjointFlux(current_adjoint * max_inverse);
-    assert(1.0 / _cells[i].adjointFlux() <= 1.0);
+    _cells[i].setAdjointFlux(current_adjoint / min_adjoint);
     _cells[i].createWeightWindow(_cells[i].adjointFlux(), _window_width);
+    std::cout << "target weight: " << _cells[i].targetWeight() << std::endl;
   }
 }
 
