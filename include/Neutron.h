@@ -50,8 +50,8 @@ public:
   double pos() const { return _pos; }
   double mu() const { return _mu; }
   bool isAlive() const { return _is_alive; }
-  const double weight() const { return _weight; }
-  const Cell & cell() const { return *_cell; }
+  double weight() const { return _weight; }
+  Cell & cell() const { return *_cell; }
 
   void setMu(const double mu);
 

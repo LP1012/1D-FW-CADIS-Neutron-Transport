@@ -20,7 +20,7 @@ public:
          const unsigned int n_inactive,
          const std::vector<Region> regions,
          const std::vector<Cell> cells,
-         const bool use_weight_windows);
+         const bool using_fwcadis);
 
   /// method to run simulation
   void k_eigenvalue();
@@ -37,8 +37,8 @@ protected:
   const unsigned int _n_generations;
   /// number of inactive cycles
   const unsigned int _n_inactive;
+  const bool _use_fwcadis;
 
-  const bool _use_wws;
   bool _export_raw_tallies;
 
   /// @brief throws a random number to see if absorption occurred
@@ -49,11 +49,11 @@ protected:
   void scatter(Neutron & neutron);
 
   /// @brief computes Shannon Entropy for source convergence
-  double shannonEntropy(const std::vector<unsigned long int> & collision_bins);
+  double shannonEntropy(const std::vector<double> & collision_bins);
 
   /// all cells in simulation
   std::vector<Cell> _cells;
-  std::vector<Cell> _fissionable_cells;
+  std::vector<Cell *> _fissionable_cells;
 
   /// simulation input file
   const std::string _input_file_name;
@@ -68,7 +68,8 @@ protected:
 
   UniformRNG _rng; // initialize RNG
 
-  unsigned int _n_neutrons_born; // the number of fission neutrons born in a generation
+  double _weight_born; // the number of fission neutrons born in a generation
+  double _starting_weight;
 
   // banks of source sites
   std::deque<Neutron> _old_fission_bank;
@@ -109,12 +110,11 @@ protected:
   void createFissionCells();
   void runHistory(Neutron & neutron,
                   const unsigned int generation_num,
-                  std::vector<unsigned long int> & source_bins);
-  Cell randomFissionCell();
+                  std::vector<double> & source_bins);
+  Cell * randomFissionCell();
   void splitOrRoulette(Neutron & neutron);
-  void implicitCapture(Neutron & neutron);
-  unsigned int nNeutronsBorn(const Neutron & neutron);
-  void addFissionsToBank(const unsigned int n_neutrons_born, const Neutron & neutron);
+
+  void addFissionToBank(const Neutron & neutron);
 
   void updatePathLengths(const double x_start,
                          const double x_end,

@@ -15,13 +15,14 @@ public:
        const double source);
 
   void createWeightWindow(const double fwcadis_adjoint_flux, const double window_width);
+  void createSimpleWWs();
   void setForwardFlux(const double forward_flux) { _forward_flux = forward_flux; };
   void setAdjointFlux(const double adjoint_flux) { _adjoint_flux = adjoint_flux; };
   void addToPathlength(const double val) { _pathlength_bin += val; }
   void addToCollisions(const double val) { _collision_bin += val; }
   void addPathlengthSS(const double val) { _pathlength_ss += val; }
 
-  static double randomPositionInCell(const Cell cell, UniformRNG rng);
+  static double randomPositionInCell(const Cell * cell, UniformRNG rng);
 
   // getters
 

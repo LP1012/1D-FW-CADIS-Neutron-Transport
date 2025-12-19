@@ -21,10 +21,10 @@ Cell::Cell(const double xmin,
 }
 
 double
-Cell::randomPositionInCell(const Cell cell, UniformRNG rng)
+Cell::randomPositionInCell(const Cell * cell, UniformRNG rng)
 {
-  double xmax = cell.xMax();
-  double xmin = cell.xMin();
+  double xmax = cell->xMax();
+  double xmin = cell->xMin();
   double rn = rng.generateRN();
   return rn * (xmax - xmin) + xmin;
 }
@@ -36,4 +36,12 @@ Cell::createWeightWindow(const double fwcadis_adjoint_flux, const double window_
   _lower_weight = 1.0 / denom;
   _upper_weight = window_width * _lower_weight;
   _center_weight = (_lower_weight + _upper_weight) / 2.0;
+}
+
+void
+Cell::createSimpleWWs()
+{
+  _cell_center = 1.0;
+  _lower_weight = 0;
+  _upper_weight = std::numeric_limits<double>::infinity();
 }

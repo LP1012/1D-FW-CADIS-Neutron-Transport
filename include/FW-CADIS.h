@@ -15,6 +15,7 @@ public:
   void updateForwardFlux(const SN & simulation);
   void updateAdjointFlux(const SN & simulation);
   void setWeightWindows();
+  void setSimpleWWs();
   void kEigenvalueMonteCarlo();
 
   // bool useIC() const { return _implicit_capture; }

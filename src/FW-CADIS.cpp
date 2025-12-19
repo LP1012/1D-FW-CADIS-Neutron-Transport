@@ -21,6 +21,13 @@ FWCADIS::FWCADIS(const std::string input_file_name) : _input_file_name(input_fil
 }
 
 void
+FWCADIS::setSimpleWWs()
+{
+  for (auto & cell : _cells)
+    cell.createSimpleWWs();
+}
+
+void
 FWCADIS::setWeightWindows()
 {
   // start by normalizing so that the max target weight is 1.0
