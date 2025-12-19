@@ -1,33 +1,23 @@
-# MCSlab
-This repository contains the software and report satisfying requirements laid out by NPRE 555: Reactor Theory I for Computer Project I.
+# 1D-FW-CADIS Neutron Transport
+This repository contains the software and report satisfying requirements laid out by NPRE 555: Reactor Theory I for Computer Project III.
+In this project, I attempted to implement the FW-CADIS method to k-eigenvalue problems using the Monte Carlo code I created in Computer Project I.
 
 ## Code Compiling
-To build the code, navigate to `MCSlab/`.
-Then:
+To build the code:
 ```
 mkdir build && cd build/
 cmake ..
-make
+make -j6
 ```
-To ensure everything is running correctly, also run the tests.
-Within `MCSlab/`, run:
-```
-bash test_MCSlab.sh
-```
+Tests were not created (but the should be...).
 
 ## Examples
 Example files have been included for convenience.
-To run all, from the root directory:
-```
-cd MCSlab/examples
-```
-then:
-```
-bash run_examples.sh
-```
+From `examples`, simply navigate to one of the directories, call the built executable, then give the input file name as a command line argument.
+Note that examples in `/analog` will *not* run without modification.
 
 ## Running Simulations
-`MCSlab` takes one command-line argument, which is the name of the input file.
+`1D-FW-CADIS` takes one command-line argument, which is the name of the input file.
 Input files are `XML` files, and the structure of these can be seen in the included examples.
 Note that one can include and aribtrary number of regions so long as they are:
 1. sorted from smallest x-values to largest
@@ -35,26 +25,24 @@ Note that one can include and aribtrary number of regions so long as they are:
 
 Error messages have been written should the user forget these requirements.
 
+Additionally, the method for variance-reduction must be specified. 
+When in double, try something a read the error message :-).
+
 ## Plotting Results
 For convenience, a plotting `Python` script as been included.
 To use, follow this template:
 ```
-python3 plot_simulations {input_filename}
+python3 plot_outfile.py {input_filename}
 ```
-A convention has been created within `MCSlab` such that only the input filename needs to be passed to get results plotted, *not* the output `.csv` filename.
-The user is encouraged to view the bash script included in `examples/` for troubleshooting.
+A convention has been created such that only the input filename needs to be passed to get results plotted, *not* the output `.csv` filename.
+Additionally, if one runs simulations with `fw-cadis` as variance reduction, the `plot_sn.py` script will plot the results of the discrete ordinates sweeps (both forward and adjoint) and also plot the importance map.
+All values are normalized to have a max value of 1.0.
 
 ## Report
 The report must be created.
 To use the `Makefile` supplied, navigate to `report`, then run `make`.
 
 ### Replicating Results
-The random number generator within `MCSlab` is randomly seeded for each generation, so perfect replication is not possible. 
-However, users are able to run the same input files because all are included within `examples/`.
-Runnning the provided bash script will reproduce the results.
-
-## References
-### FW-CADIS
-[OpenMC](https://docs.openmc.org/en/stable/methods/variance_reduction.html#equation-fw-cadis)
-[Paper 1](https://www.tandfonline.com/doi/abs/10.13182/NSE12-33)
+The files `submission_simulation.xml` and `challenge_prob.xml` were the only problems tested and reported on.
+Run as described above.
 
