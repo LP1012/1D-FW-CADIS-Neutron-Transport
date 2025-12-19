@@ -24,7 +24,13 @@ main(int argc, char * argv[])
   if (simulation.useFWCADIS())
   {
     simulation.runForwardFlux();
-    simulation.runAdjointFlux();
+    simulation.runFWCADISAdjointFlux();
+    simulation.setWeightWindows();
+  }
+
+  if (simulation.useCADIS())
+  {
+    simulation.runCADISAdjointFlux();
     simulation.setWeightWindows();
   }
   simulation.kEigenvalueMonteCarlo();

@@ -17,14 +17,18 @@ SN::SN(const std::string input_file_name,
        const std::vector<Cell> & cells,
        const unsigned int GQ_order,
        const bool adjoint,
+       const bool fwcadis_adjoint,
        const double k_start)
   : _input_file_name(input_file_name),
     _cells(cells),
     _num_cells(cells.size()),
     _gq_order(GQ_order),
     _adjoint(adjoint),
+    _fwcadis_adjoint(fwcadis_adjoint),
     _k(k_start)
 {
+  if (fwcadis_adjoint && !adjoint)
+    throw std::runtime_error("Must specify adjoint to be true when running FW-CADIS!");
   if (_gq_order % 2 == 1.0)
     throw std::runtime_error("Gauss quadrature order cannot be odd!");
   populateSNCells(cells);
@@ -57,7 +61,7 @@ SN::run()
     std::vector<double> old_scalar_flux = getScalarFlux();
     const double old_k = _k;
 
-    if (!_adjoint)
+    if (!_fwcadis_adjoint)
     {
       updateK(); // update k and scalar fluxes
     }
@@ -130,7 +134,7 @@ SN::isConverged(const std::vector<double> & old_flux,
   double tol = 1e-6;
   if (relative_flux < tol)
   {
-    if (_adjoint)
+    if (_fwcadis_adjoint)
       return true;
     else
     {
@@ -156,7 +160,7 @@ SN::L2Norm(const std::vector<double> & vector)
 void
 SN::populateSNCells(const std::vector<Cell> & cells)
 {
-  if (!_adjoint)
+  if (!_fwcadis_adjoint)
   {
     for (auto & cell : cells)
       _sn_cells.push_back(SNCell(cell, _gq_order));
@@ -306,9 +310,10 @@ SN::updateSource()
     double scattering_xs = cell.sigmaS();
     double nu_sigma_f = cell.nuSigmaF();
     double new_source =
-        !_adjoint ? (flux * (scattering_xs + 1.0 / _k * nu_sigma_f) + cell.volumetricSource()) /
-                        (4.0 * M_PI)
-                  : (flux * scattering_xs + cell.volumetricSource()) / (4.0 * M_PI);
+        !_fwcadis_adjoint
+            ? (flux * (scattering_xs + 1.0 / _k * nu_sigma_f) + cell.volumetricSource()) /
+                  (4.0 * M_PI)
+            : (flux * scattering_xs + cell.volumetricSource()) / (4.0 * M_PI);
     cell.setSource(new_source);
   }
 }

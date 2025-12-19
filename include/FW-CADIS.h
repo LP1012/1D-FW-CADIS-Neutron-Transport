@@ -11,7 +11,8 @@ public:
   FWCADIS(const std::string input_file_name);
 
   void runForwardFlux();
-  void runAdjointFlux();
+  void runFWCADISAdjointFlux();
+  void runCADISAdjointFlux();
   void updateForwardFlux(const SN & simulation);
   void updateAdjointFlux(const SN & simulation);
   void setWeightWindows();
@@ -20,11 +21,13 @@ public:
 
   // bool useIC() const { return _implicit_capture; }
   bool useFWCADIS() const { return _fw_cadis; }
+  bool useCADIS() const { return _cadis; }
 
 private:
   const std::string _input_file_name;
   unsigned int _n_total_cells;
   bool _fw_cadis;
+  bool _cadis;
   // bool _implicit_capture;
   double _window_width;
 

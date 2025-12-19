@@ -12,6 +12,7 @@ public:
      const std::vector<Cell> & cells,
      const unsigned int GQ_order,
      const bool adjoint = false,
+     const bool fwcadis_adjoint = false,
      const double k_start = 1.0);
 
   void run();
@@ -27,6 +28,7 @@ protected:
   const unsigned int _num_cells;
   const unsigned int _gq_order;
   const bool _adjoint;
+  const bool _fwcadis_adjoint;
   discreteQuadrature::GaussLegendreRule _gauss_legendre_rule;
 
   bool _is_converged;
