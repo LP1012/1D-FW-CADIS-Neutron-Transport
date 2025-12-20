@@ -358,7 +358,8 @@ MCSlab::normalizeNeutronBankWeights(std::deque<Neutron> bank)
   double total_weight = 0;
   for (const auto & neutron : bank)
     total_weight += neutron.weight();
-  const double normalization = static_cast<double>(num_neutrons) / total_weight;
+  const double normalization =
+      static_cast<double>(num_neutrons) / static_cast<double>(_n_particles) / total_weight;
   for (auto & neutron : bank)
   {
     double old_weight = neutron.weight();

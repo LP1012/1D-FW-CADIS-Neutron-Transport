@@ -142,9 +142,11 @@ Neutron::split(std::deque<Neutron> & split_bank)
   // adapted from OpenMC, weight_windows.cpp
   // https://github.com/openmc-dev/openmc/blob/develop/src/weight_windows.cpp
 
-  unsigned int n_split =
-      std::max(static_cast<unsigned int>(std::ceil(_weight / _cell->upperWeight())),
-               static_cast<unsigned int>(1));
+  // unsigned int n_split =
+  //     std::max(static_cast<unsigned int>(std::ceil(_weight / _cell->upperWeight())),
+  //              static_cast<unsigned int>(1));
+
+  unsigned int n_split = std::ceil(_weight / _cell->upperWeight());
   double split_weight = _weight / static_cast<double>(n_split);
   for (auto i = 0; i < n_split - 1; i++)
     split_bank.push_back(Neutron(_pos, _mu, _cell, split_weight));
