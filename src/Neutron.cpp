@@ -130,7 +130,7 @@ Neutron::roulette()
 {
   const double rn = _rng.generateRN();
   const double survival_probability = _weight / _cell->lowerWeight();
-  if (rn < survival_probability)
+  if (rn > survival_probability)
     _weight = _cell->targetWeight();
   else
     kill();
