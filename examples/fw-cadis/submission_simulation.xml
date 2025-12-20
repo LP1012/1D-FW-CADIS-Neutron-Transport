@@ -4,5 +4,5 @@
     <region xmin="0" xmax="50" n_cells="50" Sigma_a="0.12" Sigma_s="0.05" nuSigma_f="0.15" source="0"/>
     <region xmin="50" xmax="100" n_cells="50" Sigma_a="0.10" Sigma_s="0.05" nuSigma_f="0.12" source="0"/>
   </regions>
-  <settings n_particles="20000" n_generations="25" n_inactive="10" variance-reduction="fw-cadis" quadrature-order="8" window-width="4"/>
+  <settings n_particles="20000" n_generations="50" n_inactive="15" variance-reduction="cadis" quadrature-order="8" window-width="4"/>
 </simulation>
