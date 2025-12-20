@@ -175,6 +175,8 @@ MCSlab::k_eigenvalue()
 
     assert(_new_fission_bank.size() <= _n_particles);
 
+    normalizeNeutronBankWeights(_new_fission_bank);
+
     _old_fission_bank = _new_fission_bank; // reassign fission bank
 
     // spit out results
@@ -346,6 +348,23 @@ MCSlab::collisionIndex(const Neutron & neutron)
       return i;
   }
   throw std::runtime_error("Collision location not within domain of problem!");
+}
+
+void
+MCSlab::normalizeNeutronBankWeights(std::deque<Neutron> bank)
+{
+  unsigned int num_neutrons = bank.size();
+
+  double total_weight = 0;
+  for (const auto & neutron : bank)
+    total_weight += neutron.weight();
+  const double normalization =
+      static_cast<double>(num_neutrons) / static_cast<double>(_n_particles) / total_weight;
+  for (auto & neutron : bank)
+  {
+    double old_weight = neutron.weight();
+    neutron.changeWeight(old_weight * normalization);
+  }
 }
 
 double

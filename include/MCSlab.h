@@ -48,6 +48,8 @@ protected:
   /// @brief carries out events of a scattering, assuming one occurs
   void scatter(Neutron & neutron);
 
+  void normalizeNeutronBankWeights(std::deque<Neutron> bank);
+
   /// @brief computes Shannon Entropy for source convergence
   double shannonEntropy(const std::vector<double> & collision_bins);
 
